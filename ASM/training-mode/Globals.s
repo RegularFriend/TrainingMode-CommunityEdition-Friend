@@ -302,7 +302,7 @@
     .byte KO
     .endm
 
-    .set EventOSD_GrabMashOut, 0x01000000
+    .set EventOSD_GrabMashOut, 0x00000000
 
 
     # Number of Events
@@ -602,21 +602,21 @@ InitSettings:
     .set EventOSD_Multishine, 0x00000000
     .set EventOSD_Reaction, 0x00000000
 
-    .set EventOSD_LCancel, 0x00000003
-    .set EventOSD_Ledgedash, 0x04000000
+    .set EventOSD_LCancel, 0x00000000
+    .set EventOSD_Ledgedash, 0x00000000
     .set EventOSD_Eggs, 0x00000000
-    .set EventOSD_SDI, 0x10000400
-    .set EventOSD_Reversal, 0x002C0009
-    .set EventOSD_Powershield, 0x00000200
-    .set EventOSD_ShieldDrop, 0x00200048
-    .set EventOSD_AttackOnShield, 0x00210000
-    .set EventOSD_LedgeTech, 0x00000404
-    .set EventOSD_AmsahTech, 0x00000004
-    .set EventOSD_ComboTraining, 0x01010020
-    .set EventOSD_WaveshineSDI, 0x10000400
+    .set EventOSD_SDI, 0x00000000
+    .set EventOSD_Reversal, 0x000000000
+    .set EventOSD_Powershield, 0x00000000
+    .set EventOSD_ShieldDrop, 0x00000000
+    .set EventOSD_AttackOnShield, 0x00000000
+    .set EventOSD_LedgeTech, 0x00000000
+    .set EventOSD_AmsahTech, 0x00000000
+    .set EventOSD_ComboTraining, 0x00000000
+    .set EventOSD_WaveshineSDI, 0x00000000
 
-    .set EventOSD_LedgetechCounter, 0x00000604
-    .set EventOSD_EscapeSheik, 0x00000400
+    .set EventOSD_LedgetechCounter, 0x00000000
+    .set EventOSD_EscapeSheik, 0x00000000
 
     #####################
     ## Melee Variables ##
