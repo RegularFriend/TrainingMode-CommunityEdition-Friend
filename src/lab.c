@@ -1018,6 +1018,7 @@ static int CheckOverlay(GOBJ *character, OverlayGroup overlay)
 
             return state == ASID_TURN
                 || state == ASID_PASS
+                || state == ASID_CATCHWAIT
                 || state == ASID_SQUATWAIT
                 || state == ASID_OTTOTTOWAIT;
         }
@@ -1086,7 +1087,10 @@ static int CheckOverlay(GOBJ *character, OverlayGroup overlay)
             return state >= ASID_SQUAT && state <= ASID_SQUATRV;
 
         case (OVERLAY_WAIT):
-            return check_IASA(data) || state == ASID_WAIT;
+            return check_IASA(data)
+                || state == ASID_WAIT
+                || state == ASID_CATCHWAIT
+                || state == ASID_SQUATWAIT;
 
         case (OVERLAY_WALK):
             return state == ASID_WALKSLOW
