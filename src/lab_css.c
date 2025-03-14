@@ -115,7 +115,7 @@ void Read_Recordings()
                         {
                             ExportHeader *header = GetExportHeaderFromCard(slot, card_stat.fileName, buffer);
 
-                            if (CSS_ID(header->metadata.hmn) != hmnCSSId)
+                            if (CSS_ID(header->metadata.hmn) != hmnCSSId && CSS_ID(header->metadata.cpu) != hmnCSSId)
                             {
                                 import_data.hidden_file_num++;
                                 continue;
