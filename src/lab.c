@@ -3296,6 +3296,8 @@ void Inputs_Think(GOBJ *gobj)
     for (int i = 0; i < 4; i++) input_display |= show[i];
     if (!input_display) {
         Match_ShowTimer();
+    } else {
+        Match_HideTimer();
     }
 
     // update controllers
