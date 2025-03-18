@@ -3223,8 +3223,12 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu) {
     int inputs_rapid = pad->rapidFire;
     int inputs_held = pad->held;
     int inputs = inputs_rapid;
-    if ((inputs_held & HSD_TRIGGER_R) != 0)
+    if (
+        (inputs_held & HSD_TRIGGER_R) != 0
+        || (pad->triggerRight >= 24)
+    ) {
         inputs = inputs_held;
+    }
 
     // get menu variables
     int isChanged = 0;
