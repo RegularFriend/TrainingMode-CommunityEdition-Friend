@@ -756,7 +756,7 @@ void InfoDisplay_Update(GOBJ *menu_gobj, EventOption menu[], GOBJ *fighter, GOBJ
                 }
                 case (INFDISP_SYSLSTICK):
                 {
-                    HSD_Pad *pad = PadGet(fighter_data->ply, PADGET_MASTER);
+                    HSD_Pad *pad = PadGet(fighter_data->pad_index, PADGET_MASTER);
                     Text_SetText(text, i, "LStick Sys: (%+.4f , %+.4f)", pad->fstickX, pad->fstickY);
                     break;
                 }
@@ -767,7 +767,7 @@ void InfoDisplay_Update(GOBJ *menu_gobj, EventOption menu[], GOBJ *fighter, GOBJ
                 }
                 case (INFDISP_SYSCSTICK):
                 {
-                    HSD_Pad *pad = PadGet(fighter_data->ply, PADGET_MASTER);
+                    HSD_Pad *pad = PadGet(fighter_data->pad_index, PADGET_MASTER);
                     Text_SetText(text, i, "CStick Sys: (%+.4f , %+.4f)", pad->fsubstickX, pad->fsubstickY);
                     break;
                 }
@@ -778,7 +778,7 @@ void InfoDisplay_Update(GOBJ *menu_gobj, EventOption menu[], GOBJ *fighter, GOBJ
                 }
                 case (INFDISP_SYSTRIGGER):
                 {
-                    HSD_Pad *pad = PadGet(fighter_data->ply, PADGET_MASTER);
+                    HSD_Pad *pad = PadGet(fighter_data->pad_index, PADGET_MASTER);
                     Text_SetText(text, i, "Trigger Sys: (%+.3f , %+.3f)", pad->ftriggerLeft, pad->ftriggerRight);
                     break;
                 }
