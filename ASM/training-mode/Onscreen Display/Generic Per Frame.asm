@@ -48,6 +48,9 @@ FoxFalco:
     beq FoxFalco_SideBEnd
     cmpwi r3, 0x160                 # Air Side B End
     beq FoxFalco_SideBEnd
+    
+    cmpwi r3, 0x16D                 # Ground Side B End
+    beq FoxFalco_ShineAirStartup
 
     cmpwi r3, 0x169
     beq FoxFalco_ShineGroundLoop
@@ -180,6 +183,98 @@ FoxFalco_ShineAirLoop_EndSetColor:
     Message_Display
 
     b FighterSpecificTech_End
+    
+# --------
+    
+FoxFalco_ShineAirStartup:
+    # ensure we just jumped from the ground
+    lhz r3, 0x23fc(playerdata)
+    cmpwi r3, ASID_JumpF
+    beq FoxFalco_ShineAirStartup_AfterJump 
+    cmpwi r3, ASID_JumpB
+    beq FoxFalco_ShineAirStartup_AfterJump 
+    b FighterSpecificTech_End 
+     
+FoxFalco_ShineAirStartup_AfterJump:
+
+    # Calculate frames holding jump
+    li r9, 0
+FoxFalco_ShineAirStartup_JumpInputsLoop:
+    mulli r10, r9, 8
+    add r10, r10, playerdata
+
+    lhz r11, TM_Inputs(r10) # buttons
+    andi. r11, r11, 0xC00 # x or y
+    bne FoxFalco_ShineAirStartup_EndJumpInputsLoop
+
+    addi r10, r10, 3
+    lbz r11, TM_Inputs(r10) # stick y
+    extsb r11, r11
+    cmpwi r11, 44
+    bgt FoxFalco_ShineAirStartup_EndJumpInputsLoop
+
+    # no jump input this frame
+    addi r9, r9, 1
+    cmpwi r9, 32
+    blt FoxFalco_ShineAirStartup_JumpInputsLoop
+    
+    # Out of input history with no jump input - probably took longer than 32 frames.
+    # Nothing we can do here unless we increase the input history range.
+    b FighterSpecificTech_End
+    
+FoxFalco_ShineAirStartup_EndJumpInputsLoop:
+    lbz r10, 0x685(playerdata) # timer_jump
+    sub r9, r10, r9 # get jump held frames
+    addi r9, r9, 1 # 1-index
+    
+    # get hop type and text
+    mr r3, r9
+    bl IntToFloat
+    lfs f2, 0x148(playerdata) # jump_startup_time
+    bl ShortHopText
+    mflr r8
+    li r19, 0 # save for later
+    fcmpo cr0, f1, f2
+    blt EndGetHopTypeText
+    bl FullHopText
+    mflr r8
+    li r19, 1 # save for later
+EndGetHopTypeText:
+    
+    # display
+    li r3, OSD.FighterSpecificTechAlt  # ID - use alt so that ActOoShine doesn't overwrite
+    lbz r4, 0xC(playerdata)         # queue
+    li r5, MSGCOLOR_WHITE
+    bl FoxFalco_JCShineText
+    mflr r6
+    lhz r7, 0x2408(playerdata) # frames in JumpF / JumpB
+    Message_Display
+    lwz r3, 0x2C(r3)
+    lwz r20, MsgData_Text(r3)
+    
+    # set shine frame colour
+    bl GreenRedColors
+    mflr r5
+    lhz r7, 0x2408(playerdata) # frames in JumpF / JumpB
+    cmpwi r7, 2
+    ble ShineWasGood
+    addi r5, r5, 4
+ShineWasGood:
+    li r4, 1
+    mr r3, r20 
+    branchl r12, Text_ChangeTextColor
+       
+    # set hop type colour
+    li r4, 2
+    mr r3, r19
+    bl GreenRedColors
+    mflr r5
+    mulli r3, r3, 4
+    add r5, r5, r3
+    mr r3, r20
+    branchl r12, Text_ChangeTextColor
+    
+    b FighterSpecificTech_End
 
 # /////////////////////////////////////////////////////////////////////////////
 
@@ -264,6 +359,27 @@ FoxFalco_ShortenLatePressText:
 FoxFalco_ActOOShineText:
     blrl
     .string "Act OoShine\nFrame %d"
+    .align 2
+    
+FoxFalco_JCShineText:
+    blrl
+    .string "JC Shine\nFrame %d\n%s: %df"
+    .align 2
+
+ShortHopText:
+    blrl
+    .string "Short Hop"
+    .align 2
+
+FullHopText:
+    blrl
+    .string "Full Hop"
+    .align 2
+    
+GreenRedColors:
+    blrl
+    .long 0x8dff6eff                # green
+    .long 0xffa2baff                # red
     .align 2
 
 # --------
@@ -407,8 +523,31 @@ DJL_Text:
     .align 2
     
 DJL_End:
+    b Exit
 
 ##############################
+
+IntToFloat:
+    mflr r0
+    stw r0, 0x4(r1)
+    stwu r1, -0x100(r1)             # make space for 12 registers
+    stmw r20, 0x8(r1)
+    stfs f2, 0x38(r1)
+
+    lis r0, 0x4330
+    lfd f2, -0x6758(rtoc)
+    xoris r3, r3, 0x8000
+    stw r0, 0xF0(sp)
+    stw r3, 0xF4(sp)
+    lfd f1, 0xF0(sp)
+    fsubs f1, f1, f2                # Convert To Float
+
+    lfs f2, 0x38(r1)
+    lmw r20, 0x8(r1)
+    lwz r0, 0x104(r1)
+    addi r1, r1, 0x100              # release the space
+    mtlr r0
+    blr
 
 Exit:
     restoreall

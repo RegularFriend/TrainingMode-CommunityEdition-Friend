@@ -596,6 +596,12 @@ InitSettings:
     .set OSD.GrabBreakout, 24
     .set OSD.Ledge, 26
     .set OSD.ActOoHitstun, 28
+    
+    # OSD Alt IDs
+    # Some OSD options contain multiple sub OSDs.
+    # We don't want those OSDs to overwrite each other, 
+    # so we have some alt IDs for them to use.
+    .set OSD.FighterSpecificTechAlt, 64 
 
     # Event OSDs
     .set EventOSD_Eggs, 0x00000000
