@@ -1523,6 +1523,7 @@ enum cpu_option
     OPTCPU_GRABRELEASE,
     OPTCPU_SET_POS,
     OPTCPU_CTRL_BY,
+    OPTCPU_FREEZE,
 
     OPTCPU_COUNT
 };
@@ -1724,6 +1725,12 @@ static EventOption LabOptions_CPU[OPTCPU_COUNT] = {
         .desc = "Select another port to control the CPU.",
         .option_values = LabValues_CPUControlledBy,
     },
+    {
+        .option_kind = OPTKIND_FUNC,
+        .option_name = "Freeze CPU",
+        .desc = "Freeze the CPU and their hitboxes.",
+        .onOptionSelect = Lab_FreezeCPU,
+    }
 };
 
 static EventMenu LabMenu_CPU = {

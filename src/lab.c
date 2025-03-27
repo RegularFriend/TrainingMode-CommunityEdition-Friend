@@ -233,6 +233,12 @@ void Lab_FinishMoveCPU(GOBJ *menu_gobj) {
     hmn_data->pad_index = stc_hmn_controller;
 }
 
+void Lab_FreezeCPU(GOBJ *menu_gobj) {
+    GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *cpu_data = cpu->userdata;
+    FrameSpeedChange(cpu, 0.f);
+}
+
 void Lab_ChangeFrameAdvance(GOBJ *menu_gobj, int value)
 {
     // remove colanim if toggling off

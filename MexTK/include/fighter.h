@@ -3170,6 +3170,7 @@ static int *stc_ft_tiplog = (R13 + -0x5144); // used as semi-local variables rem
 GOBJ *Fighter_Create(PlayerData *pd);
 GOBJ *Fighter_Create2(PlayerData *pd);
 void ActionStateChange(float startFrame, float animSpeed, float animBlend, GOBJ *fighter, int stateID, int flags1, GOBJ *alt_state_source);
+void FrameSpeedChange(GOBJ *f, float speed);
 void Fighter_UpdateAnim(GOBJ *f);      // 8006a360
 void Fighter_UpdateIASA(GOBJ *f);      // 8006ad10
 void Fighter_UpdatePhys(GOBJ *f);      // 8006b82c

@@ -4,6 +4,7 @@
 80068E98:Fighter_Create
 800BE7E0:Fighter_Create2
 800693AC:ActionStateChange
+8006f190:FrameSpeedChange
 8036410C:AOBJ_ReqAnim
 8036530C:AOBJ_SetRate
 8036414C:AOBJ_StopAnim

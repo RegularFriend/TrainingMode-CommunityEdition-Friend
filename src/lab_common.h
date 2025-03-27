@@ -388,6 +388,7 @@ void Lab_ChangeInputDisplay(GOBJ *menu_gobj, int value);
 void Lab_ChangeOverlays(GOBJ *menu_gobj, int value);
 void Lab_StartMoveCPU(GOBJ *menu_gobj);
 void Lab_FinishMoveCPU(GOBJ *menu_gobj);
+void Lab_FreezeCPU(GOBJ *menu_gobj);
 void Lab_ChangeTauntEnabled(GOBJ *menu_gobj, int value);
 void Lab_ChangePlayerPercent(GOBJ *menu_gobj, int value);
 void Lab_ChangePlayerLockPercent(GOBJ *menu_gobj, int value);
