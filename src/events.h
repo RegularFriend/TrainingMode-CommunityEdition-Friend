@@ -99,6 +99,7 @@ typedef struct EventOption
 {
     u8 option_kind;                                     // the type of option this is; string, integers, etc
     u8 disable;                                         // boolean for disabling the option
+    u16 value_min;                                      // number of values
     u16 value_num;                                      // number of values
     u16 option_val;                                     // value of this option
     EventMenu *menu;                                    // pointer to the menu that pressing A opens

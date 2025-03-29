@@ -3241,8 +3241,8 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu) {
 
     // get option variables
     s16 option_val = currOption->option_val;
-    s16 value_min = 0;
-    s16 value_max = currOption->value_num;
+    s16 value_min = currOption->value_min;
+    s16 value_max = value_min + currOption->value_num;
 
     // check for dpad down
     if (((inputs & HSD_BUTTON_DOWN) != 0) || ((inputs & HSD_BUTTON_DPAD_DOWN) != 0)) {

@@ -63,6 +63,20 @@ static bool did_player_miss_lcancel[2] = {false, false};
 
 // Menu Callbacks
 
+void Lab_ChangeAdvCounterHitNumber(GOBJ *menu_gobj, int value) {
+    // copy current hit number to all options 
+    for (int i = 0; i < ADV_COUNTER_COUNT; ++i)
+        LabOptions_AdvCounter[i][OPTCTR_HITNUM].option_val = value;
+    LabMenu_AdvCounter.options = LabOptions_AdvCounter[value - 1];
+}
+
+void Lab_ChangeAdvCounterLogic(GOBJ *menu_gobj, int value) {
+    int disable = value != CTRLOGIC_CUSTOM;
+    EventOption *options = LabMenu_AdvCounter.options;
+    for (int i = OPTCTR_CTRGRND; i < OPTCTR_COUNT; ++i)
+        options[i].disable = disable;
+}
+
 void Lab_AddCustomOSD(GOBJ *menu_gobj) {
     int row = OPTCUSTOMOSD_FIRST_CUSTOM + stc_custom_osd_state_num;
     if (row == OPTCUSTOMOSD_MAX_COUNT) {
@@ -1955,6 +1969,11 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
 
         switch (asdi_kind)
         {
+            case (ASDI_NONE):
+            {
+                // follow TDI, or custom SDI
+                break;
+            }
             case (ASDI_AUTO):
             {
                 // follow TDI, or custom SDI
@@ -2256,68 +2275,31 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
             if (eventData->cpu_groundstate == 0 && cpu_data->phys.air_state == 1)
                 eventData->cpu_groundstate = 1;
         }
-
-        int action_id;
+        
         if (
-            eventData->cpu_hitkind == HITKIND_DAMAGE
+            eventData->cpu_hitkind != HITKIND_DAMAGE
+            && eventData->cpu_hitkind != HITKIND_SHIELD 
 
             // Additional check for countering on grab release
-            || last_state == ASID_CAPTURECUT || last_state == ASID_CAPTUREJUMP
+            && last_state != ASID_CAPTURECUT 
+            && last_state != ASID_CAPTUREJUMP
         ) {
-            // ensure hit count and frame count criteria are met
-            int min_hitnum = LabOptions_CPU[OPTCPU_CTRHITS].option_val;
-            int counter_delay = LabOptions_CPU[OPTCPU_CTRFRAMES].option_val;
-
-            if (eventData->cpu_hitnum < min_hitnum || eventData->cpu_countertimer < counter_delay) {
-                break;
-            }
-
-            if (eventData->cpu_groundstate == 0)
-            {
-                int grndCtr = LabOptions_CPU[OPTCPU_CTRGRND].option_val;
-                action_id = CPUCounterActionsGround[grndCtr];
-            }
-            else
-            {
-                int airCtr = LabOptions_CPU[OPTCPU_CTRAIR].option_val;
-                action_id = CPUCounterActionsAir[airCtr];
-            }
-        }
-        else if (eventData->cpu_hitkind == HITKIND_SHIELD)
-        {
-
-            // if the shield wasnt hit enough times, return to start
-            if (eventData->cpu_hitshieldnum < LabOptions_CPU[OPTCPU_SHIELDHITS].option_val)
-            {
-                eventData->cpu_state = CPUSTATE_START;
-                goto CPULOGIC_START;
-                break;
-            }
-
-            // if this isnt the frame to counter, keep holding shield
-            if (eventData->cpu_countertimer < LabOptions_CPU[OPTCPU_CTRFRAMES].option_val)
-            {
-                cpu_data->cpu.held = PAD_TRIGGER_R;
-                break;
-            }
-
-            // get action to perform
-            int shieldCtr = LabOptions_CPU[OPTCPU_CTRSHIELD].option_val;
-            action_id = CPUCounterActionsShield[shieldCtr];
-        }
-        else
-        {
             // wasnt hit, fell or something idk. enter start again
             goto CPUSTATE_ENTERSTART;
         }
 
-        if (action_id == 0) {
+        CounterInfo info = GetCounterInfo();
+        if (info.disable)
+            break;
+        
+        // run counter logic
+        if (info.action_id == 0) {
             eventData->cpu_state = CPUSTATE_NONE;
             goto CPULOGIC_NONE;
         } else {
             eventData->cpu_countering = true;
-            if (Lab_CPUPerformAction(cpu, action_id, hmn)) {
-                CPUAction *action = Lab_CPUActions[action_id];
+            if (Lab_CPUPerformAction(cpu, info.action_id, hmn)) {
+                CPUAction *action = Lab_CPUActions[info.action_id];
                 if (action->noActAfter)
                     eventData->cpu_state = CPUSTATE_NONE;
                 else
@@ -5849,6 +5831,15 @@ void Event_Init(GOBJ *gobj)
     GObj_AddProc(gobj, Event_PostThink, 20);
 
     // Init runtime options...
+    
+    // advanced counter options
+    for (int i = 0; i < ADV_COUNTER_COUNT; ++i) {
+        memcpy(
+            LabOptions_AdvCounter[i],
+            LabOptions_AdvCounter_Default,
+            sizeof(LabOptions_AdvCounter_Default)
+        );
+    }
 
     // overlays
     memcpy(LabOptions_OverlaysHMN, LabOptions_OverlaysDefault, sizeof(LabOptions_OverlaysDefault));
@@ -6180,11 +6171,9 @@ void Event_Think_LabState_Normal(GOBJ *event) {
                     eventData->cpu_lasthit = cpu_data->dmg.atk_instance_hurtby;
                     eventData->cpu_hitkind = HITKIND_DAMAGE;
                 }
-
-                int min_hitnum = LabOptions_CPU[OPTCPU_CTRHITS].option_val;
-                int counter_delay = LabOptions_CPU[OPTCPU_CTRFRAMES].option_val;
-
-                if (eventData->cpu_hitnum >= min_hitnum && eventData->cpu_countertimer >= counter_delay) {
+                
+                CounterInfo info = GetCounterInfo();
+                if (!info.disable) {
                     stc_playback_cancelled_cpu = true;
                     eventData->cpu_state = CPUSTATE_COUNTER;
                 } else if (!in_hitstun_anim(cpu) || hitstun_ended(cpu)) {
@@ -6442,6 +6431,59 @@ void Event_Think(GOBJ *event)
 
         Event_Think_LabState_Normal(event);
     }
+}
+
+CounterInfo GetCounterInfo(void) {
+    LabData *eventData = event_vars->event_gobj->userdata;
+    CounterInfo info = {0};
+    
+    // determine counter logic
+    EventOption *adv_options = NULL;
+    int logic = CTRLOGIC_DEFAULT;
+    int hitidx = eventData->cpu_hitnum - 1;
+    if (hitidx < ADV_COUNTER_COUNT) {
+        adv_options = LabOptions_AdvCounter[hitidx];
+        logic = adv_options[OPTCTR_LOGIC].option_val;
+    }
+                        
+    // find action and delay for this hit
+    if (logic == CTRLOGIC_DEFAULT) {
+        info.counter_delay = LabOptions_CPU[OPTCPU_CTRFRAMES].option_val;
+        
+        if (eventData->cpu_hitkind == HITKIND_SHIELD) {
+            int ctr = LabOptions_CPU[OPTCPU_CTRSHIELD].option_val;
+            info.action_id = CPUCounterActionsShield[ctr];
+        } else if (eventData->cpu_groundstate == 0) {
+            int ctr = LabOptions_CPU[OPTCPU_CTRGRND].option_val;
+            info.action_id = CPUCounterActionsGround[ctr];
+        } else {
+            int ctr = LabOptions_CPU[OPTCPU_CTRAIR].option_val;
+            info.action_id = CPUCounterActionsAir[ctr];
+        }
+    } else if (logic == CTRLOGIC_DISABLED) {
+        info.disable = 1;
+    } else if (logic == CTRLOGIC_CUSTOM) {
+        if (eventData->cpu_hitkind == HITKIND_SHIELD) {
+            info.counter_delay = adv_options[OPTCTR_DELAYSHIELD].option_val;
+            int ctr = adv_options[OPTCTR_CTRSHIELD].option_val;
+            info.action_id = CPUCounterActionsShield[ctr];
+        } else if (eventData->cpu_groundstate == 0) {
+            info.counter_delay = adv_options[OPTCTR_DELAYGRND].option_val;
+            int ctr = adv_options[OPTCTR_CTRGRND].option_val;
+            info.action_id = CPUCounterActionsGround[ctr];
+        } else {
+            info.counter_delay = adv_options[OPTCTR_DELAYAIR].option_val;
+            int ctr = adv_options[OPTCTR_CTRAIR].option_val;
+            info.action_id = CPUCounterActionsAir[ctr];
+        }
+    } else {
+        assert("invalid counter logic");
+    }
+    
+    if (eventData->cpu_countertimer < info.counter_delay)
+        info.disable = 1;
+
+    return info;
 }
 
 // Initial Menu

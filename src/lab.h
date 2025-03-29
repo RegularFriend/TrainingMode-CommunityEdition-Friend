@@ -10,6 +10,7 @@ static EventMenu LabMenu_OverlaysCPU;
 static EventMenu LabMenu_InfoDisplayHMN;
 static EventMenu LabMenu_InfoDisplayCPU;
 static EventMenu LabMenu_CPU;
+static EventMenu LabMenu_AdvCounter;
 static EventMenu LabMenu_Record;
 static EventMenu LabMenu_Tech;
 static EventMenu LabMenu_Stage_FOD;
@@ -92,6 +93,8 @@ void CustomTDI_Update(GOBJ *gobj);
 void CustomTDI_Destroy(GOBJ *gobj);
 void CustomTDI_Apply(GOBJ *cpu, GOBJ *hmn, CustomTDI *di);
 void CPUResetVars(void);
+void Lab_ChangeAdvCounterHitNumber(GOBJ *menu_gobj, int value);
+void Lab_ChangeAdvCounterLogic(GOBJ *menu_gobj, int value);
 
 // ACTIONS #################################################
 
@@ -1463,6 +1466,7 @@ enum cpu_inf_shield {
 
 enum asdi
 {
+    ASDI_NONE,
     ASDI_AUTO,
     ASDI_AWAY,
     ASDI_TOWARD,
@@ -1513,8 +1517,6 @@ enum cpu_option
     OPTCPU_CTRAIR,
     OPTCPU_CTRSHIELD,
     OPTCPU_CTRFRAMES,
-    OPTCPU_CTRHITS,
-    OPTCPU_SHIELDHITS,
     OPTCPU_SHIELD,
     OPTCPU_SHIELDHEALTH,
     OPTCPU_SHIELDDIR,
@@ -1532,7 +1534,7 @@ static char *LabValues_Shield[] = {"Off", "On Until Hit", "On"};
 static char *LabValues_ShieldDir[] = {"Neutral", "Up", "Towards", "Down", "Away"};
 static char *LabValues_CPUBehave[] = {"Stand", "Shield", "Crouch", "Jump"};
 static char *LabValues_TDI[] = {"Random", "Inwards", "Outwards", "Custom", "Random Custom", "None"};
-static char *LabValues_ASDI[] = {"Auto", "Away", "Towards", "Left", "Right", "Up", "Down"};
+static char *LabValues_ASDI[] = {"None", "Auto", "Away", "Towards", "Left", "Right", "Up", "Down"};
 static char *LabValues_SDIDir[] = {"Random", "Away", "Towards", "Up", "Down", "Left", "Right"};
 static char *LabValues_Tech[] = {"Random", "In Place", "Away", "Towards", "None"};
 static char *LabValues_Getup[] = {"Random", "Stand", "Away", "Towards", "Attack"};
@@ -1608,6 +1610,7 @@ static EventOption LabOptions_CPU[OPTCPU_COUNT] = {
     {
         .option_kind = OPTKIND_STRING,
         .value_num = sizeof(LabValues_ASDI) / 4,
+        .option_val = 1,
         .option_name = "ASDI",
         .desc = "Set CPU C-stick ASDI direction",
         .option_values = LabValues_ASDI,
@@ -1644,27 +1647,17 @@ static EventOption LabOptions_CPU[OPTCPU_COUNT] = {
         .option_values = LabValues_CounterShield,
     },
     {
+        .option_kind = OPTKIND_MENU,
+        .menu = &LabMenu_AdvCounter,
+        .option_name = "Advanced Counter Options",
+        .desc = "More options for adjusting how the CPU counters.",
+    },
+    {
         .option_kind = OPTKIND_INT,
         .value_num = 100,
-        .option_name = "Counter After Frames",
+        .option_name = "Counter Delay",
         .desc = "Adjust the amount of actionable frames before \nthe CPU counters.",
         .option_values = "%d Frames",
-    },
-    {
-        .option_kind = OPTKIND_INT,
-        .value_num = 100,
-        .option_val = 1,
-        .option_name = "Counter After Hits",
-        .desc = "Adjust the amount of hits taken before the \nCPU counters.",
-        .option_values = "%d Hits",
-    },
-    {
-        .option_kind = OPTKIND_INT,
-        .value_num = 100,
-        .option_val = 1,
-        .option_name = "Counter After Shield Hits",
-        .desc = "Adjust the amount of hits the CPU's shield\nwill take before they counter.",
-        .option_values = "%d Hits",
     },
     {
         .option_kind = OPTKIND_STRING,
@@ -1737,6 +1730,126 @@ static EventMenu LabMenu_CPU = {
     .name = "CPU Options",
     .option_num = sizeof(LabOptions_CPU) / sizeof(EventOption),
     .options = &LabOptions_CPU,
+    .shortcuts = &Lab_ShortcutList,
+};
+
+// ADVANCED COUNTER OPTIONS -------------------------------------------------
+
+enum advanced_counter_option {
+    OPTCTR_HITNUM,
+    OPTCTR_LOGIC,
+    
+    OPTCTR_CTRGRND,
+    OPTCTR_CTRAIR,
+    OPTCTR_CTRSHIELD,
+    
+    OPTCTR_DELAYGRND,
+    OPTCTR_DELAYAIR,
+    OPTCTR_DELAYSHIELD,
+    
+    OPTCTR_COUNT,
+};
+
+enum counter_logic {
+    CTRLOGIC_DEFAULT,
+    CTRLOGIC_DISABLED,
+    CTRLOGIC_CUSTOM,
+    
+    CTRLOGIC_COUNT
+};
+
+typedef struct CounterInfo {
+    int disable;
+    int action_id;
+    int counter_delay;
+} CounterInfo;
+CounterInfo GetCounterInfo(void);
+
+static char *LabValues_CounterLogic[] = {"Default", "Disable", "Custom"};
+
+#define ADV_COUNTER_COUNT 10
+#define ADV_COUNTER_SAVED_COUNT (OPTCTR_COUNT - OPTCTR_HITNUM - 1) 
+
+static EventOption LabOptions_AdvCounter[ADV_COUNTER_COUNT][OPTCTR_COUNT];
+
+static EventOption LabOptions_AdvCounter_Default[OPTCTR_COUNT] = {
+    {
+        .option_kind = OPTKIND_INT,
+        .option_name = "Hit Number",
+        .option_val = 1,
+        .value_min = 1,
+        .value_num = ADV_COUNTER_COUNT,
+        .option_values = "%d",
+        .desc = "Which hit number to alter.",
+        .onOptionChange = Lab_ChangeAdvCounterHitNumber,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_CounterLogic) / 4,
+        .option_name = "Counter Logic",
+        .desc = "How to alter the counter option.\nDefault = use basic counter options.\nDisable = no counter. Custom = custom behavior.",
+        .option_values = LabValues_CounterLogic,
+        .onOptionChange = Lab_ChangeAdvCounterLogic,
+    },
+    
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_CounterGround) / 4,
+        .option_val = 1,
+        .option_name = "Counter Action (Ground)",
+        .desc = "Select the action to be performed after a\ngrounded CPU's hitstun ends.",
+        .option_values = LabValues_CounterGround,
+        .disable = 1,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_CounterAir) / 4,
+        .option_val = 4,
+        .option_name = "Counter Action (Air)",
+        .desc = "Select the action to be performed after an\nairborne CPU's hitstun ends.",
+        .option_values = LabValues_CounterAir,
+        .disable = 1,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_CounterShield) / 4,
+        .option_val = 1,
+        .option_name = "Counter Action (Shield)",
+        .desc = "Select the action to be performed after the\nCPU's shield is hit.",
+        .option_values = LabValues_CounterShield,
+        .disable = 1,
+    },
+    
+    {
+        .option_kind = OPTKIND_INT,
+        .value_num = 100,
+        .option_name = "Delay (Ground)",
+        .desc = "Adjust the amount of actionable frames before \nthe CPU counters on the ground.",
+        .option_values = "%d Frames",
+        .disable = 1,
+    },
+    {
+        .option_kind = OPTKIND_INT,
+        .value_num = 100,
+        .option_name = "Delay (Air)",
+        .desc = "Adjust the amount of actionable frames before \nthe CPU counters in the air.",
+        .option_values = "%d Frames",
+        .disable = 1,
+    },
+    {
+        .option_kind = OPTKIND_INT,
+        .value_num = 100,
+        .option_name = "Delay (Shield)",
+        .desc = "Adjust the amount of actionable frames before \nthe CPU counters in shield.",
+        .option_values = "%d Frames",
+        .disable = 1,
+    },
+};
+
+static EventMenu LabMenu_AdvCounter = {
+    .name = "Advanced Counter Options",
+    .option_num = sizeof(LabOptions_AdvCounter_Default) / sizeof(EventOption),
+    .options = LabOptions_AdvCounter[0],
     .shortcuts = &Lab_ShortcutList,
 };
 
