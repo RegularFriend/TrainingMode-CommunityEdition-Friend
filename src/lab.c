@@ -2300,10 +2300,12 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
             eventData->cpu_countering = true;
             if (Lab_CPUPerformAction(cpu, info.action_id, hmn)) {
                 CPUAction *action = Lab_CPUActions[info.action_id];
-                if (action->noActAfter)
+                if (action->noActAfter) {
                     eventData->cpu_state = CPUSTATE_NONE;
-                else
+                    goto CPULOGIC_NONE;
+                } else {
                     eventData->cpu_state = CPUSTATE_RECOVER;
+                }
             }
         }
 
