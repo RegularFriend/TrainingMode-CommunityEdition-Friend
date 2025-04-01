@@ -81,7 +81,6 @@ static EventOption LdshOptions_Main[] = {
         .option_name = "Reset",
         .desc = "Change where the fighter gets placed\nafter a ledgedash attempt.",
         .option_values = LdshOptions_Reset,
-        .onOptionChange = Ledgedash_ToggleAutoReset,
     },
     {
         .option_kind = OPTKIND_STRING,
@@ -661,20 +660,6 @@ void Ledgedash_ToggleStartPosition(GOBJ *menu_gobj, int value)
     LedgedashData *event_data = event_vars->event_gobj->userdata;
 
     Fighter_PlaceOnLedge();
-
-    return;
-}
-void Ledgedash_ToggleAutoReset(GOBJ *menu_gobj, int value)
-{
-
-    LedgedashData *event_data = event_vars->event_gobj->userdata;
-
-    // enable camera
-    if (value == OPTRESET_NONE)
-        event_data->cam->kind = 0;
-    // disable camera
-    else
-        event_data->cam->kind = 1;
 
     return;
 }
