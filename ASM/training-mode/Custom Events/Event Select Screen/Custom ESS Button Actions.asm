@@ -13,7 +13,7 @@
     
     load r3, 0x804c20bc # stc_css_pad
     lbz r3, 0x1C(r3) # triggerLeft
-    cmpwi r3, 0x14
+    cmpwi r3, 20
     bge OpenFDD
 
     /*
