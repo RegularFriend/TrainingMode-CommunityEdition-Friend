@@ -7,8 +7,14 @@
     # Check For L
     li r3, 4
     branchl r12, Inputs_GetPlayerInstantInputs
-    rlwinm. r0, r4, 0, 25, 27   # CHECK FOR L/R/Z
+    
+    rlwinm. r0, r4, 0, 25, 25   # CHECK FOR L HARD PRESS
     bne OpenFDD
+    
+    load r3, 0x804c20bc # stc_css_pad
+    lbz r3, 0x1C(r3) # triggerLeft
+    cmpwi r3, 0x14
+    bge OpenFDD
 
     /*
     rlwinm. r0, r4, 0, 27, 27   # CHECK FOR Z
