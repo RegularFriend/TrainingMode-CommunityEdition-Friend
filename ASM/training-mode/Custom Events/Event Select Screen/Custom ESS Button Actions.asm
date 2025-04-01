@@ -7,7 +7,7 @@
     # Check For L
     li r3, 4
     branchl r12, Inputs_GetPlayerInstantInputs
-    rlwinm. r0, r4, 0, 25, 25   # CHECK FOR L
+    rlwinm. r0, r4, 0, 25, 27   # CHECK FOR L/R/Z
     bne OpenFDD
 
     /*
