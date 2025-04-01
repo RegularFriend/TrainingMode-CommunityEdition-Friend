@@ -1517,6 +1517,7 @@ enum cpu_option
     OPTCPU_CTRAIR,
     OPTCPU_CTRSHIELD,
     OPTCPU_CTRFRAMES,
+    OPTCPU_CTRADV,
     OPTCPU_SHIELD,
     OPTCPU_SHIELDHEALTH,
     OPTCPU_SHIELDDIR,
@@ -1647,17 +1648,17 @@ static EventOption LabOptions_CPU[OPTCPU_COUNT] = {
         .option_values = LabValues_CounterShield,
     },
     {
-        .option_kind = OPTKIND_MENU,
-        .menu = &LabMenu_AdvCounter,
-        .option_name = "Advanced Counter Options",
-        .desc = "More options for adjusting how the CPU counters.",
-    },
-    {
         .option_kind = OPTKIND_INT,
         .value_num = 100,
         .option_name = "Counter Delay",
         .desc = "Adjust the amount of actionable frames before \nthe CPU counters.",
         .option_values = "%d Frames",
+    },
+    {
+        .option_kind = OPTKIND_MENU,
+        .menu = &LabMenu_AdvCounter,
+        .option_name = "Advanced Counter Options",
+        .desc = "More options for adjusting how the CPU counters.",
     },
     {
         .option_kind = OPTKIND_STRING,

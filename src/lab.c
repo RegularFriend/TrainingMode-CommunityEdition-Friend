@@ -1425,11 +1425,9 @@ void CPUResetVars(void) {
     eventData->cpu_hitshield = 0;
     eventData->cpu_hitnum = 0;
     eventData->cpu_countertimer = 0;
-    eventData->cpu_hitshield = 0;
     eventData->cpu_lasthit = -1;
     eventData->cpu_lastshieldstun = -1;
     eventData->cpu_hitkind = -1;
-    eventData->cpu_hitshieldnum = 0;
     eventData->cpu_isactionable = 0;
     eventData->cpu_sdinum = 0;
     eventData->cpu_miss_tech_wait_timer = 0;
@@ -1515,7 +1513,7 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
         if (eventData->cpu_lastshieldstun != cpu_data->atk_instance)
         {
             eventData->cpu_lastshieldstun = cpu_data->atk_instance;
-            eventData->cpu_hitshieldnum++;
+            eventData->cpu_hitnum++;
         }
 
         // Keep holding shield during hitstop/hitlag. Prevents nana from dropping shield.
@@ -2290,7 +2288,7 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
 
         CounterInfo info = GetCounterInfo();
         if (info.disable)
-            break;
+            goto CPULOGIC_START;
         
         // run counter logic
         if (info.action_id == 0) {
@@ -6287,7 +6285,7 @@ void Event_Think(GOBJ *event)
     GOBJ *cpu = Fighter_GetGObj(1);
     FighterData *cpu_data = cpu->userdata;
     HSD_Pad *pad = PadGet(hmn_data->pad_index, PADGET_ENGINE);
-
+    
     // We allow negative values to track how long we have not been in lockout for.
     // If the CPU is in hitlag, do not finish the lockout. This prevents insta techs
     // when the tech windows is the 1f between hitlag and knockdown.
@@ -6442,10 +6440,13 @@ CounterInfo GetCounterInfo(void) {
     // determine counter logic
     EventOption *adv_options = NULL;
     int logic = CTRLOGIC_DEFAULT;
+    
     int hitidx = eventData->cpu_hitnum - 1;
     if (hitidx < ADV_COUNTER_COUNT) {
         adv_options = LabOptions_AdvCounter[hitidx];
+        OSReport("adv %p\n", adv_options);
         logic = adv_options[OPTCTR_LOGIC].option_val;
+        OSReport("logic %s %i\n", adv_options[OPTCTR_LOGIC].desc, logic);
     }
                         
     // find action and delay for this hit
