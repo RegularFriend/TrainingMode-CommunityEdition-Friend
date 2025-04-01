@@ -30,6 +30,7 @@ enum menu_options
     OPT_INV,
     OPT_SPEED,
     OPT_OVERLAYS,
+    OPT_RESETDELAY,
     OPT_ABOUT,
     OPT_EXIT,
 };
@@ -60,6 +61,9 @@ static char **LdshOptions_Overlays[] = {"Off", "On"};
 static float LdshOptions_GameSpeeds[] = {1.f, 5.f/6.f, 2.f/3.f, 1.f/2.f, 1.f/4.f};
 static char *LdshOptions_GameSpeedText[] = {"1", "5/6", "2/3", "1/2", "1/4"};
 static char *LdshOptions_Reset[] = {"None", "Same Side", "Swap", "Swap on Success", "Random"};
+static char *LdshOptions_ResetDelay[] = {"Normal", "Fast", "Slow", "Instant"};
+static int LdshOptions_ResetDelaySuccess[] = { 60, 30, 120, 1 };
+static int LdshOptions_ResetDelayFailure[] = { 20, 1, 60, 1 };
 
 static EventOption LdshOptions_Main[] = {
     {
@@ -122,6 +126,13 @@ static EventOption LdshOptions_Main[] = {
         .option_name = "Color Overlays",
         .desc = "Show which state you are in with a color overlay.",
         .option_values = LdshOptions_Overlays,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LdshOptions_ResetDelay) / sizeof(*LdshOptions_ResetDelay),
+        .option_name = "Reset Delay",
+        .desc = "Change how quickly you can start a new ledgedash.",
+        .option_values = LdshOptions_ResetDelay,
     },
     {
         .option_kind = OPTKIND_FUNC,
@@ -597,7 +608,9 @@ void Ledgedash_ResetThink(LedgedashData *event_data, GOBJ *hmn)
 
         Fighter_PlaceOnLedge();
     } else if (event_data->action_state.is_finished) {
-        event_data->reset_timer = 60;
+        
+        int reset_idx = LdshOptions_Main[OPT_RESETDELAY].option_val;
+        event_data->reset_timer = LdshOptions_ResetDelaySuccess[reset_idx];
         if (event_data->was_successful)
             SFX_Play(303);
         else
@@ -616,7 +629,8 @@ void Ledgedash_ResetThink(LedgedashData *event_data, GOBJ *hmn)
             && hmn_data->TM.state_frame >= 12;
 
         if (dead || missed_airdodge || ledge_action || non_landing_grounded) {
-            event_data->reset_timer = 20;
+            int reset_idx = LdshOptions_Main[OPT_RESETDELAY].option_val;
+            event_data->reset_timer = LdshOptions_ResetDelayFailure[reset_idx];
             event_data->was_successful = false;
             SFX_PlayCommon(3);
         }
