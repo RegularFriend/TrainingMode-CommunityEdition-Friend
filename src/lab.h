@@ -2261,6 +2261,7 @@ enum rec_option
    OPTREC_PLAYBACK_COUNTER,
    OPTREC_LOOP,
    OPTREC_AUTORESTORE,
+   OPTREC_STARTPAUSED,
    OPTREC_RESAVE,
    OPTREC_PRUNE,
    OPTREC_DELETE,
@@ -2377,6 +2378,13 @@ static EventOption LabOptions_Record[OPTREC_COUNT] = {
         .option_name = "Auto Restore",
         .desc = "Automatically restore saved positions.",
         .option_values = LabValues_AutoRestore,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabOptions_OffOn) / 4,
+        .option_name = "Start Paused",
+        .desc = "Pause the replay until your first input.",
+        .option_values = LabOptions_OffOn,
     },
     {
         .option_kind = OPTKIND_FUNC,

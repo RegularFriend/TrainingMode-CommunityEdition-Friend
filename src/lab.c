@@ -2394,10 +2394,29 @@ int Update_CheckPause()
     // menu unpaused
     else
     {
-        // check if paused
-        if (update->pause_kind == PAUSEKIND_SYS)
+        if (LabOptions_Record[OPTREC_STARTPAUSED].option_val && Record_GetCurrFrame() == 0)
         {
-            // unpause
+            GOBJ *hmn = Fighter_GetGObj(0);
+            FighterData *hmn_data = hmn->userdata;
+            HSD_Pad *pad = PadGet(hmn_data->pad_index, PADGET_MASTER);
+            
+            int input = false;
+            int buttons = PAD_TRIGGER_Z | PAD_TRIGGER_L | PAD_TRIGGER_R
+                | PAD_BUTTON_A | PAD_BUTTON_B | PAD_BUTTON_X | PAD_BUTTON_Y;  
+            input |= (pad->held & buttons) != 0; 
+            input |= fabs(pad->fstickX) >= STICK_DEADZONE; 
+            input |= fabs(pad->fstickY) >= STICK_DEADZONE; 
+            input |= fabs(pad->fsubstickX) >= STICK_DEADZONE; 
+            input |= fabs(pad->fsubstickY) >= STICK_DEADZONE; 
+            input |= pad->ftriggerLeft >= 0.1;
+            input |= pad->ftriggerRight >= 0.1;
+            
+            if (update->pause_kind == PAUSEKIND_SYS) {
+                isChange = input;
+            } else {
+                isChange = !input;
+            }
+        } else if (update->pause_kind == PAUSEKIND_SYS) {
             isChange = 1;
         }
     }
