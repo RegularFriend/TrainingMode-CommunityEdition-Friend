@@ -425,7 +425,7 @@ void Ledgedash_HUDThink(LedgedashData *event_data, FighterData *hmn_data)
             action = LDACT_AIRDODGE;
 
         // look for attack
-        else if (hmn_data->atk_kind != 1)
+        else if (hmn_data->atk_kind != 1 || state_id == ASID_CATCH || state_id == ASID_CATCHDASH)
             action = LDACT_ATTACK;
 
         // look for landing
