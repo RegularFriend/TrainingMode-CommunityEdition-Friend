@@ -6503,9 +6503,7 @@ CounterInfo GetCounterInfo(void) {
     int hitidx = eventData->cpu_hitnum - 1;
     if (hitidx < ADV_COUNTER_COUNT) {
         adv_options = LabOptions_AdvCounter[hitidx];
-        OSReport("adv %p\n", adv_options);
         logic = adv_options[OPTCTR_LOGIC].option_val;
-        OSReport("logic %s %i\n", adv_options[OPTCTR_LOGIC].desc, logic);
     }
                         
     // find action and delay for this hit
