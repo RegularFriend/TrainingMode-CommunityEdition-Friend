@@ -3463,6 +3463,46 @@ void Inputs_Init()
     return;
 }
 
+void Record_CopySlot(GOBJ *menu_gobj) {
+    int player = LabOptions_SlotManagement[OPTSLOT_PLAYER].option_val;
+    int copy_slot = LabOptions_SlotManagement[OPTSLOT_SRC].option_val;
+    int target_slot = LabOptions_SlotManagement[OPTSLOT_DST].option_val;
+    if (copy_slot == target_slot) return;
+
+    RecInputData **data;
+    EventOption *chances;
+    if (player == PLAYER_HMN) {
+        data = rec_data.hmn_inputs;
+        chances = LabOptions_SlotChancesHMN;
+    } else {
+        data = rec_data.cpu_inputs;
+        chances = LabOptions_SlotChancesCPU;
+    }
+
+    chances[target_slot].disable = chances[copy_slot].disable;
+    rebound_slot_chances(chances, target_slot);
+    memcpy(data[target_slot], data[copy_slot], sizeof(RecInputData));
+}
+
+void Record_DeleteSlot(GOBJ *menu_gobj) {
+    int player = LabOptions_SlotManagement[OPTSLOT_PLAYER].option_val;
+    int delete_slot = LabOptions_SlotManagement[OPTSLOT_SRC].option_val;
+
+    RecInputData **data;
+    EventOption *chances;
+    if (player == PLAYER_HMN) {
+        data = rec_data.hmn_inputs;
+        chances = LabOptions_SlotChancesHMN;
+    } else {
+        data = rec_data.cpu_inputs;
+        chances = LabOptions_SlotChancesCPU;
+    }
+    chances[delete_slot].disable = 1;
+    rebound_slot_chances(chances, delete_slot);
+    data[delete_slot]->start_frame = -1;
+    data[delete_slot]->num = 0;
+}
+
 // Recording Functions
 GOBJ *Record_Init()
 {

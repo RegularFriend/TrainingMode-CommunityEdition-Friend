@@ -15,6 +15,7 @@ static EventMenu LabMenu_Record;
 static EventMenu LabMenu_Tech;
 static EventMenu LabMenu_Stage_FOD;
 static EventMenu LabMenu_CustomOSDs;
+static EventMenu LabMenu_SlotManagement;
 static ShortcutList Lab_ShortcutList;
 
 #define AUTORESTORE_DELAY 20
@@ -2353,7 +2354,7 @@ static EventOption LabOptions_Record[OPTREC_COUNT] = {
         .option_kind = OPTKIND_STRING,
         .value_num = sizeof(LabOptions_ChangeMirroredPlayback) / 4,
         .option_name = "Mirrored Playback",
-    	.desc = "Playback with mirrored the recorded inputs,\npositions and facing directions.\n(!) This works properly only on symmetrical \nstages.",
+        .desc = "Playback with mirrored the recorded inputs,\npositions and facing directions.\n(!) This works properly only on symmetrical \nstages.",
         .option_values = LabOptions_ChangeMirroredPlayback,
         .onOptionChange = Record_ChangeMirroredPlayback,
     },
@@ -2406,6 +2407,12 @@ static EventOption LabOptions_Record[OPTREC_COUNT] = {
     },
     {
         .option_kind = OPTKIND_MENU,
+        .option_name = "Slot Management",
+        .desc = "Miscellaneous settings for altering the\npositions and inputs.",
+        .menu = &LabMenu_SlotManagement,
+    },
+    {
+        .option_kind = OPTKIND_MENU,
         .option_name = "Set HMN Chances",
         .desc = "Set various randomization settings for the HMN.",
         .menu = &LabMenu_SlotChancesHMN,
@@ -2428,6 +2435,69 @@ static EventMenu LabMenu_Record = {
     .name = "Recording",
     .option_num = sizeof(LabOptions_Record) / sizeof(EventOption),
     .options = &LabOptions_Record,
+    .shortcuts = &Lab_ShortcutList,
+};
+
+// SLOT MANAGEMENT MENU --------------------------------------------------------------
+
+enum state_options {
+    OPTSLOT_PLAYER,
+    OPTSLOT_SRC,
+    OPTSLOT_DELETE,
+    OPTSLOT_DST,
+    OPTSLOT_COPY,
+
+    OPTSLOT_COUNT
+};
+
+enum player_type {
+    PLAYER_HMN,
+    PLAYER_CPU,
+};
+
+static const char *LabOptions_HmnCpu[] = {"HMN", "CPU"};
+static const char *LabOptions_Slot[] = {"Slot 1", "Slot 2", "Slot 3", "Slot 4", "Slot 5", "Slot 6"};
+
+static EventOption LabOptions_SlotManagement[OPTSLOT_COUNT] = {
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabOptions_HmnCpu) / 4,
+        .option_name = "Player",
+        .desc = "Select the player to manage.",
+        .option_values = LabOptions_HmnCpu,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabOptions_Slot) / 4,
+        .option_name = "Source Slot",
+        .desc = "Select the slot to copy from or delete.",
+        .option_values = LabOptions_Slot,
+    },
+    {
+        .option_kind = OPTKIND_FUNC,
+        .option_name = "Delete Slot",
+        .desc = "Remove the inputs from this slot.",
+        .onOptionSelect = Record_DeleteSlot,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabOptions_Slot) / 4,
+        .option_name = "Copy Target Slot",
+        .desc = "Select the slot to copy to.",
+        .option_values = LabOptions_Slot,
+    },
+    {
+        .option_kind = OPTKIND_FUNC,
+        .option_name = "Copy Slot",
+        .desc = "Copy the inputs from \"Source Input\"\nto \"Target Input\".",
+        .onOptionSelect = Record_CopySlot,
+    },
+};
+
+static EventMenu LabMenu_SlotManagement = {
+    .name = "Slot Management",
+    .option_num = sizeof(LabOptions_SlotManagement) / sizeof(EventOption),
+    .options = &LabOptions_SlotManagement,
     .shortcuts = &Lab_ShortcutList,
 };
 
