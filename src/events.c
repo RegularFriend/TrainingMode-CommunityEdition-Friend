@@ -1116,26 +1116,16 @@ void EventInit(int page, int eventID, MatchInit *matchData)
         u8 cpu_port = *stc_css_cpuport + 1;
 
         // Initialize all player data
-        Memcard *memcard = R13_PTR(MEMCARD);
-        CSSBackup eventBackup = memcard->EventBackup;
-        for (int i = 0; i < 6; i++)
-        {
-            // initialize data
-            CSS_InitPlayerData(&matchData->playerData[i]);
-
-            // copy nametag id for the player
-            if (i == 0)
-            {
-                // Update the player's nametag ID
-                matchData->playerData[0].nametag = eventBackup.nametag;
-
-                // Update the player's rumble setting
-                int tagRumble = CSS_GetNametagRumble(0, matchData->playerData[0].nametag);
-                matchData->playerData[0].isRumble = tagRumble;
-            }
-
-            matchData->playerData[i].stocks = 1;
+        for (int i = 0; i < 6; i++) {
+          CSS_InitPlayerData(&matchData->playerData[i]);
+          matchData->playerData[i].stocks = 1;
         }
+
+        // Update the player's nametag ID and rumble
+        Memcard *memcard = R13_PTR(MEMCARD);
+        u8 nametag = memcard->EventBackup.nametag;
+        matchData->playerData[0].nametag = nametag;
+        matchData->playerData[0].isRumble = CSS_GetNametagRumble(0, nametag);
 
         // Determine the CPU
         s32 cpu_kind;
