@@ -383,7 +383,7 @@
 
     .macro Event_EscapeSheik_PlayableCharacters
     .byte Event_EscapeSheik
-    .long Fox_CSSID | Falco_CSSID | CaptainFalcon_CSSID | Yoshi_CSSID # Player Characters
+    .long Fox_CSSID | Falco_CSSID | CaptainFalcon_CSSID | Yoshi_CSSID | Pikachu_CSSID # Player Characters
     .long -1
     .endm
 
