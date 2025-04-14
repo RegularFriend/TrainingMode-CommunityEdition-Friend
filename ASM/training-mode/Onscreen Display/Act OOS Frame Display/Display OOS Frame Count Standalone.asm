@@ -2,12 +2,6 @@
     .include "../../Globals.s"
     .include "../../../m-ex/Header.s"
 
-    .set ActionStateChange, 0x800693ac
-    .set HSD_Randi, 0x80380580
-    .set HSD_Randf, 0x80380528
-    .set Wait, 0x8008a348
-    .set Fall, 0x800cc730
-
     .set REG_FighterData, 31
     .set player, 30
     .set REG_TextColor, 29
