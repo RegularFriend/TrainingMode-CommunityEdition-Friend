@@ -1133,6 +1133,8 @@ void EventInit(int page, int eventID, MatchInit *matchData)
                 int tagRumble = CSS_GetNametagRumble(0, matchData->playerData[0].nametag);
                 matchData->playerData[0].isRumble = tagRumble;
             }
+
+            matchData->playerData[i].stocks = 1;
         }
 
         // Determine the CPU
