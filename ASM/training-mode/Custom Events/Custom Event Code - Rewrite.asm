@@ -548,7 +548,7 @@ Eggs_OnCollision:
     cmpwi r4, Scene.EventMode
     bne Eggs_OnCollisionOriginalFunction
     # Now check if its eggs-ercise
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lbz r4, 0x0535(r4)                                  # get event ID
     cmpwi r4, Event_Eggs
     beq Eggs_OnCollisionStart
@@ -1429,7 +1429,7 @@ LedgeStallThink_CheckTimer:
 
 LedgeStallThink_Success:
     # Get current high score
-    lwz r3, -0x77C0(r13)
+    lwz r3, MemcardData(r13)
     lbz r20, 0x535(r3)
     mr r3, r20
     branchl r12, Events_GetEventSavedScore
@@ -11996,7 +11996,7 @@ Event_ExitFunction:
     backup
 
     # Ensure No Contest/Retry
-    lwz r3, -0x77C0(r13)
+    lwz r3, MemcardData(r13)
     lbz r3, 0x053B(r3)
     rlwinm. r0, r3, 0, 25, 25
     bne Event_ExitFunction_Exit
@@ -13023,7 +13023,7 @@ InitializeMatch:
     mr REG_UseSopo, r8
 
     # Check to override OSD Toggles
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lbz r3, 0x1f2A(r4)
     cmpwi r3, 1
     beq InitializeMatch_SkipOSDOverride
@@ -13085,7 +13085,7 @@ InitializeMatch_SwapInSopo:
     cmpwi REG_UseSopo, 0
     beq InitializeMatch_SwapInSopo_End
     # Swap P1 Character to Sopo
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     addi r4, r4, 1328                                   # event mode match backup struct?
     lbz r3, 0x2(r4)                                     # P1 External ID
     cmpwi r3, 0xE

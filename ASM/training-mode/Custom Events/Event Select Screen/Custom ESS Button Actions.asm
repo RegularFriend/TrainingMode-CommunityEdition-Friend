@@ -65,7 +65,7 @@ OpenFDD:
     lbz r3, 0x0(r5)
     lwz r4, 0x4(r5)
     add r3, r3, r4
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     stb r3, 0x0535(r4)
 
     # LOAD RSS

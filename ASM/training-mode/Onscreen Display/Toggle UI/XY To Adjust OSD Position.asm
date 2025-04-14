@@ -20,7 +20,7 @@
     li r3, 4
     branchl r12, Inputs_GetPlayerInstantInputs
 
-    lwz r20, -0x77C0(r13)       # Get Memcard Data
+    lwz r20, MemcardData(r13)       # Get Memcard Data
 
 #############################################
 CheckY:

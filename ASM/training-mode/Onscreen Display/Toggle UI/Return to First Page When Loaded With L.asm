@@ -75,7 +75,7 @@ LoadRulesFirstPage:
     b exit
 
 LoadEvents:
-    lwz r3, -0x77C0(r13)
+    lwz r3, MemcardData(r13)
     lbz r3, 0x0535(r3)      # Get Last Event Match
     li r4, 1                # No Delay On Text Loading
     branchl r12, 0x8024e838

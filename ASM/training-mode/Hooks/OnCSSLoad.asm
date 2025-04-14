@@ -17,7 +17,7 @@
     # Get file string
     lwz r3, MemcardData(r13)
     lbz r3, CurrentEventPage(r3)
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lbz r4, 0x0535(r4)
     rtocbl r12, TM_GetCSSFile
     cmpwi r3, 0
