@@ -5,7 +5,7 @@
     stb r0, 0x000A(r31)
 
     # Get Event ID
-    lwz r3, -0x77C0(r13)
+    lwz r3, MemcardData(r13)
     lbz r4, 0x0535(r3)
     lbz r3, CurrentEventPage(r3)
     # Check if this event has a SSS

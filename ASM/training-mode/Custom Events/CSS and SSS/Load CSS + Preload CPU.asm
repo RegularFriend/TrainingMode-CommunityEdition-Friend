@@ -14,7 +14,7 @@
     # Save scene data
     mr REG_SceneData, r3
     # Get Current Event Number
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lbz EventID, 0x0535(r4)
     # Get Current Page in
     lwz r4, MemcardData(r13)

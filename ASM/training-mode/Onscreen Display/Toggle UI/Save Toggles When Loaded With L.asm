@@ -67,7 +67,7 @@
     # CUSTOM CODE
     rlwinm r0, r3, 0, 24, 31    # put menu selection in r0
     # lwz r5, -0xdbc(rtoc) #get frame data toggle bits
-    lwz r6, -0x77C0(r13)
+    lwz r6, MemcardData(r13)
     lwz r5, 0x1F24(r6)
     rlwinm. r4, r4, 0, 24, 31   # check if turning on or off
 

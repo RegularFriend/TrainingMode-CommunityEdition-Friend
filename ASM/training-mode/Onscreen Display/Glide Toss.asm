@@ -11,7 +11,7 @@
 
     # CHECK IF ENABLED
     li r0, OSD.RollAirdodgeInterrupt
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lwz r4, 0x1F24(r4)
     li r3, 1
     slw r0, r3, r0

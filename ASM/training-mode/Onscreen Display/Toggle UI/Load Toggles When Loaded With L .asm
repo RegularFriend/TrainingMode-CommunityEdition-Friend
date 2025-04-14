@@ -11,7 +11,7 @@
     # CUSTOM CODE
     rlwinm r0, r3, 0, 16, 31
     # lwz r4, -0xdbc(rtoc) #get frame data toggle bits
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lwz r4, 0x1F24(r4)
 
     li r3, 1

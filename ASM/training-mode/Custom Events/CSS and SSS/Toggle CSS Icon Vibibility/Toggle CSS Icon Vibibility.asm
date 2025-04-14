@@ -183,7 +183,7 @@ GetCharacterList:
     .set PageID, 30
 
     # Get Hovered Over Event ID in r23
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lbz EventID, 0x0535(r4)
     # Get Current Page
     lbz PageID, CurrentEventPage(r4)

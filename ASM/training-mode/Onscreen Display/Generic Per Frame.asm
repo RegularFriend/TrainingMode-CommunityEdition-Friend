@@ -11,7 +11,7 @@
 
 OSD_FighterSpecificTech:
     li r0, OSD.FighterSpecificTech    # OSD ID
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lwz r4, 0x1F24(r4)
     li r3, 1
     slw r0, r3, r0
@@ -396,7 +396,7 @@ FighterSpecificTech_End:
 OSD_Lockout:
     # Check enabled
     li r0, OSD.LockoutTimers
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lwz r4, 0x1F24(r4)
     li r3, 1
     slw r0, r3, r0
@@ -450,7 +450,7 @@ Lockout_End:
 
 OSD_DJL:
     li r0, OSD.FighterSpecificTech    # OSD ID
-    lwz r4, -0x77C0(r13)
+    lwz r4, MemcardData(r13)
     lwz r4, 0x1F24(r4)
     li r3, 1
     slw r0, r3, r0
