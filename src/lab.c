@@ -3299,14 +3299,6 @@ void Inputs_Think(GOBJ *gobj)
         }
     }
 
-    bool input_display = false;
-    for (int i = 0; i < 4; i++) input_display |= show[i];
-    if (!input_display) {
-        Match_ShowTimer();
-    } else {
-        Match_HideTimer();
-    }
-
     // update controllers
     for (int i = 0; i < 4; i++)
     {
@@ -3423,10 +3415,10 @@ void Inputs_Init()
     JOBJ *root = JOBJ_LoadJoint(root_desc);
 
     static Vec2 stc_pos[4] = {
-        {5, 20},
-        {15, 20},
-        {5, 10},
-        {15, 10},
+        {13, 20},
+        {23, 20},
+        {13, 10},
+        {23, 10},
     };
 
     int controller_count = 0;
