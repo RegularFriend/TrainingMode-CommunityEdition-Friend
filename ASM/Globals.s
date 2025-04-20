@@ -31,10 +31,6 @@
     .macro Event_Eggs_AvailableCPUs
     .endm
 
-    .macro Event_Eggs_ScoreType
-    .byte KO
-    .endm
-
     .set Event_Multishine, 1
     # Event Name
     .macro Event_Multishine_Name
@@ -52,10 +48,6 @@
     .endm
 
     .macro Event_Multishine_AvailableCPUs
-    .endm
-
-    .macro Event_Multishine_ScoreType
-    .byte KO
     .endm
 
     # bp call sets r3 to 0!! Only put before a write to r3!!
@@ -79,10 +71,6 @@
     .macro Event_Reaction_AvailableCPUs
     .endm
 
-    .macro Event_Reaction_ScoreType
-    .byte KO
-    .endm
-
     .set Event_Ledgestall, 3
     # Event Name
     .macro Event_Ledgestall_Name
@@ -97,10 +85,6 @@
     .endm
 
     .macro Event_Ledgestall_AvailableCPUs
-    .endm
-
-    .macro Event_Ledgestall_ScoreType
-    .byte Time
     .endm
 
     .set EventOSD_LedgeStall, 0x00000000
@@ -123,10 +107,6 @@
     .macro Event_Combo_PlayableCharacters
     .endm
 
-    .macro Event_Combo_ScoreType
-    .byte KO
-    .endm
-
     .set Event_AttackOnShield, 5
     # Event Name
     .macro Event_AttackOnShield_Name
@@ -138,10 +118,6 @@
     .endm
 
     .macro Event_AttackOnShield_PlayableCharacters
-    .endm
-
-    .macro Event_AttackOnShield_ScoreType
-    .byte KO
     .endm
 
     .set Event_Reversal, 6
@@ -157,10 +133,6 @@
     .macro Event_Reversal_PlayableCharacters
     .endm
 
-    .macro Event_Reversal_ScoreType
-    .byte KO
-    .endm
-
     .set Event_SDI, 7
     # Event Name
     .macro Event_SDI_Name
@@ -174,10 +146,6 @@
     .macro Event_SDI_PlayableCharacters
     .endm
 
-    .macro Event_SDI_ScoreType
-    .byte KO
-    .endm
-
     .set Event_Powershield, 8
     # Event Name
     .macro Event_Powershield_Name
@@ -189,10 +157,6 @@
     .endm
 
     .macro Event_Powershield_PlayableCharacters
-    .endm
-
-    .macro Event_Powershield_ScoreType
-    .byte KO
     .endm
 
     .set Event_LedgeTech, 9
@@ -209,10 +173,6 @@
     .macro Event_LedgeTech_PlayableCharacters
     .endm
 
-    .macro Event_LedgeTech_ScoreType
-    .byte KO
-    .endm
-
     .set Event_AmsahTech, 10
     # Event Name
     .macro Event_AmsahTech_Name
@@ -226,10 +186,6 @@
     .macro Event_AmsahTech_PlayableCharacters
     .endm
 
-    .macro Event_AmsahTech_ScoreType
-    .byte KO
-    .endm
-
     .set Event_ShieldDrop, 11
     # Event Name
     .macro Event_ShieldDrop_Name
@@ -241,10 +197,6 @@
     .endm
 
     .macro Event_ShieldDrop_PlayableCharacters
-    .endm
-
-    .macro Event_ShieldDrop_ScoreType
-    .byte KO
     .endm
 
     .set Event_WaveshineSDI, 12
@@ -263,10 +215,6 @@
     .long -1
     .endm
 
-    .macro Event_WaveshineSDI_ScoreType
-    .byte KO
-    .endm
-
     .set Event_SlideOff, 13
     # Event Name
     .macro Event_SlideOff_Name
@@ -278,9 +226,6 @@
     .endm
 
     .macro Event_SlideOff_PlayableCharacters
-    .endm
-
-    .macro Event_SlideOff_ScoreType
     .endm
 
     .set EventOSD_SlideOff, 0x00000000
@@ -296,10 +241,6 @@
     .endm
 
     .macro Event_GrabMashOut_PlayableCharacters
-    .endm
-
-    .macro Event_GrabMashOut_ScoreType
-    .byte KO
     .endm
 
     .set EventOSD_GrabMashOut, 0x00000000
@@ -325,10 +266,6 @@
     .long -1
     .endm
 
-    .macro Event_LedgetechCounter_ScoreType
-    .byte KO
-    .endm
-
     .set Event_EdgeguardFirefox, 1
     # Event Name
     .macro Event_EdgeguardFirefox_Name
@@ -340,10 +277,6 @@
     .endm
 
     .macro Event_EdgeguardFirefox_PlayableCharacters
-    .endm
-
-    .macro Event_EdgeguardFirefox_ScoreType
-    .byte KO
     .endm
 
     .set EventOSD_ArmadaShine, 0x00000000
@@ -364,10 +297,6 @@
     .long -1
     .endm
 
-    .macro Event_SideBSweetspot_ScoreType
-    .byte KO
-    .endm
-
     .set Event_EscapeSheik, 3
     # Event Name
     .macro Event_EscapeSheik_Name
@@ -382,10 +311,6 @@
     .byte Event_EscapeSheik
     .long Fox_CSSID | Falco_CSSID | CaptainFalcon_CSSID | Yoshi_CSSID | Pikachu_CSSID # Player Characters
     .long -1
-    .endm
-
-    .macro Event_EscapeSheik_ScoreType
-    .byte KO
     .endm
 
 ##################################
