@@ -8,11 +8,11 @@
 
     # Remove All Text
     lwz r3, MainTextOffset (r13)
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
     lwz r3, LeftArrowTextOffset (r13)
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
     lwz r3, RightArrowTextOffset (r13)
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
 
     # Original Line
     lwz r3, 0x0074(r31)

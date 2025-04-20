@@ -10,10 +10,10 @@
 
     # REMOVE CUSTOM TEXT
     lwz r3, 0x40(r31)       # GET TEXT POINTER
-    branchl r12, 0x803a5cc4 # REMOVE TEXT
+    branchl r12, Text_RemoveText # REMOVE TEXT
 
     lwz r3, 0x44(r31)       # GET TEXT POINTER
-    branchl r12, 0x803a5cc4 # REMOVE TEXT
+    branchl r12, Text_RemoveText # REMOVE TEXT
 
     branch r12, 0x80236be0  # EXIT
 

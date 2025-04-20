@@ -28,7 +28,7 @@
     # CREATE TEXT OBJECT, RETURN POINTER TO STRUCT IN r3
     li r3, 0
     li r4, 0
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
     # BACKUP STRUCT POINTER
     mr text, r3
     # STORE POINTER
@@ -60,7 +60,7 @@
     lfs f1, PageX(textproperties)       # X offset of text
     lfs f2, PageY(textproperties)       # Y offset of text
     mr r3, text                         # struct pointer
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
 
 #############
 ## L = OSD ##
@@ -72,7 +72,7 @@
     mr r3, text                         # struct pointer
     bl LText
     mflr r4                             # pointer to ASCII
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
     # Change scale
     mr r4, r3
     mr r3, text
@@ -91,7 +91,7 @@
     lfs f1, VersionX(textproperties)    # X offset of text
     lfs f2, VersionY(textproperties)    # Y offset of text
     mr r3, text                         # struct pointer
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
     # Temp remember subtext ID
     mr r20, r3
     # Change scale
@@ -120,7 +120,7 @@
     mr r3, text                         # struct pointer
     bl OptionsText
     mflr r4                             # pointer to ASCII
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
     # Change scale
     mr r4, r3
     mr r3, text
@@ -136,7 +136,7 @@
     # CREATE TEXT OBJECT, RETURN POINTER TO STRUCT IN r3
     li r3, 0
     li r4, 0
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
     # BACKUP STRUCT POINTER
     mr text, r3
     # STORE POINTER
@@ -161,7 +161,7 @@
     mr r3, text                         # struct pointer
     bl PageArrowLeft
     mflr r4
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
     # Change scale
     mr r4, r3
     mr r3, text
@@ -176,7 +176,7 @@
     # CREATE TEXT OBJECT, RETURN POINTER TO STRUCT IN r3
     li r3, 0
     li r4, 0
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
     # BACKUP STRUCT POINTER
     mr text, r3
     # STORE POINTER
@@ -201,7 +201,7 @@
     mr r3, text                         # struct pointer
     bl PageArrowRight
     mflr r4
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
 
     # Change scale
     mr r4, r3

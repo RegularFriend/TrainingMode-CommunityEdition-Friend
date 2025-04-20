@@ -11,7 +11,7 @@ CustomEvent:
     # Create Text
     li r3, 0
     li r4, 0
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
     mr text, r3
 
     # Store pointer to text so it can be removed by the game
@@ -52,7 +52,7 @@ CustomEvent:
     mr r3, text
     lfs f1, -0x3870(rtoc)
     lfs f2, -0x3870(rtoc)
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
 
     # Get event file
     lwz r3, MemcardData(r13)
@@ -68,7 +68,7 @@ NoFile:
     li r4, 0
     bl Color
     mflr r5
-    branchl r12, 0x803a74f0
+    branchl r12, Text_ChangeTextColor
 
 HasFile:
     # Exit

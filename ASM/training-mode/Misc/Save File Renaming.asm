@@ -64,4 +64,4 @@ MemcardStringFormat:
     .long 0x25730000
 
 exit:
-    branchl r12, 0x80323cf4
+    branchl r12, sprintf

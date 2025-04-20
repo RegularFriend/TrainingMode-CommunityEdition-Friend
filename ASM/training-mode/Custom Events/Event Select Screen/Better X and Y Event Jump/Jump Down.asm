@@ -105,7 +105,7 @@ UpdateText:
 UpdateText1:
     # Play SFX and Update Text
     li r3, 2
-    branchl r12, 0x80024030
+    branchl r12, SFX_MenuCommonSound
     restore
     branch r12, 0x8024d9dc
 

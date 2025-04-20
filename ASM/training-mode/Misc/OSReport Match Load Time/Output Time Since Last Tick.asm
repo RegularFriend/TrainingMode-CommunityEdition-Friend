@@ -27,7 +27,7 @@
     # OSReport Difference
     bl OSReportString
     mflr r3
-    branchl r12, 0x803456a8
+    branchl r12, OSReport
     b Exit
 
 OSReportString:

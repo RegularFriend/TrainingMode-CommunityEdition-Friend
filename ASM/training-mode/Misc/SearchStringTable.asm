@@ -22,7 +22,7 @@ SearchStringTable_Loop:
     beq SearchStringTable_Exit
     # Get string length
     mr r3, Name
-    branchl r12, 0x80325b04
+    branchl r12, strlen
     # Add to current name pointer
     add Name, Name, r3
     addi Name, Name, 1

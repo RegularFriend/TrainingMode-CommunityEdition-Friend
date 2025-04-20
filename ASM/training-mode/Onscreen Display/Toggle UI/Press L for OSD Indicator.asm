@@ -18,7 +18,7 @@
     # CREATE TEXT OBJECT, RETURN POINTER TO STRUCT IN r3
     li r3, 0
     li r4, 1
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
 
     # BACKUP STRUCT POINTER
     mr text, r3
@@ -57,7 +57,7 @@
     mr r3, text                     # struct pointer
     bl Text
     mflr r4
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
     # Change scale
     mr r4, r3
     mr r3, text

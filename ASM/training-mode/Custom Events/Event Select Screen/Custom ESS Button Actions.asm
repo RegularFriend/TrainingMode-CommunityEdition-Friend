@@ -48,7 +48,7 @@ CheckToSwitchPage:
 OpenFDD:
     # PLAY SFX
     li r3, 1
-    branchl r4, 0x80024030
+    branchl r4, SFX_MenuCommonSound
 
     # SET FLAG IN RULES STRUCT
     li r0, 3                    # 3 = frame data from event toggle
@@ -73,7 +73,7 @@ OpenFDD:
 
     # REMOVE EVENT THINK FUNCTION
     lwz r3, -0x3E84(r13)
-    branchl r12, 0x80390228
+    branchl r12, GObj_Destroy
 
     b exit
 
@@ -161,7 +161,7 @@ SwitchPage_DrawEventTextLoop:
     li r0, 0
     stw r0, 0x3C(r3)
     # DirtySub
-    branchl r12, 0x803732e8
+    branchl r12, HSD_JObjSetMtxDirtySub
 
     # Play SFX
     li r3, 2

@@ -8,7 +8,7 @@
 
     # Play SFX?
     li r3, 317              # 188 = warning #317 = gasp
-    branchl r12, 0x801c53ec
+    branchl r12, SFX_PlaySoundAtFullVolume
 
 #############################
 ## OS Report Tweet Message ##
