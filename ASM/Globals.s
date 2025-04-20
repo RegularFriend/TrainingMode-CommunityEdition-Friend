@@ -49,11 +49,6 @@
     .macro Event_Multishine_AvailableCPUs
     .endm
 
-    # bp call sets r3 to 0!! Only put before a write to r3!!
-    .macro SetBreakpoint
-    branchl r3, 0x8021b2d8
-    .endm
-
     .set Event_Reaction, 2
     # Event Name
     .macro Event_Reaction_Name
@@ -1364,6 +1359,11 @@ EventHighScores:
     lwz r0, 0x104(r1)
     addi r1, r1, 0x100                                  # release the space
     mtlr r0
+    .endm
+
+    # bp call sets r3 to 0!! Only put before a write to r3!!
+    .macro SetBreakpoint
+    branchl r3, 0x8021b2d8
     .endm
 
     .set R13_EventVars, -0x4A0C
