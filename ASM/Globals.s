@@ -1461,12 +1461,6 @@ InitSettings:
     bctrl
     .endm
 
-    /*
-    .macro branchl reg, address
-    .long \address ^ 0x80<<24 | 0xC8<<24
-    .endm
-    */
-
     .macro branch reg, address
     lis \reg, \address @h
     ori \reg, \reg, \address @l
