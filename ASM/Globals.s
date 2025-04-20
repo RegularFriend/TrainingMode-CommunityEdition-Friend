@@ -361,9 +361,7 @@ GeneralTech:
     .align 2
 
 SpacieTech:
-    # Ledgetech Marth Counter
     Event_LedgetechCounter_Name
-    # Armada-Shine Practice
     Event_EdgeguardFirefox_Name
     Event_SideBSweetspot_Name
     Event_EscapeSheik_Name
@@ -393,9 +391,7 @@ GeneralTech:
     .align 2
 
 SpacieTech:
-    # Ledgetech Marths Counter
     Event_LedgetechCounter_Description
-    # Armada-Shine Practice
     Event_EdgeguardFirefox_Description
     Event_SideBSweetspot_Description
     Event_EscapeSheik_Description
