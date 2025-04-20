@@ -684,7 +684,7 @@ Multishine:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, FinalDestination                             # Use FD
-    load r7, EventOSD_Multishine
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo Bool
     bl InitializeMatch
 
@@ -812,7 +812,7 @@ Reaction:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use chosen CPU
     li r6, FinalDestination                             # Use FD
-    load r7, EventOSD_Reaction
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo Bool
     bl InitializeMatch
 
@@ -1071,7 +1071,7 @@ LedgeStall:
     mr r4, r26                                          # Send match struct
     li r5, -1
     li r6, Brinstar                                     # stage
-    load r7, EventOSD_LedgeStall
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -1614,7 +1614,7 @@ SDITraining:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use chosen CPU
     li r6, FinalDestination                             # Use SSS Stage
-    load r7, EventOSD_SDI
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -2099,7 +2099,7 @@ Reversal:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, -1                                           # Use SSS Stage
-    load r7, EventOSD_Reversal
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -2840,7 +2840,7 @@ ShieldDrop:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, Battlefield                                  # Use SSS Stage
-    load r7, EventOSD_ShieldDrop
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -3091,7 +3091,7 @@ AttackOnShield:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, FinalDestination                             # Use SSS Stage
-    load r7, EventOSD_AttackOnShield
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -3520,7 +3520,7 @@ Ledgetech:
     mr r4, r26                                          # Send match struct
     li r5, Falco.Ext                                    # Use chosen CPU
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_LedgeTech
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -3963,7 +3963,7 @@ AmsahTech:
     mr r4, r26                                          # Send match struct
     li r5, 9                                            # Use chosen CPU
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_AmsahTech
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -4356,7 +4356,7 @@ ComboTraining:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_ComboTraining
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -6072,7 +6072,7 @@ WaveshineSDI:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use chosen CPU
     li r6, FinalDestination                             # Use chosen Stage
-    load r7, EventOSD_WaveshineSDI
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -6530,7 +6530,7 @@ SlideOff:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext
     li r6, PokemonStadium                               # Use chosen Stage
-    load r7, EventOSD_SlideOff
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -7155,7 +7155,7 @@ GrabMashOut:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext
     li r6, FinalDestination                             # Use chosen Stage
-    load r7, EventOSD_GrabMashOut
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -7506,7 +7506,7 @@ LedgetechCounter:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext                                    # Use marth
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_LedgetechCounter
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -7733,7 +7733,7 @@ ArmadaShine:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use fox
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_ArmadaShine
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -8390,7 +8390,7 @@ SideBSweetspot:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_SideBSweetspot
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -8885,7 +8885,7 @@ EscapeSheik:
     mr r4, r26                                          # Send match struct
     li r5, Sheik.Ext
     li r6, FinalDestination                             # Use chosen Stage
-    load r7, EventOSD_EscapeSheik
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 

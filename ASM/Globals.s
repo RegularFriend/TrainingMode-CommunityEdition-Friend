@@ -20,9 +20,6 @@
     .macro Event_Eggs_PlayableCharacters
     .endm
 
-    .macro Event_Eggs_AvailableCPUs
-    .endm
-
     .set Event_Multishine, 1
 
     .macro Event_Multishine_PlayableCharacters
@@ -30,15 +27,9 @@
     .long Falco_CSSID | Fox_CSSID
     .endm
 
-    .macro Event_Multishine_AvailableCPUs
-    .endm
-
     .set Event_Reaction, 2
 
     .macro Event_Reaction_PlayableCharacters
-    .endm
-
-    .macro Event_Reaction_AvailableCPUs
     .endm
 
     .set Event_Ledgestall, 3
@@ -46,10 +37,6 @@
     .macro Event_Ledgestall_PlayableCharacters
     .endm
 
-    .macro Event_Ledgestall_AvailableCPUs
-    .endm
-
-    .set EventOSD_LedgeStall, 0x00000000
 
 
     # Number of Events
@@ -104,14 +91,12 @@
     .macro Event_SlideOff_PlayableCharacters
     .endm
 
-    .set EventOSD_SlideOff, 0x00000000
 
     .set Event_GrabMashOut, 14
 
     .macro Event_GrabMashOut_PlayableCharacters
     .endm
 
-    .set EventOSD_GrabMashOut, 0x00000000
 
 
     # Number of Events
@@ -130,7 +115,6 @@
     .macro Event_EdgeguardFirefox_PlayableCharacters
     .endm
 
-    .set EventOSD_ArmadaShine, 0x00000000
 
     .set Event_SideBSweetspot, 2
 
@@ -250,33 +234,12 @@ EventHighScores:
     .set OSD.GrabBreakout, 24
     .set OSD.Ledge, 26
     .set OSD.ActOoHitstun, 28
-    
+
     # OSD Alt IDs
     # Some OSD options contain multiple sub OSDs.
-    # We don't want those OSDs to overwrite each other, 
+    # We don't want those OSDs to overwrite each other,
     # so we have some alt IDs for them to use.
-    .set OSD.FighterSpecificTechAlt, 64 
-
-    # Event OSDs
-    .set EventOSD_Eggs, 0x00000000
-    .set EventOSD_Multishine, 0x00000000
-    .set EventOSD_Reaction, 0x00000000
-
-    .set EventOSD_LCancel, 0x00000000
-    .set EventOSD_Ledgedash, 0x00000000
-    .set EventOSD_Eggs, 0x00000000
-    .set EventOSD_SDI, 0x00000000
-    .set EventOSD_Reversal, 0x000000000
-    .set EventOSD_Powershield, 0x00000000
-    .set EventOSD_ShieldDrop, 0x00000000
-    .set EventOSD_AttackOnShield, 0x00000000
-    .set EventOSD_LedgeTech, 0x00000000
-    .set EventOSD_AmsahTech, 0x00000000
-    .set EventOSD_ComboTraining, 0x00000000
-    .set EventOSD_WaveshineSDI, 0x00000000
-
-    .set EventOSD_LedgetechCounter, 0x00000000
-    .set EventOSD_EscapeSheik, 0x00000000
+    .set OSD.FighterSpecificTechAlt, 64
 
     #####################
     ## Melee Variables ##
