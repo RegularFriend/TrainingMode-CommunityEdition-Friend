@@ -340,9 +340,6 @@
     .endm
 
     .macro Event_EdgeguardFirefox_PlayableCharacters
-    .byte Event_EdgeguardFirefox
-    .long -1                                            # Fox_CSSID #Player Characters
-    .long -1
     .endm
 
     .macro Event_EdgeguardFirefox_ScoreType
