@@ -1,5 +1,5 @@
     # To be inserted at 80264504
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     .set text, 31

@@ -1,6 +1,6 @@
     # To be inserted at 8011bebc
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     .set playerdata, 31

@@ -1,7 +1,7 @@
     # To be inserted at 8006b7f4
     # Runs once per frame, use for OSDs that don't require a specific injection point
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     .set playerdata, 31

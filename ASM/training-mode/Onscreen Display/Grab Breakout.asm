@@ -1,5 +1,5 @@
     # To be inserted at 800da07c
-    .include "../Globals.s"
+    .include "../../Globals.s"
 
     .set playerdata, 31
 

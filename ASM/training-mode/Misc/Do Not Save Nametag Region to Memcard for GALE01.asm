@@ -1,5 +1,5 @@
     # To be inserted at 8001ae8c
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     # Check If Save Chunk #2 and #3

@@ -1,3 +1,629 @@
+    # Debug Flag
+    .set debug, 0
+
+    #######################
+    ## Codeset Variables ##
+    #######################
+    # Number of Pages
+    .set NumOfPages, 3 -1
+
+    # Score Types
+    .set KO, 0x0
+    .set Time, 0x1
+
+    ##################################
+    # Number of Events
+    .set Minigames.NumOfEvents, 4 -1
+
+    .set Event_Eggs, 0
+    # Event Name
+    .macro Event_Eggs_Name
+    .string "Eggs-ercise"
+    .endm
+
+    .macro Event_Eggs_Description
+    .string "Break the eggs! Only strong hits will break them. DPad down = free practice."
+    .endm
+
+    .macro Event_Eggs_PlayableCharacters
+    .endm
+
+    .macro Event_Eggs_AvailableCPUs
+    .endm
+
+    .macro Event_Eggs_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_Multishine, 1
+    # Event Name
+    .macro Event_Multishine_Name
+    .string "Shined Blind"
+    .endm
+
+    .macro Event_Multishine_Description
+    .string "How many shines can you perform in 10 seconds?"
+    .endm
+
+    .macro Event_Multishine_PlayableCharacters
+    .byte Event_Multishine
+    .long Falco_CSSID | Fox_CSSID
+    .long -1
+    .endm
+
+    .macro Event_Multishine_AvailableCPUs
+    .endm
+
+    .macro Event_Multishine_ScoreType
+    .byte KO
+    .endm
+
+    # bp call sets r3 to 0!! Only put before a write to r3!!
+    .macro SetBreakpoint
+    branchl r3, 0x8021b2d8
+    .endm
+
+    .set Event_Reaction, 2
+    # Event Name
+    .macro Event_Reaction_Name
+    .string "Reaction Test"
+    .endm
+
+    .macro Event_Reaction_Description
+    .string "Test your reaction time by pressing any button when you see/hear Fox shine!"
+    .endm
+
+    .macro Event_Reaction_PlayableCharacters
+    .endm
+
+    .macro Event_Reaction_AvailableCPUs
+    .endm
+
+    .macro Event_Reaction_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_Ledgestall, 3
+    # Event Name
+    .macro Event_Ledgestall_Name
+    .string "Under Fire"
+    .endm
+
+    .macro Event_Ledgestall_Description
+    .string "Ledgestall to remain invincible while the lava rises!"
+    .endm
+
+    .macro Event_Ledgestall_PlayableCharacters
+    .endm
+
+    .macro Event_Ledgestall_AvailableCPUs
+    .endm
+
+    .macro Event_Ledgestall_ScoreType
+    .byte Time
+    .endm
+
+    .set EventOSD_LedgeStall, 0x00000000
+
+
+    # Number of Events
+    .set GeneralTech.NumOfEvents, 13 -1
+
+    # Event List
+    .set Event_Combo, 4
+    # Event Name
+    .macro Event_Combo_Name
+    .string "Combo Training"
+    .endm
+
+    .macro Event_Combo_Description
+    .string "L+DPad adjusts percent | DPadDown moves CPU DPad right/left saves and loads positions."
+    .endm
+
+    .macro Event_Combo_PlayableCharacters
+    .endm
+
+    .macro Event_Combo_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_AttackOnShield, 5
+    # Event Name
+    .macro Event_AttackOnShield_Name
+    .string "Attack On Shield"
+    .endm
+
+    .macro Event_AttackOnShield_Description
+    .string "Practice attacks on a shielding opponent Pause to change their OoS option."
+    .endm
+
+    .macro Event_AttackOnShield_PlayableCharacters
+    .endm
+
+    .macro Event_AttackOnShield_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_Reversal, 6
+    # Event Name
+    .macro Event_Reversal_Name
+    .string "Reversal Training"
+    .endm
+
+    .macro Event_Reversal_Description
+    .string "Practice OoS punishes! DPad left/right moves characters closer and further apart."
+    .endm
+
+    .macro Event_Reversal_PlayableCharacters
+    .endm
+
+    .macro Event_Reversal_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_SDI, 7
+    # Event Name
+    .macro Event_SDI_Name
+    .string "SDI Training"
+    .endm
+
+    .macro Event_SDI_Description
+    .string "Use Smash DI to escape Fox's up-air!"
+    .endm
+
+    .macro Event_SDI_PlayableCharacters
+    .endm
+
+    .macro Event_SDI_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_Powershield, 8
+    # Event Name
+    .macro Event_Powershield_Name
+    .string "Powershield Training"
+    .endm
+
+    .macro Event_Powershield_Description
+    .string "Powershield Falco's laser! Pause to change fire-rate."
+    .endm
+
+    .macro Event_Powershield_PlayableCharacters
+    .endm
+
+    .macro Event_Powershield_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_LedgeTech, 9
+    # Event Name
+    .macro Event_LedgeTech_Name
+    .string "Ledge-Tech Training"
+    .endm
+
+    .macro Event_LedgeTech_Description
+    # Ledge-Tech Training
+    .string "Practice ledge-teching Falco's down-smash!"
+    .endm
+
+    .macro Event_LedgeTech_PlayableCharacters
+    .endm
+
+    .macro Event_LedgeTech_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_AmsahTech, 10
+    # Event Name
+    .macro Event_AmsahTech_Name
+    .string "Amsah-Tech Training"
+    .endm
+
+    .macro Event_AmsahTech_Description
+    .string "Taunt to have Marth Up-B, then ASDI down and tech!"
+    .endm
+
+    .macro Event_AmsahTech_PlayableCharacters
+    .endm
+
+    .macro Event_AmsahTech_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_ShieldDrop, 11
+    # Event Name
+    .macro Event_ShieldDrop_Name
+    .string "Shield Drop Training"
+    .endm
+
+    .macro Event_ShieldDrop_Description
+    .string "Counter with a shield-drop aerial! DPad left/right moves players apart."
+    .endm
+
+    .macro Event_ShieldDrop_PlayableCharacters
+    .endm
+
+    .macro Event_ShieldDrop_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_WaveshineSDI, 12
+    # Event Name
+    .macro Event_WaveshineSDI_Name
+    .string "Waveshine SDI"
+    .endm
+
+    .macro Event_WaveshineSDI_Description
+    .string "Use Smash DI to get out of Fox's waveshine!"
+    .endm
+
+    .macro Event_WaveshineSDI_PlayableCharacters
+    .byte Event_WaveshineSDI
+    .long Doc_CSSID | Mario_CSSID | Bowser_CSSID | Peach_CSSID | Yoshi_CSSID | DK_CSSID | CaptainFalcon_CSSID | Ganondorf_CSSID | Ness_CSSID | Samus_CSSID | Zelda_CSSID | Link_CSSID
+    .long -1
+    .endm
+
+    .macro Event_WaveshineSDI_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_SlideOff, 13
+    # Event Name
+    .macro Event_SlideOff_Name
+    .string "Slide-Off Training"
+    .endm
+
+    .macro Event_SlideOff_Description
+    .string "Use Slide-Off DI to slide off the platform and counter attack!"
+    .endm
+
+    .macro Event_SlideOff_PlayableCharacters
+    .endm
+
+    .macro Event_SlideOff_ScoreType
+    .endm
+
+    .set EventOSD_SlideOff, 0x00000000
+
+    .set Event_GrabMashOut, 14
+    # Event Name
+    .macro Event_GrabMashOut_Name
+    .string "Grab Mash Training"
+    .endm
+
+    .macro Event_GrabMashOut_Description
+    .string "Mash buttons to escape the grab as quickly as possible!"
+    .endm
+
+    .macro Event_GrabMashOut_PlayableCharacters
+    .endm
+
+    .macro Event_GrabMashOut_ScoreType
+    .byte KO
+    .endm
+
+    .set EventOSD_GrabMashOut, 0x00000000
+
+
+    # Number of Events
+    .set SpacieTech.NumOfEvents, 4 -1
+
+    # Event List
+    .set Event_LedgetechCounter, 0
+    # Event Name
+    .macro Event_LedgetechCounter_Name
+    .string "Ledgetech Marth Counter"
+    .endm
+
+    .macro Event_LedgetechCounter_Description
+    .string "Practice ledge-teching Marth's counter!"
+    .endm
+
+    .macro Event_LedgetechCounter_PlayableCharacters
+    .byte Event_LedgetechCounter
+    .long Fox_CSSID | Falco_CSSID                       # Player Characters
+    .long -1
+    .endm
+
+    .macro Event_LedgetechCounter_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_EdgeguardFirefox, 1
+    # Event Name
+    .macro Event_EdgeguardFirefox_Name
+    .string "Edgeguard Firefox Training"
+    .endm
+
+    .macro Event_EdgeguardFirefox_Description
+    .string "Finish off the enemy Fox after he uses Firefox!"
+    .endm
+
+    .macro Event_EdgeguardFirefox_PlayableCharacters
+    .byte Event_EdgeguardFirefox
+    .long -1                                            # Fox_CSSID #Player Characters
+    .long -1
+    .endm
+
+    .macro Event_EdgeguardFirefox_ScoreType
+    .byte KO
+    .endm
+
+    .set EventOSD_ArmadaShine, 0x00000000
+
+    .set Event_SideBSweetspot, 2
+    # Event Name
+    .macro Event_SideBSweetspot_Name
+    .string "Side-B Sweetspot"
+    .endm
+
+    .macro Event_SideBSweetspot_Description
+    .string "Use a sweetspot Side-B to avoid Marth's down-tilt and grab the ledge!"
+    .endm
+
+    .macro Event_SideBSweetspot_PlayableCharacters
+    .byte Event_SideBSweetspot
+    .long Fox_CSSID | Falco_CSSID                       # Player Characters
+    .long -1
+    .endm
+
+    .macro Event_SideBSweetspot_ScoreType
+    .byte KO
+    .endm
+
+    .set Event_EscapeSheik, 3
+    # Event Name
+    .macro Event_EscapeSheik_Name
+    .string "Escape Sheik Techchase"
+    .endm
+
+    .macro Event_EscapeSheik_Description
+    .string "Practice escaping the techchase with a frame perfect shine or jab SDI!"
+    .endm
+
+    .macro Event_EscapeSheik_PlayableCharacters
+    .byte Event_EscapeSheik
+    .long Fox_CSSID | Falco_CSSID | CaptainFalcon_CSSID | Yoshi_CSSID | Pikachu_CSSID # Player Characters
+    .long -1
+    .endm
+
+    .macro Event_EscapeSheik_ScoreType
+    .byte KO
+    .endm
+
+##################################
+
+    # This macro will change the order of the pages
+    # Only thing this macro doesn't affect is Load CSS + Preload CPU + high scores. Must change this manually.
+    .macro EventJumpTable
+    bl Minigames
+    bl GeneralTech
+    bl SpacieTech
+    .endm
+
+    .macro EventAmountPerPage
+Minigames:
+    .long Minigames.NumOfEvents
+    .align 2
+
+GeneralTech:
+    .long GeneralTech.NumOfEvents
+    .align 2
+
+SpacieTech:
+    .long SpacieTech.NumOfEvents
+    .align 2
+
+    .endm
+
+    .macro EventNameStrings
+Minigames:
+    Event_Eggs_Name
+    Event_Multishine_Name
+    Event_Reaction_Name
+    Event_Ledgestall_Name
+    .align 2
+
+GeneralTech:
+    Event_Combo_Name
+    Event_AttackOnShield_Name
+    Event_Reversal_Name
+    Event_SDI_Name
+    Event_Powershield_Name
+    Event_LedgeTech_Name
+    Event_AmsahTech_Name
+    Event_ShieldDrop_Name
+    Event_WaveshineSDI_Name
+    Event_SlideOff_Name
+    Event_GrabMashOut_Name
+    .align 2
+
+SpacieTech:
+    # Ledgetech Marth Counter
+    Event_LedgetechCounter_Name
+    # Armada-Shine Practice
+    Event_EdgeguardFirefox_Name
+    Event_SideBSweetspot_Name
+    Event_EscapeSheik_Name
+    .align 2
+    .endm
+
+    .macro EventDescriptionStrings
+Minigames:
+    Event_Eggs_Description
+    Event_Multishine_Description
+    Event_Reaction_Description
+    Event_Ledgestall_Description
+    .align 2
+
+GeneralTech:
+    Event_Combo_Description
+    Event_AttackOnShield_Description
+    Event_Reversal_Description
+    Event_SDI_Description
+    Event_Powershield_Description
+    Event_LedgeTech_Description
+    Event_AmsahTech_Description
+    Event_ShieldDrop_Description
+    Event_WaveshineSDI_Description
+    Event_SlideOff_Description
+    Event_GrabMashOut_Description
+    .align 2
+
+SpacieTech:
+    # Ledgetech Marths Counter
+    Event_LedgetechCounter_Description
+    # Armada-Shine Practice
+    Event_EdgeguardFirefox_Description
+    Event_SideBSweetspot_Description
+    Event_EscapeSheik_Description
+    .align 2
+    .endm
+
+    .macro EventPlayableCharacters
+Minigames:
+    Event_Eggs_PlayableCharacters
+    Event_Multishine_PlayableCharacters
+    Event_Reaction_PlayableCharacters
+    Event_Ledgestall_PlayableCharacters
+    .byte -1
+    .align 2
+
+GeneralTech:
+    Event_SDI_PlayableCharacters
+    Event_Reversal_PlayableCharacters
+    Event_Powershield_PlayableCharacters
+    Event_ShieldDrop_PlayableCharacters
+    Event_AttackOnShield_PlayableCharacters
+    Event_LedgeTech_PlayableCharacters
+    Event_AmsahTech_PlayableCharacters
+    Event_Combo_PlayableCharacters
+    Event_WaveshineSDI_PlayableCharacters
+    Event_SlideOff_PlayableCharacters
+    Event_GrabMashOut_PlayableCharacters
+    .byte -1
+    .align 2
+
+SpacieTech:
+    Event_LedgetechCounter_PlayableCharacters
+    Event_EdgeguardFirefox_PlayableCharacters
+    Event_SideBSweetspot_PlayableCharacters
+    Event_EscapeSheik_PlayableCharacters
+    .byte -1
+    .align 2
+
+    .endm
+
+    .macro EventHighScores
+EventHighScores:
+    blrl
+    .byte 0
+    .byte Minigames.NumOfEvents +1
+    .byte Minigames.NumOfEvents + GeneralTech.NumOfEvents +1
+    .align 2
+
+    .endm
+
+############################
+    .macro OnSaveCreate
+    # Get trophy data
+    lwz r3, -0x77C0(r13)
+    addi r3, r3, 7376
+    # Set trophy count
+    li r4, 293
+    sth r4, 0x0(r3)
+    # Set individual trophies as unlocked
+    addi r3, r3, 4
+    li r4, 99
+    li r5, 0x24f
+    branchl r12, memset
+
+InitSettings:
+    # Set Max OSD on No Memcard
+    li r3, 1
+    lwz r4, -0x77C0(r13)
+    stb r3, 0x1F28(r4)
+    # Set Initial Page Number
+    li r3, 0x1
+    stb r3, CurrentEventPage(r4)
+    # Enable Recommended OSDs
+    li r3, 0
+    stb r3, OSDRecommended(r4)
+    # Turn off OSDs by default
+    li r3, 0
+    stw r3, OSDBitfield(r4)
+    .endm
+    .macro OnBootup
+    # Set First Boot Flag (used for OSD backup/restore)
+    li r3, 0x1
+    stb r3, FirstBootFlag(rtoc)
+    # Set CPU Info
+    li r3, 0x21
+    stb r3, EventCPUBackup_CharID(rtoc)                 # Set CPU Character ID
+    .endm
+
+    # Custom Memcard Data Bitfield
+    .set OSDBitfield, 0x1F24
+    .set OSDMaxWindows, 0x1F28
+    .set CurrentEventPage, 0x1F29
+    .set OSDRecommended, 0x1F2A
+    .set LabFrameAdvanceButton, 0x1F2B
+
+    # Custom rtoc offsets
+    .set EventCPUBackup_CharID, -0xDA5                  # byte
+    .set FirstBootFlag, -0xDA4                          # byte
+    .set CodesetPointer, -0xDA0                         # word
+    .set CodesetLength, -0xD9C                          # word
+
+    # OSD IDs
+    .set OSD.Wavedash, 0
+    .set OSD.LCancel, 1
+    .set OSD.ActOoS, 3
+    .set OSD.Dashback, 5
+    .set OSD.FighterSpecificTech, 8
+    .set OSD.Powershield, 9
+    .set OSD.SDI, 10
+    .set OSD.LockoutTimers, 12
+    .set OSD.RollAirdodgeInterrupt, 13
+    .set OSD.BoostGrab, 14
+    .set OSD.Miscellaneous, 15
+    .set OSD.ActOoWait, 16
+    .set OSD.ActOoAirborne, 18
+    .set OSD.ActOoJumpSquat, 19
+    .set OSD.Fastfall, 20
+    .set OSD.FrameAdvantage, 21
+    .set OSD.ComboCounter, 22
+    .set OSD.GrabBreakout, 24
+    .set OSD.Ledge, 26
+    .set OSD.ActOoHitstun, 28
+    
+    # OSD Alt IDs
+    # Some OSD options contain multiple sub OSDs.
+    # We don't want those OSDs to overwrite each other, 
+    # so we have some alt IDs for them to use.
+    .set OSD.FighterSpecificTechAlt, 64 
+
+    # Event OSDs
+    .set EventOSD_Eggs, 0x00000000
+    .set EventOSD_Multishine, 0x00000000
+    .set EventOSD_Reaction, 0x00000000
+
+    .set EventOSD_LCancel, 0x00000000
+    .set EventOSD_Ledgedash, 0x00000000
+    .set EventOSD_Eggs, 0x00000000
+    .set EventOSD_SDI, 0x00000000
+    .set EventOSD_Reversal, 0x000000000
+    .set EventOSD_Powershield, 0x00000000
+    .set EventOSD_ShieldDrop, 0x00000000
+    .set EventOSD_AttackOnShield, 0x00000000
+    .set EventOSD_LedgeTech, 0x00000000
+    .set EventOSD_AmsahTech, 0x00000000
+    .set EventOSD_ComboTraining, 0x00000000
+    .set EventOSD_WaveshineSDI, 0x00000000
+
+    .set EventOSD_LedgetechCounter, 0x00000000
+    .set EventOSD_EscapeSheik, 0x00000000
+
     #####################
     ## Melee Variables ##
     #####################
@@ -36,7 +662,7 @@
     .set CSS_Data, -0x49F0
     .set CSS_UnkGObj, -0x49E4
     .set CSS_UnkJObj, -0x49E0
-    .set CSS_PointerToDatNodes, -0x49C8 # these are initialized to at 80266970
+    .set CSS_PointerToDatNodes, -0x49C8                 # these are initialized to at 80266970
     .set CSS_MainPlayerPort, -0x49B0
     .set CSS_CPUPlayerPort, -0x49AF
     .set CSS_StartCountdown, -0x49AE
@@ -49,11 +675,11 @@
     .set HPS_Unk, -0x3F14
     .set GObj_CurrentProc, -0x3E68
     .set HSDPerf_, 0x0
-    .set Hitbox_DamageLog, -0x5148      # Num of solid hits dealt by the player this check
-    .set Hitbox_TipLog, -0x5144         # Num of phantom hits dealt by the player this check
+    .set Hitbox_DamageLog, -0x5148                      # Num of solid hits dealt by the player this check
+    .set Hitbox_TipLog, -0x5144                         # Num of phantom hits dealt by the player this check
     .set StageID_External, -0x6CB8
     .set Stage_LedgeInfo, -0x51E8
-    .set Stage_LineInfo, -0x51EC        # ctrl f "stage line counts" in melee notes.txt for detailed info
+    .set Stage_LineInfo, -0x51EC                        # ctrl f "stage line counts" in melee notes.txt for detailed info
     .set Stage_PositionHazardCount, -0x5128
     .set Stage_GrabHazardCount, -0x512C
     .set Stage_DamageHazardCount, -0x5130
@@ -64,6 +690,35 @@
 
     .set TM_FrozenToggle, -0x4F8C
     .set TM_GameFrameCounter, -0x49a8
+
+    # TM Function
+    .set TM_tmFunction, -(50*4)                         # offset of rtoc where function pointers are kept, probably temp solution
+    .set TM_EventPages, TM_tmFunction + 0x0
+    .set TM_GetEventDesc, TM_EventPages + 0x4
+    .set TM_GetEventName, TM_GetEventDesc + 0x4
+    .set TM_GetEventDescription, TM_GetEventName + 0x4
+    .set TM_GetPageName, TM_GetEventDescription + 0x4
+    .set TM_GetPageEventNum, TM_GetPageName + 0x4
+    .set TM_GetTMVersShort, TM_GetPageEventNum + 0x4
+    .set TM_GetTMVersLong, TM_GetTMVersShort + 0x4
+    .set TM_GetTMCompile, TM_GetTMVersLong + 0x4
+    .set TM_GetPageNum, TM_GetTMCompile + 0x4
+    .set TM_GetCSSType, TM_GetPageNum + 0x4
+    .set TM_GetIsSelectStage, TM_GetCSSType + 0x4
+    .set TM_GetFighter, TM_GetIsSelectStage + 0x4
+    .set TM_GetCPUFighter, TM_GetFighter + 0x4
+    .set TM_GetStage, TM_GetCPUFighter + 0x4
+    .set TM_GetEventFile, TM_GetStage + 0x4
+    .set TM_GetCSSFile, TM_GetEventFile + 0x4
+    .set TM_EventInit, TM_GetCSSFile + 0x4
+    .set TM_OnSceneChange, TM_EventInit + 0x4
+    .set TM_OnBoot, TM_OnSceneChange + 0x4
+    .set TM_OnStartMelee, TM_OnBoot + 0x4
+    .set TM_OnFileLoad, TM_OnStartMelee + 0x4
+    .set TM_MessageDisplay, TM_OnFileLoad + 0x4
+
+    # TmDt Data Pointers
+    .set TM_Data, TM_tmFunction - 0x4
 
     # Scene Struct
     .set SceneController, 0x80479D30
@@ -135,6 +790,7 @@
     .set HSD_MemAlloc, 0x8037f1e4
     .set HSD_JObjLoadJoint, 0x80370e44
     .set memcpy, 0x800031f4
+    .set memmove, 0x80323938
     .set strcpy, 0x80325a50
     .set ZeroAreaLength, 0x8000c160
     .set CreateCameraBox, 0x80029020
@@ -802,6 +1458,12 @@
     bctrl
     .endm
 
+    .macro rtocbl reg, offset
+    lwz \reg, \offset(rtoc)
+    mtctr \reg
+    bctrl
+    .endm
+
     /*
     .macro branchl reg, address
     .long \address ^ 0x80<<24 | 0xC8<<24
@@ -823,27 +1485,43 @@
     .macro backup
     mflr r0
     stw r0, 0x4(r1)
-    stwu r1, -0x100(r1)                 # make space for 12 registers
+    stwu r1, -0x100(r1)                                 # make space for 12 registers
     stmw r20, 0x8(r1)
     .endm
 
     .macro restore
     lmw r20, 0x8(r1)
     lwz r0, 0x104(r1)
-    addi r1, r1, 0x100                  # release the space
+    addi r1, r1, 0x100                                  # release the space
     mtlr r0
     .endm
 
     .macro backupall
     mflr r0
     stw r0, 0x4(r1)
-    stwu r1, -0x100(r1)                 # make space for 12 registers
+    stwu r1, -0x100(r1)                                 # make space for 12 registers
     stmw r3, 0x8(r1)
     .endm
 
     .macro restoreall
     lmw r3, 0x8(r1)
     lwz r0, 0x104(r1)
-    addi r1, r1, 0x100                  # release the space
+    addi r1, r1, 0x100                                  # release the space
     mtlr r0
     .endm
+
+    .set R13_EventVars, -0x4A0C
+    .set EventVars_MessageDisplay, (8 * 4)
+
+    # Message Display
+    .macro Message_Display
+    crset 6
+    rtocbl r12, TM_MessageDisplay
+    .endm
+
+    .set MsgData_Text, 0x0
+
+    .set MSGCOLOR_WHITE, 0
+    .set MSGCOLOR_GREEN, 1
+    .set MSGCOLOR_RED, 2
+    .set MSGCOLOR_YELLOW, 3

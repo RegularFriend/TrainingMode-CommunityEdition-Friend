@@ -1,5 +1,5 @@
     # To be inserted at 801af6f4
-    .include "../Globals.s"
+    .include "../../Globals.s"
 
     .set MEMCARD_HASSAVE, 0x0
     .set MEMCARD_NOSAVE, 0x4

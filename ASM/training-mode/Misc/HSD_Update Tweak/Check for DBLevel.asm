@@ -1,5 +1,5 @@
     # To be inserted at 801a49a8
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     lwz r0, -0x6C98(r13)

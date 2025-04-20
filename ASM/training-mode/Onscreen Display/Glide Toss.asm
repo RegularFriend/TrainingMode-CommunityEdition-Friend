@@ -1,7 +1,7 @@
 # To be inserted at 800956c0
 # Just after determining to start a glide toss in Interrupt_RollCheckForThrow
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     .set playerdata, 31

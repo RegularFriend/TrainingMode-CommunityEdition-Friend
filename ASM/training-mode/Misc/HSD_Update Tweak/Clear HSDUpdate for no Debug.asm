@@ -1,5 +1,5 @@
     # To be inserted at 801a4c08
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     # Finish storing function

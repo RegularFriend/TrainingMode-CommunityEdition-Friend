@@ -1,5 +1,5 @@
     # To be inserted at 801bab28
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     stb r0, 0x000A(r31)

@@ -1,5 +1,5 @@
     # To be inserted at 80005508
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     .set REG_FighterData, 31

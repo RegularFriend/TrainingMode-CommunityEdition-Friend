@@ -1,7 +1,7 @@
 # To be inserted at 80099c7C
 # Just after determining to start an item throw/zdrop in Interrupt_AS_EscapeAir_Airdodge
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     .set playerdata, 31
