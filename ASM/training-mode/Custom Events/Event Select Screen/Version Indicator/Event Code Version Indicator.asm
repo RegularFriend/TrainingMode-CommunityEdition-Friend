@@ -5,8 +5,6 @@
     .set text, 31
     .set textproperties, 30
 
-    .set VersionString, 0x8040a58c
-
     .set MainTextOffset, -0x4EB4
     .set LeftArrowTextOffset, -0x4EB0
     .set RightArrowTextOffset, -0x4EAC
@@ -287,11 +285,6 @@ PageArrowRight:
 LText:
     blrl
     .string "L = OSD"
-    .align 2
-
-VersionText:
-    blrl
-    .string "Training Mode %s"
     .align 2
 
 OptionsText:

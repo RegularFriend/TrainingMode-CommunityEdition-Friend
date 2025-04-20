@@ -6,8 +6,6 @@
     .set textproperties, 30
     .set originalRegister, 29
 
-    .set VersionString, 0x8040a58c
-
     backup
 
 ########################

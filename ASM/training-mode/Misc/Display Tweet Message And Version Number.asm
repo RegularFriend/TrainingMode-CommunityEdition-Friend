@@ -1,8 +1,6 @@
     # To be inserted at 80394a6c
     .include "../../Globals.s"
 
-    .set VersionString, 0x8040a58c
-
 # Remove all previous OSReports
 # load r3, 0x804cf7e8
 # li r4, 0
