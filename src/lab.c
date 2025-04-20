@@ -534,11 +534,6 @@ void Lab_Exit(int value)
 
     // cleanup
     Match_EndVS();
-
-    // Unfreeze
-    LabOptions_General[OPTGEN_FRAME].option_val = 0;
-    //HSD_Update *update = stc_hsd_update;
-    return;
 }
 
 // Event Functions

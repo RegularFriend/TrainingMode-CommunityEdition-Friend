@@ -121,11 +121,6 @@ void Event_Exit()
 
     // cleanup
     Match_EndVS();
-
-    // unfreeze
-    HSD_Update *update = stc_hsd_update;
-    update->pause_kind = PAUSEKIND_NONE;
-    return;
 }
 
 // L-Cancel functions
