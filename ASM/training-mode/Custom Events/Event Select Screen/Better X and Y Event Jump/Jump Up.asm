@@ -1,5 +1,5 @@
     # To be inserted at 8024dabc
-    .include "../../../Globals.s"
+    .include "../../../../Globals.s"
     .include "../../../../m-ex/Header.s"
 
     .set EventID, 31

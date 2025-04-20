@@ -1,6 +1,6 @@
     # To be inserted at 801aac60
     # 80100000
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     b FunctionStart

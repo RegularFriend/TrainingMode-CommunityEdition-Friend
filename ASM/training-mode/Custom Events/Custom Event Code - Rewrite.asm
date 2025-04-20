@@ -1,5 +1,5 @@
     # To be inserted at 801bb128
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     # Check if event is legacy (no file)

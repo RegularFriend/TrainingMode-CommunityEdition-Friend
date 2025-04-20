@@ -1,5 +1,5 @@
     # To be inserted at 80394a6c
-    .include "../Globals.s"
+    .include "../../Globals.s"
 
     .set VersionString, 0x8040a58c
 

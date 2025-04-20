@@ -1,5 +1,5 @@
     # To be inserted at 8022e630
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
 # Check If First Boot

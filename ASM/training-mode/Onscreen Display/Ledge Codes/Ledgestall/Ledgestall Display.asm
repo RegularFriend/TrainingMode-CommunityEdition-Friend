@@ -1,5 +1,5 @@
     # To be inserted at 800814ec
-    .include "../../../Globals.s"
+    .include "../../../../Globals.s"
     .include "../../../../m-ex/Header.s"
 
     .set playerdata, 31

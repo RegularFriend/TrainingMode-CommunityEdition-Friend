@@ -1,5 +1,5 @@
     # To be inserted at 0x80005530
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     #############################################

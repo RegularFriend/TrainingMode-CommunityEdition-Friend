@@ -2,7 +2,7 @@
     # Inserted right after call to Projectile_YoshiEggThrow_CalculateAngle
     # f6 is angle, f3 is press duration, r31 is fighter data
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     backupall

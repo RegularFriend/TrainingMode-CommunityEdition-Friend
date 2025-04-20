@@ -1,7 +1,7 @@
     # To be inserted at 80096d44
     # There is potential for a general purpose special move->NIL OSD here
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     .set playerdata, 31

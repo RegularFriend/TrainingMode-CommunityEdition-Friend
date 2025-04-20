@@ -1,5 +1,5 @@
     # To be inserted at 801baa80
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     .set REG_Stage, 26

@@ -1,7 +1,7 @@
     # To be inserted at 8016d1f8
     # In SceneThink_VSMove, just before the branch to skip the lras check
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
     
     load r3, 0x804c1fac # master pad array

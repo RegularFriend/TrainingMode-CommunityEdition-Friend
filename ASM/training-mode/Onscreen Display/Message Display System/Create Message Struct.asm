@@ -1,5 +1,5 @@
     # To be inserted at 802ff4e8
-    .include "../../Globals.s"
+    .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
     .set MessageStructTotalSize, 0x300

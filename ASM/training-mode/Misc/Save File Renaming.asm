@@ -1,5 +1,5 @@
     # To be inserted at 8001c800
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     # Check For Game ID GTME(ISO)

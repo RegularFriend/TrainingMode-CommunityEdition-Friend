@@ -1,5 +1,5 @@
     # To be inserted at 8000552c
-    .include "../../../Globals.s"
+    .include "../../../../Globals.s"
 
     .set PageID, 31
 

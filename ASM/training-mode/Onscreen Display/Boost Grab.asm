@@ -1,7 +1,7 @@
     # To be inserted at 800d8b58
     # Just after determining to start a boost grab in Interrupt_Grab_FromDashAttack
 
-    .include "../Globals.s"
+    .include "../../Globals.s"
     .include "../../m-ex/Header.s"
 
     .set playerdata, 31
