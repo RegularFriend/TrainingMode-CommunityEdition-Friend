@@ -145,19 +145,7 @@
     .macro Event_SDI_PlayableCharacters
     .endm
 
-    .set Event_Powershield, 8
-    # Event Name
-    .macro Event_Powershield_Name
-    .string "Powershield Training"
-    .endm
-
-    .macro Event_Powershield_Description
-    .string "Powershield Falco's laser! Pause to change fire-rate."
-    .endm
-
-    .macro Event_Powershield_PlayableCharacters
-    .endm
-
+    # Skip one for powershield event
     .set Event_LedgeTech, 9
     # Event Name
     .macro Event_LedgeTech_Name
@@ -346,7 +334,6 @@ GeneralTech:
     Event_AttackOnShield_Name
     Event_Reversal_Name
     Event_SDI_Name
-    Event_Powershield_Name
     Event_LedgeTech_Name
     Event_AmsahTech_Name
     Event_ShieldDrop_Name
@@ -376,7 +363,6 @@ GeneralTech:
     Event_AttackOnShield_Description
     Event_Reversal_Description
     Event_SDI_Description
-    Event_Powershield_Description
     Event_LedgeTech_Description
     Event_AmsahTech_Description
     Event_ShieldDrop_Description
@@ -405,7 +391,6 @@ Minigames:
 GeneralTech:
     Event_SDI_PlayableCharacters
     Event_Reversal_PlayableCharacters
-    Event_Powershield_PlayableCharacters
     Event_ShieldDrop_PlayableCharacters
     Event_AttackOnShield_PlayableCharacters
     Event_LedgeTech_PlayableCharacters
