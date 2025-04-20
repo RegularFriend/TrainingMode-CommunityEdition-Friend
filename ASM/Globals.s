@@ -44,7 +44,6 @@
     .macro Event_Multishine_PlayableCharacters
     .byte Event_Multishine
     .long Falco_CSSID | Fox_CSSID
-    .long -1
     .endm
 
     .macro Event_Multishine_AvailableCPUs
@@ -212,7 +211,6 @@
     .macro Event_WaveshineSDI_PlayableCharacters
     .byte Event_WaveshineSDI
     .long Doc_CSSID | Mario_CSSID | Bowser_CSSID | Peach_CSSID | Yoshi_CSSID | DK_CSSID | CaptainFalcon_CSSID | Ganondorf_CSSID | Ness_CSSID | Samus_CSSID | Zelda_CSSID | Link_CSSID
-    .long -1
     .endm
 
     .set Event_SlideOff, 13
@@ -263,7 +261,6 @@
     .macro Event_LedgetechCounter_PlayableCharacters
     .byte Event_LedgetechCounter
     .long Fox_CSSID | Falco_CSSID                       # Player Characters
-    .long -1
     .endm
 
     .set Event_EdgeguardFirefox, 1
@@ -294,7 +291,6 @@
     .macro Event_SideBSweetspot_PlayableCharacters
     .byte Event_SideBSweetspot
     .long Fox_CSSID | Falco_CSSID                       # Player Characters
-    .long -1
     .endm
 
     .set Event_EscapeSheik, 3
@@ -310,7 +306,6 @@
     .macro Event_EscapeSheik_PlayableCharacters
     .byte Event_EscapeSheik
     .long Fox_CSSID | Falco_CSSID | CaptainFalcon_CSSID | Yoshi_CSSID | Pikachu_CSSID # Player Characters
-    .long -1
     .endm
 
 ##################################

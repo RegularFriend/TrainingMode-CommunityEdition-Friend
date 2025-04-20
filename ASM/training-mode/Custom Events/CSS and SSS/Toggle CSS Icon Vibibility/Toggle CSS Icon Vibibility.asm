@@ -211,7 +211,7 @@ GetCharacterList_Loop:
     beq GetCharacterList_Failed
     cmpw r3, EventID
     beq GetCharacterList_Success
-    addi r6, r6, 0x9
+    addi r6, r6, 0x5
     b GetCharacterList_Loop
 
 GetCharacterList_Failed:
