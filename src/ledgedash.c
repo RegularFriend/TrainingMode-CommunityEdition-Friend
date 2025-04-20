@@ -209,8 +209,6 @@ void Event_Init(GOBJ *gobj)
     Ledgedash_FtInit(event_data);
 
     Fighter_PlaceOnLedge();
-
-    return;
 }
 // Think Function
 void Event_Think(GOBJ *event)
@@ -271,9 +269,6 @@ void Event_Think(GOBJ *event)
             hmn_data->color[1].color_enable = 1;
         }
     }
-
-
-    return;
 }
 void Event_Exit()
 {
@@ -284,8 +279,6 @@ void Event_Exit()
 
     // cleanup
     Match_EndVS();
-
-    return;
 }
 
 // Ledgedash functions
@@ -559,16 +552,12 @@ void Ledgedash_HUDThink(LedgedashData *event_data, FighterData *hmn_data)
 
     // update HUD anim
     JOBJ_AnimAll(hud_jobj);
-
-    return;
 }
 void Ledgedash_HUDCamThink(GOBJ *gobj)
 {
     // if HUD enabled and not paused
     if (LdshOptions_Main[OPT_HUD].option_val == 0 && Pause_CheckStatus(1) != 2)
         CObjThink_Common(gobj);
-
-    return;
 }
 
 void Ledgedash_ResetThink(LedgedashData *event_data, GOBJ *hmn)
@@ -634,8 +623,6 @@ void Ledgedash_ResetThink(LedgedashData *event_data, GOBJ *hmn)
             SFX_PlayCommon(3);
         }
     }
-
-    return;
 }
 void Ledgedash_InitVariables(LedgedashData *event_data)
 {
@@ -660,8 +647,6 @@ void Ledgedash_ToggleStartPosition(GOBJ *menu_gobj, int value)
     LedgedashData *event_data = event_vars->event_gobj->userdata;
 
     Fighter_PlaceOnLedge();
-
-    return;
 }
 
 // Hitlog functions
@@ -744,8 +729,6 @@ void Ledgedash_HitLogThink(LedgedashData *event_data, GOBJ *hmn)
             this_item = this_item->next;
         }
     }
-
-    return;
 }
 void Ledgedash_HitLogGX(GOBJ *gobj, int pass)
 {
@@ -774,8 +757,6 @@ void Ledgedash_HitLogGX(GOBJ *gobj, int pass)
 
         Develop_DrawSphere(this_ldsh_hit->size, &this_ldsh_hit->pos_curr, &this_ldsh_hit->pos_prev, diffuse, &hitlog_ambient);
     }
-
-    return;
 }
 
 // Fighter fuctions
@@ -803,8 +784,6 @@ void Ledgedash_FtInit(LedgedashData *event_data)
     //    event_data->cam->is_disable = 0;
     //    event_vars->Tip_Display(500 * 60, "Error:\nIt appears there are no\ngood ledges on this stage...");
     //}
-
-    return;
 }
 
 void Ledgedash_ChangeCamMode(GOBJ *menu_gobj, int value)
@@ -833,8 +812,6 @@ void Ledgedash_ChangeCamMode(GOBJ *menu_gobj, int value)
         Match_SetDevelopCamera();
     }
     Match_CorrectCamera();
-
-    return;
 }
 
 void Event_Update()
@@ -895,8 +872,6 @@ void Update_Camera()
             }
         }
     }
-
-    return;
 }
 
 int Ledge_Find(int search_dir, float xpos_start, float *ledge_dir)
@@ -1230,8 +1205,6 @@ void Fighter_PlaceOnLedge(void)
 
         gobj = gobj_next;
     }
-
-    return;
 }
 void Fighter_UpdatePosition(GOBJ *fighter)
 {
@@ -1260,7 +1233,6 @@ void Fighter_UpdatePosition(GOBJ *fighter)
 
     // Update Static Player Block Coords
     Fighter_SetPosition(fighter_data->ply, fighter_data->flags.ms, &fighter_data->phys.pos);
-    return;
 }
 void Fighter_UpdateCamera(GOBJ *fighter)
 {
@@ -1287,8 +1259,6 @@ void RebirthWait_Phys(GOBJ *fighter)
 
     // infinite time
     fighter_data->state_var.state_var1 = 2;
-
-    return;
 }
 int RebirthWait_IASA(GOBJ *fighter)
 {
@@ -1349,8 +1319,6 @@ void Tips_Toggle(GOBJ *menu_gobj, int value)
     // destroy existing tips when disabling
     if (value == 1)
         event_vars->Tip_Destroy();
-
-    return;
 }
 void Tips_Think(LedgedashData *event_data, FighterData *hmn_data)
 {

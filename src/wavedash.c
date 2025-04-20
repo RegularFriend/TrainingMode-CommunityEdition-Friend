@@ -93,8 +93,6 @@ void Event_Init(GOBJ *gobj)
 
     // init target
     Target_Init(event_data, hmn_data);
-
-    return;
 }
 // Think Function
 void Event_Think(GOBJ *event)
@@ -107,8 +105,6 @@ void Event_Think(GOBJ *event)
     hmn_data->shield.health = 60;
 
     Wavedash_Think(event_data, hmn_data);
-
-    return;
 }
 void Event_Exit()
 {
@@ -454,8 +450,6 @@ void Wavedash_Think(WavedashData *event_data, FighterData *hmn_data)
         arrow_jobj->trans.X = xpos;
         JOBJ_SetMtxDirtySub(arrow_jobj);
     }
-
-    return;
 }
 void Wavedash_HUDCamThink(GOBJ *gobj)
 {
@@ -465,8 +459,6 @@ void Wavedash_HUDCamThink(GOBJ *gobj)
     {
         CObjThink_Common(gobj);
     }
-
-    return;
 }
 float Bezier(float time, float start, float end)
 {
@@ -511,8 +503,6 @@ void Target_Init(WavedashData *event_data, FighterData *hmn_data)
 
     // free jobj
     JOBJ_RemoveAll(target);
-
-    return;
 }
 void Target_Manager(WavedashData *event_data, FighterData *hmn_data)
 {
@@ -566,8 +556,6 @@ void Target_Manager(WavedashData *event_data, FighterData *hmn_data)
         break;
     }
     }
-
-    return;
 }
 GOBJ *Target_Spawn(WavedashData *event_data, FighterData *hmn_data)
 {
@@ -752,8 +740,6 @@ void Target_Think(GOBJ *target_gobj)
         break;
     }
     }
-
-    return;
 }
 void Target_ChangeState(GOBJ *target_gobj, int state)
 {
@@ -767,8 +753,6 @@ void Target_ChangeState(GOBJ *target_gobj, int state)
     // add anim
     JOBJ_AddAnimAll(target_jobj, event_data->assets->target_jointanim[state], event_data->assets->target_matanim[state], 0);
     JOBJ_ReqAnimAll(target_jobj, 0); // req anim
-
-    return;
 }
 float Target_GetWdashDistance(FighterData *hmn_data, float mag)
 {
@@ -847,8 +831,6 @@ Tips_Think(WavedashData *event_data, FighterData *hmn_data)
             }
         }
     }
-
-    return;
 }
 
 // Initial Menu
