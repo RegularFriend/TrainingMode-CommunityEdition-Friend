@@ -2643,7 +2643,7 @@ struct FighterData
         char x2228_5 : 1;                         // 0x08 - 0x2228
         char is_ignore_death3 : 1;                // 0x04 - 0x2228
         char used_tether : 1;                     // 0x02 - 0x2228
-        char x2228_8 : 1;                         // 0x01 - 0x2228
+        char last_lstick_x_dir: 1;                // 0x01 - 0x2228, last stick x direction outside of deadzone. 1 to right, 0 to left.
         unsigned char x2229_1 : 1;                // 0x80 - 0x2229
         unsigned char x2229_2 : 1;                // 0x40 - 0x2229
         unsigned char x2229_3 : 1;                // 0x20 - 0x2229
