@@ -16,94 +16,27 @@
     .set Minigames.NumOfEvents, 4 -1
 
     .set Event_Eggs, 0
-    # Event Name
-    .macro Event_Eggs_Name
-    .string "Eggs-ercise"
-    .endm
-
-    .macro Event_Eggs_Description
-    .string "Break the eggs! Only strong hits will break them. DPad down = free practice."
-    .endm
 
     .macro Event_Eggs_PlayableCharacters
     .endm
 
-    .macro Event_Eggs_AvailableCPUs
-    .endm
-
-    .macro Event_Eggs_ScoreType
-    .byte KO
-    .endm
-
     .set Event_Multishine, 1
-    # Event Name
-    .macro Event_Multishine_Name
-    .string "Shined Blind"
-    .endm
-
-    .macro Event_Multishine_Description
-    .string "How many shines can you perform in 10 seconds?"
-    .endm
 
     .macro Event_Multishine_PlayableCharacters
     .byte Event_Multishine
     .long Falco_CSSID | Fox_CSSID
-    .long -1
-    .endm
-
-    .macro Event_Multishine_AvailableCPUs
-    .endm
-
-    .macro Event_Multishine_ScoreType
-    .byte KO
-    .endm
-
-    # bp call sets r3 to 0!! Only put before a write to r3!!
-    .macro SetBreakpoint
-    branchl r3, 0x8021b2d8
     .endm
 
     .set Event_Reaction, 2
-    # Event Name
-    .macro Event_Reaction_Name
-    .string "Reaction Test"
-    .endm
-
-    .macro Event_Reaction_Description
-    .string "Test your reaction time by pressing any button when you see/hear Fox shine!"
-    .endm
 
     .macro Event_Reaction_PlayableCharacters
     .endm
 
-    .macro Event_Reaction_AvailableCPUs
-    .endm
-
-    .macro Event_Reaction_ScoreType
-    .byte KO
-    .endm
-
     .set Event_Ledgestall, 3
-    # Event Name
-    .macro Event_Ledgestall_Name
-    .string "Under Fire"
-    .endm
-
-    .macro Event_Ledgestall_Description
-    .string "Ledgestall to remain invincible while the lava rises!"
-    .endm
 
     .macro Event_Ledgestall_PlayableCharacters
     .endm
 
-    .macro Event_Ledgestall_AvailableCPUs
-    .endm
-
-    .macro Event_Ledgestall_ScoreType
-    .byte Time
-    .endm
-
-    .set EventOSD_LedgeStall, 0x00000000
 
 
     # Number of Events
@@ -111,198 +44,59 @@
 
     # Event List
     .set Event_Combo, 4
-    # Event Name
-    .macro Event_Combo_Name
-    .string "Combo Training"
-    .endm
-
-    .macro Event_Combo_Description
-    .string "L+DPad adjusts percent | DPadDown moves CPU DPad right/left saves and loads positions."
-    .endm
 
     .macro Event_Combo_PlayableCharacters
     .endm
 
-    .macro Event_Combo_ScoreType
-    .byte KO
-    .endm
-
     .set Event_AttackOnShield, 5
-    # Event Name
-    .macro Event_AttackOnShield_Name
-    .string "Attack On Shield"
-    .endm
-
-    .macro Event_AttackOnShield_Description
-    .string "Practice attacks on a shielding opponent Pause to change their OoS option."
-    .endm
 
     .macro Event_AttackOnShield_PlayableCharacters
     .endm
 
-    .macro Event_AttackOnShield_ScoreType
-    .byte KO
-    .endm
-
     .set Event_Reversal, 6
-    # Event Name
-    .macro Event_Reversal_Name
-    .string "Reversal Training"
-    .endm
-
-    .macro Event_Reversal_Description
-    .string "Practice OoS punishes! DPad left/right moves characters closer and further apart."
-    .endm
 
     .macro Event_Reversal_PlayableCharacters
     .endm
 
-    .macro Event_Reversal_ScoreType
-    .byte KO
-    .endm
-
     .set Event_SDI, 7
-    # Event Name
-    .macro Event_SDI_Name
-    .string "SDI Training"
-    .endm
-
-    .macro Event_SDI_Description
-    .string "Use Smash DI to escape Fox's up-air!"
-    .endm
 
     .macro Event_SDI_PlayableCharacters
     .endm
 
-    .macro Event_SDI_ScoreType
-    .byte KO
-    .endm
-
-    .set Event_Powershield, 8
-    # Event Name
-    .macro Event_Powershield_Name
-    .string "Powershield Training"
-    .endm
-
-    .macro Event_Powershield_Description
-    .string "Powershield Falco's laser! Pause to change fire-rate."
-    .endm
-
-    .macro Event_Powershield_PlayableCharacters
-    .endm
-
-    .macro Event_Powershield_ScoreType
-    .byte KO
-    .endm
-
+    # Skip one for powershield event
     .set Event_LedgeTech, 9
-    # Event Name
-    .macro Event_LedgeTech_Name
-    .string "Ledge-Tech Training"
-    .endm
-
-    .macro Event_LedgeTech_Description
-    # Ledge-Tech Training
-    .string "Practice ledge-teching Falco's down-smash!"
-    .endm
 
     .macro Event_LedgeTech_PlayableCharacters
     .endm
 
-    .macro Event_LedgeTech_ScoreType
-    .byte KO
-    .endm
-
     .set Event_AmsahTech, 10
-    # Event Name
-    .macro Event_AmsahTech_Name
-    .string "Amsah-Tech Training"
-    .endm
-
-    .macro Event_AmsahTech_Description
-    .string "Taunt to have Marth Up-B, then ASDI down and tech!"
-    .endm
 
     .macro Event_AmsahTech_PlayableCharacters
     .endm
 
-    .macro Event_AmsahTech_ScoreType
-    .byte KO
-    .endm
-
     .set Event_ShieldDrop, 11
-    # Event Name
-    .macro Event_ShieldDrop_Name
-    .string "Shield Drop Training"
-    .endm
-
-    .macro Event_ShieldDrop_Description
-    .string "Counter with a shield-drop aerial! DPad left/right moves players apart."
-    .endm
 
     .macro Event_ShieldDrop_PlayableCharacters
     .endm
 
-    .macro Event_ShieldDrop_ScoreType
-    .byte KO
-    .endm
-
     .set Event_WaveshineSDI, 12
-    # Event Name
-    .macro Event_WaveshineSDI_Name
-    .string "Waveshine SDI"
-    .endm
-
-    .macro Event_WaveshineSDI_Description
-    .string "Use Smash DI to get out of Fox's waveshine!"
-    .endm
 
     .macro Event_WaveshineSDI_PlayableCharacters
     .byte Event_WaveshineSDI
     .long Doc_CSSID | Mario_CSSID | Bowser_CSSID | Peach_CSSID | Yoshi_CSSID | DK_CSSID | CaptainFalcon_CSSID | Ganondorf_CSSID | Ness_CSSID | Samus_CSSID | Zelda_CSSID | Link_CSSID
-    .long -1
-    .endm
-
-    .macro Event_WaveshineSDI_ScoreType
-    .byte KO
     .endm
 
     .set Event_SlideOff, 13
-    # Event Name
-    .macro Event_SlideOff_Name
-    .string "Slide-Off Training"
-    .endm
-
-    .macro Event_SlideOff_Description
-    .string "Use Slide-Off DI to slide off the platform and counter attack!"
-    .endm
 
     .macro Event_SlideOff_PlayableCharacters
     .endm
 
-    .macro Event_SlideOff_ScoreType
-    .endm
-
-    .set EventOSD_SlideOff, 0x00000000
 
     .set Event_GrabMashOut, 14
-    # Event Name
-    .macro Event_GrabMashOut_Name
-    .string "Grab Mash Training"
-    .endm
-
-    .macro Event_GrabMashOut_Description
-    .string "Mash buttons to escape the grab as quickly as possible!"
-    .endm
 
     .macro Event_GrabMashOut_PlayableCharacters
     .endm
 
-    .macro Event_GrabMashOut_ScoreType
-    .byte KO
-    .endm
-
-    .set EventOSD_GrabMashOut, 0x00000000
 
 
     # Number of Events
@@ -310,82 +104,30 @@
 
     # Event List
     .set Event_LedgetechCounter, 0
-    # Event Name
-    .macro Event_LedgetechCounter_Name
-    .string "Ledgetech Marth Counter"
-    .endm
-
-    .macro Event_LedgetechCounter_Description
-    .string "Practice ledge-teching Marth's counter!"
-    .endm
 
     .macro Event_LedgetechCounter_PlayableCharacters
     .byte Event_LedgetechCounter
     .long Fox_CSSID | Falco_CSSID                       # Player Characters
-    .long -1
-    .endm
-
-    .macro Event_LedgetechCounter_ScoreType
-    .byte KO
     .endm
 
     .set Event_EdgeguardFirefox, 1
-    # Event Name
-    .macro Event_EdgeguardFirefox_Name
-    .string "Edgeguard Firefox Training"
-    .endm
-
-    .macro Event_EdgeguardFirefox_Description
-    .string "Finish off the enemy Fox after he uses Firefox!"
-    .endm
 
     .macro Event_EdgeguardFirefox_PlayableCharacters
     .endm
 
-    .macro Event_EdgeguardFirefox_ScoreType
-    .byte KO
-    .endm
-
-    .set EventOSD_ArmadaShine, 0x00000000
 
     .set Event_SideBSweetspot, 2
-    # Event Name
-    .macro Event_SideBSweetspot_Name
-    .string "Side-B Sweetspot"
-    .endm
-
-    .macro Event_SideBSweetspot_Description
-    .string "Use a sweetspot Side-B to avoid Marth's down-tilt and grab the ledge!"
-    .endm
 
     .macro Event_SideBSweetspot_PlayableCharacters
     .byte Event_SideBSweetspot
     .long Fox_CSSID | Falco_CSSID                       # Player Characters
-    .long -1
-    .endm
-
-    .macro Event_SideBSweetspot_ScoreType
-    .byte KO
     .endm
 
     .set Event_EscapeSheik, 3
-    # Event Name
-    .macro Event_EscapeSheik_Name
-    .string "Escape Sheik Techchase"
-    .endm
-
-    .macro Event_EscapeSheik_Description
-    .string "Practice escaping the techchase with a frame perfect shine or jab SDI!"
-    .endm
 
     .macro Event_EscapeSheik_PlayableCharacters
     .byte Event_EscapeSheik
     .long Fox_CSSID | Falco_CSSID | CaptainFalcon_CSSID | Yoshi_CSSID | Pikachu_CSSID # Player Characters
-    .long -1
-    .endm
-
-    .macro Event_EscapeSheik_ScoreType
-    .byte KO
     .endm
 
 ##################################
@@ -413,70 +155,6 @@ SpacieTech:
 
     .endm
 
-    .macro EventNameStrings
-Minigames:
-    Event_Eggs_Name
-    Event_Multishine_Name
-    Event_Reaction_Name
-    Event_Ledgestall_Name
-    .align 2
-
-GeneralTech:
-    Event_Combo_Name
-    Event_AttackOnShield_Name
-    Event_Reversal_Name
-    Event_SDI_Name
-    Event_Powershield_Name
-    Event_LedgeTech_Name
-    Event_AmsahTech_Name
-    Event_ShieldDrop_Name
-    Event_WaveshineSDI_Name
-    Event_SlideOff_Name
-    Event_GrabMashOut_Name
-    .align 2
-
-SpacieTech:
-    # Ledgetech Marth Counter
-    Event_LedgetechCounter_Name
-    # Armada-Shine Practice
-    Event_EdgeguardFirefox_Name
-    Event_SideBSweetspot_Name
-    Event_EscapeSheik_Name
-    .align 2
-    .endm
-
-    .macro EventDescriptionStrings
-Minigames:
-    Event_Eggs_Description
-    Event_Multishine_Description
-    Event_Reaction_Description
-    Event_Ledgestall_Description
-    .align 2
-
-GeneralTech:
-    Event_Combo_Description
-    Event_AttackOnShield_Description
-    Event_Reversal_Description
-    Event_SDI_Description
-    Event_Powershield_Description
-    Event_LedgeTech_Description
-    Event_AmsahTech_Description
-    Event_ShieldDrop_Description
-    Event_WaveshineSDI_Description
-    Event_SlideOff_Description
-    Event_GrabMashOut_Description
-    .align 2
-
-SpacieTech:
-    # Ledgetech Marths Counter
-    Event_LedgetechCounter_Description
-    # Armada-Shine Practice
-    Event_EdgeguardFirefox_Description
-    Event_SideBSweetspot_Description
-    Event_EscapeSheik_Description
-    .align 2
-    .endm
-
     .macro EventPlayableCharacters
 Minigames:
     Event_Eggs_PlayableCharacters
@@ -489,7 +167,6 @@ Minigames:
 GeneralTech:
     Event_SDI_PlayableCharacters
     Event_Reversal_PlayableCharacters
-    Event_Powershield_PlayableCharacters
     Event_ShieldDrop_PlayableCharacters
     Event_AttackOnShield_PlayableCharacters
     Event_LedgeTech_PlayableCharacters
@@ -522,42 +199,6 @@ EventHighScores:
     .endm
 
 ############################
-    .macro OnSaveCreate
-    # Get trophy data
-    lwz r3, -0x77C0(r13)
-    addi r3, r3, 7376
-    # Set trophy count
-    li r4, 293
-    sth r4, 0x0(r3)
-    # Set individual trophies as unlocked
-    addi r3, r3, 4
-    li r4, 99
-    li r5, 0x24f
-    branchl r12, memset
-
-InitSettings:
-    # Set Max OSD on No Memcard
-    li r3, 1
-    lwz r4, -0x77C0(r13)
-    stb r3, 0x1F28(r4)
-    # Set Initial Page Number
-    li r3, 0x1
-    stb r3, CurrentEventPage(r4)
-    # Enable Recommended OSDs
-    li r3, 0
-    stb r3, OSDRecommended(r4)
-    # Turn off OSDs by default
-    li r3, 0
-    stw r3, OSDBitfield(r4)
-    .endm
-    .macro OnBootup
-    # Set First Boot Flag (used for OSD backup/restore)
-    li r3, 0x1
-    stb r3, FirstBootFlag(rtoc)
-    # Set CPU Info
-    li r3, 0x21
-    stb r3, EventCPUBackup_CharID(rtoc)                 # Set CPU Character ID
-    .endm
 
     # Custom Memcard Data Bitfield
     .set OSDBitfield, 0x1F24
@@ -593,33 +234,12 @@ InitSettings:
     .set OSD.GrabBreakout, 24
     .set OSD.Ledge, 26
     .set OSD.ActOoHitstun, 28
-    
+
     # OSD Alt IDs
     # Some OSD options contain multiple sub OSDs.
-    # We don't want those OSDs to overwrite each other, 
+    # We don't want those OSDs to overwrite each other,
     # so we have some alt IDs for them to use.
-    .set OSD.FighterSpecificTechAlt, 64 
-
-    # Event OSDs
-    .set EventOSD_Eggs, 0x00000000
-    .set EventOSD_Multishine, 0x00000000
-    .set EventOSD_Reaction, 0x00000000
-
-    .set EventOSD_LCancel, 0x00000000
-    .set EventOSD_Ledgedash, 0x00000000
-    .set EventOSD_Eggs, 0x00000000
-    .set EventOSD_SDI, 0x00000000
-    .set EventOSD_Reversal, 0x000000000
-    .set EventOSD_Powershield, 0x00000000
-    .set EventOSD_ShieldDrop, 0x00000000
-    .set EventOSD_AttackOnShield, 0x00000000
-    .set EventOSD_LedgeTech, 0x00000000
-    .set EventOSD_AmsahTech, 0x00000000
-    .set EventOSD_ComboTraining, 0x00000000
-    .set EventOSD_WaveshineSDI, 0x00000000
-
-    .set EventOSD_LedgetechCounter, 0x00000000
-    .set EventOSD_EscapeSheik, 0x00000000
+    .set OSD.FighterSpecificTechAlt, 64
 
     #####################
     ## Melee Variables ##
@@ -1461,12 +1081,6 @@ InitSettings:
     bctrl
     .endm
 
-    /*
-    .macro branchl reg, address
-    .long \address ^ 0x80<<24 | 0xC8<<24
-    .endm
-    */
-
     .macro branch reg, address
     lis \reg, \address @h
     ori \reg, \reg, \address @l
@@ -1505,6 +1119,11 @@ InitSettings:
     lwz r0, 0x104(r1)
     addi r1, r1, 0x100                                  # release the space
     mtlr r0
+    .endm
+
+    # bp call sets r3 to 0!! Only put before a write to r3!!
+    .macro SetBreakpoint
+    branchl r3, 0x8021b2d8
     .endm
 
     .set R13_EventVars, -0x4A0C

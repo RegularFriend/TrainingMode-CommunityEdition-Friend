@@ -684,7 +684,7 @@ Multishine:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, FinalDestination                             # Use FD
-    load r7, EventOSD_Multishine
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo Bool
     bl InitializeMatch
 
@@ -812,7 +812,7 @@ Reaction:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use chosen CPU
     li r6, FinalDestination                             # Use FD
-    load r7, EventOSD_Reaction
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo Bool
     bl InitializeMatch
 
@@ -1071,7 +1071,7 @@ LedgeStall:
     mr r4, r26                                          # Send match struct
     li r5, -1
     li r6, Brinstar                                     # stage
-    load r7, EventOSD_LedgeStall
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -1449,7 +1449,7 @@ LedgeStallThink_Success_NewHighScore:
     lwz r4, SurvivalTime(REG_EventData)
     branchl r12, Events_SetEventSavedScore
     mr r3, r20                                          # set event as played
-    branchl r12, 0x8015ceb4
+    branchl r12, Events_SetEventAsPlayed
     b LedgeStallThink_Success_DestroyGObj
 
 LedgeStallThink_Success_NoHighScore:
@@ -1614,7 +1614,7 @@ SDITraining:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use chosen CPU
     li r6, FinalDestination                             # Use SSS Stage
-    load r7, EventOSD_SDI
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -2099,7 +2099,7 @@ Reversal:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, -1                                           # Use SSS Stage
-    load r7, EventOSD_Reversal
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -2840,7 +2840,7 @@ ShieldDrop:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, Battlefield                                  # Use SSS Stage
-    load r7, EventOSD_ShieldDrop
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -3091,7 +3091,7 @@ AttackOnShield:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, FinalDestination                             # Use SSS Stage
-    load r7, EventOSD_AttackOnShield
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -3520,7 +3520,7 @@ Ledgetech:
     mr r4, r26                                          # Send match struct
     li r5, Falco.Ext                                    # Use chosen CPU
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_LedgeTech
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -3963,7 +3963,7 @@ AmsahTech:
     mr r4, r26                                          # Send match struct
     li r5, 9                                            # Use chosen CPU
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_AmsahTech
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -4356,7 +4356,7 @@ ComboTraining:
     mr r4, r26                                          # Send match struct
     li r5, -1                                           # Use chosen CPU
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_ComboTraining
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -6072,7 +6072,7 @@ WaveshineSDI:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use chosen CPU
     li r6, FinalDestination                             # Use chosen Stage
-    load r7, EventOSD_WaveshineSDI
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -6530,7 +6530,7 @@ SlideOff:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext
     li r6, PokemonStadium                               # Use chosen Stage
-    load r7, EventOSD_SlideOff
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -7155,7 +7155,7 @@ GrabMashOut:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext
     li r6, FinalDestination                             # Use chosen Stage
-    load r7, EventOSD_GrabMashOut
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -7506,7 +7506,7 @@ LedgetechCounter:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext                                    # Use marth
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_LedgetechCounter
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -7733,7 +7733,7 @@ ArmadaShine:
     mr r4, r26                                          # Send match struct
     li r5, Fox.Ext                                      # Use fox
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_ArmadaShine
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -8038,10 +8038,10 @@ ArmadaShineThink_RecoverStart_InputAngle:
 
     # Get Per Frame Velocity
     mr r3, REG_P2Data
-    branchl r12, 0x800a17e4
+    branchl r12, CPU_JoystickXAxis_Convert
     fmr REG_XComp, f1
     mr r3, REG_P2Data
-    branchl r12, 0x800a1874
+    branchl r12, CPU_JoystickYAxis_Convert
     fmr REG_YComp, f1
     # Get atan2
     fmr f1, REG_YComp
@@ -8051,10 +8051,10 @@ ArmadaShineThink_RecoverStart_InputAngle:
     fmr REG_arctan, f1
     # Get XComp
     fmr f1, REG_arctan
-    branchl r12, 0x80326240
+    branchl r12, cos
     fmr REG_XComp, f1
     fmr f1, REG_arctan
-    branchl r12, 0x803263d4
+    branchl r12, sin
     fmr REG_YComp, f1
     # Get Firefox distance per frame
     lwz r3, 0x02D4(REG_P2Data)
@@ -8390,7 +8390,7 @@ SideBSweetspot:
     mr r4, r26                                          # Send match struct
     li r5, Marth.Ext
     li r6, -1                                           # Use chosen Stage
-    load r7, EventOSD_SideBSweetspot
+    li r7, 0                                            # OSD
     li r8, 0                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -8885,7 +8885,7 @@ EscapeSheik:
     mr r4, r26                                          # Send match struct
     li r5, Sheik.Ext
     li r6, FinalDestination                             # Use chosen Stage
-    load r7, EventOSD_EscapeSheik
+    li r7, 0                                            # OSD
     li r8, 1                                            # Use Sopo bool
     bl InitializeMatch
 
@@ -10409,13 +10409,13 @@ Savestate_RestoreCameraFlag:
     load r3, 0x804a10c8                                 # get base HUD info
     mulli r4, REG_SpawnedOrder, 100                     # get offset
     add r20, r4, r3                                     # get to this player's HUD info
-    branchl r12, 0x8016b094                             # MatchInfo_StockModeCheck
+    branchl r12, MatchInfo_StockModeCheck                             # MatchInfo_StockModeCheck
     cmpwi r3, 0                                         # if not stock mode
     beq- SaveState_RELOAD_PERCENT_HUDS_NOT_STOCK
 
 SaveState_RELOAD_PERCENT_HUDS_STOCK:
     mr r3, REG_SpawnedOrder                             # get player number
-    branchl r12, 0x80033bd8                             # get stocks left
+    branchl r12, PlayerBlock_LoadStocksLeft                             # get stocks left
     cmpwi r3, 0
     bne- SaveState_RELOAD_PERCENT_HUDS_NOT_STOCK
     li r5, 0x80                                         # remove percent
@@ -10464,7 +10464,7 @@ SaveState_Load_CheckIfGFXExists:
     beq SaveState_Load_GetNextGFX
     # Remove this GFX
     mr r3, r20
-    branchl r12, 0x80390228
+    branchl r12, GObj_Destroy
 
 # Get next GFX
 SaveState_Load_GetNextGFX:
@@ -11373,7 +11373,7 @@ InitializePositions:
 
     # Move P1
     mr r3, r28
-    branchl r12, 0x8008a2bc                             # Enter Wait
+    branchl r12, AS_Wait                             # Enter Wait
     lfs f1, 0x0(r20)
     stfs f1, 0xB0(r27)
     lfs f1, 0x8(r20)
@@ -11390,7 +11390,7 @@ InitializePositions:
     mr r24, r3
     mr r25, r4
     mr r3, r24
-    branchl r12, 0x8008a2bc                             # Enter Wait
+    branchl r12, AS_Wait                             # Enter Wait
     lfs f1, 0x0(r20)
     stfs f1, 0xB0(r25)
     lfs f1, 0x8(r20)
@@ -11403,7 +11403,7 @@ InitializePositions:
 # Move P2
 InitializePositions_MoveP2:
     mr r3, r30
-    branchl r12, 0x8008a2bc                             # Enter Wait
+    branchl r12, AS_Wait                             # Enter Wait
     lfs f1, 0x4(r20)
     stfs f1, 0xB0(r29)
     lfs f1, 0xC(r20)
@@ -11420,7 +11420,7 @@ InitializePositions_MoveP2:
     mr r24, r3
     mr r25, r4
     mr r3, r24
-    branchl r12, 0x8008a2bc                             # Enter Wait
+    branchl r12, AS_Wait                             # Enter Wait
     lfs f1, 0x4(r20)
     stfs f1, 0xB0(r25)
     lfs f1, 0xC(r20)
@@ -11460,7 +11460,7 @@ CheckIfPlayerHasAFollower:
     mr r24, r4
     mr r25, r5
     lbz r3, 0xC(r25)                                    # get slot
-    branchl r12, 0x80032330                             # get external character ID
+    branchl r12, PlayerBlock_LoadExternalCharID                             # get external character ID
     load r4, pdLoadCommonData                           # pdLoadCommonData table
     mulli r0, r3, 3                                     # struct length
     add r3, r4, r0                                      # get characters entry
@@ -11711,7 +11711,7 @@ ResetStaleMoves_GetPlayerData:
     # Reset Stale Moves
     # Get Stale Move Table
     lbz r3, 0xC(r21)                                    # Get Slot
-    branchl r12, 0x80036244                             # Get This Players Stale Table
+    branchl r12, PlayerBlock_GotoStaleMoveEntry_0xBC                             # Get This Players Stale Table
 
     # Fill With 0's
     li r4, 0x2C
@@ -11811,7 +11811,7 @@ MoveCPU:
     mr P2SubcharData, r4
     # Init Player Data Values (So CPU Init is called and nana knows where popp is)
     mr r3, P2Subchar
-    branchl r12, 0x80068354
+    branchl r12, InitializePlayerDataValues
     # Copy Positions
     lfs f1, 0xB0(P2Data)
     stfs f1, 0xB0(P2SubcharData)
@@ -12006,12 +12006,12 @@ Event_ExitFunction:
 
     # Get High Score
     lbz r3, 0x5(r20)                                    # Event ID
-    branchl r12, 0x8015cf5c
+    branchl r12, Events_GetEventSavedScore
     mr r21, r3                                          # Backup High Score
 
     # Check If Event Was Played Yet
     lbz r3, 0x5(r20)                                    # Event ID
-    branchl r12, 0x8015cefc
+    branchl r12, Events_CheckIfEventWasPlayedYet
     cmpwi r3, 0x0
     beq Event_ExitFunction_SaveScore
 
@@ -12024,11 +12024,11 @@ Event_ExitFunction:
 Event_ExitFunction_SaveScore:
     lbz r3, 0x5(r20)                                    # Event ID
     lhz r4, -0x4ea6(r13)
-    branchl r12, 0x8015cf70
+    branchl r12, Events_SetEventSavedScore
 
     # Set Event As Played
     lbz r3, 0x5(r20)                                    # Event ID
-    branchl r12, 0x8015ceb4
+    branchl r12, Events_SetEventAsPlayed
 
 Event_ExitFunction_Exit:
     restore
@@ -12421,7 +12421,7 @@ Custom_InterruptRebirthWait:
 
     # Check For Aerial Jump
     mr r3, player
-    branchl r12, 0x800cb870
+    branchl r12, Interrupt_AerialJumpGoTo
     cmpwi r3, 0x0
     bne Custom_InterruptRebirthWait_Exit
 
@@ -12507,14 +12507,14 @@ UpdatePosition:
     lwz r4, 0xB8(PlayerData)                            # get Z
     stw r4, 0x40(r3)                                    # store Z
 # Dirty Sub
-# branchl r12, 0x803732e8
+# branchl r12, HSD_JObjSetMtxDirtySub
 
     # Update Static Player Block Coords
     lbz r3, 0xC(PlayerData)
     lbz r4, 0x221F(PlayerData)
     rlwinm r4, r4, 29, 31, 31
     addi r5, PlayerData, 176
-    branchl r12, 0x80032828
+    branchl r12, PlayerBlock_UpdateXYCoords
 
     restore
     blr
@@ -12627,7 +12627,7 @@ PlacePlayersCenterStage_DoStuff:
 
     # Initialize Player Data (Mainly for ICs so Nana knows where Popo is)
     mr r3, player
-    branchl r12, 0x80068354
+    branchl r12, InitializePlayerDataValues
 
     mr r3, ground_id
     bl GetGroundCenter
@@ -13290,7 +13290,7 @@ EnterKnockback:
 
     # Enable ECB Update
     mr r3, REG_GObjData
-    branchl r12, 0x8007d5bc
+    branchl r12, DataOffset_ECBBottomUpdateEnable
 
 EnterKnockback_Exit:
     restore

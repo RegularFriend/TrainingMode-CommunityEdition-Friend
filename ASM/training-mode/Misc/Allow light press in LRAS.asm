@@ -20,7 +20,6 @@ LRAS_Loop:
         
     CheckL:
         mr r20, r3
-        SetBreakpoint
         mr r3, r20
         lbz r5, 0x1C(r3) # triggerLeft
         cmpwi r5, 20

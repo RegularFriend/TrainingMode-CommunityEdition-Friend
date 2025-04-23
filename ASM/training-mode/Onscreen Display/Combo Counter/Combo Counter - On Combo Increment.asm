@@ -29,7 +29,7 @@
 
     # Get Playerdata
     mr r3, r27
-    branchl r12, 0x80034110
+    branchl r12, PlayerBlock_LoadMainCharDataOffset
     mr player, r3
     lwz playerdata, 0x2C(player)
 
@@ -181,11 +181,11 @@ HitstunMonitor_EditOSD:
     lwz r3, 0x0(r26)
     li r4, 1
     addi r5, sp, 0xF0
-    branchl r12, 0x803a74f0 # Text_SetColor
+    branchl r12, Text_ChangeTextColor # Text_SetColor
     lwz r3, 0x0(r26)
     li r4, 2
     addi r5, sp, 0xF0
-    branchl r12, 0x803a74f0
+    branchl r12, Text_ChangeTextColor
 
 HitstunMonitor_SelfDestruct:
     li r3, 0

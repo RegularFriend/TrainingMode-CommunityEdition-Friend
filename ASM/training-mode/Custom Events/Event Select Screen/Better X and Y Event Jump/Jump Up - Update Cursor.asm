@@ -30,7 +30,7 @@
     stfs f1, 0x3C(r3)
     # DirtySub
     lwz r3, 0x40(sp)
-    branchl r12, 0x803732e8
+    branchl r12, HSD_JObjSetMtxDirtySub
     b Original
 
 Float:

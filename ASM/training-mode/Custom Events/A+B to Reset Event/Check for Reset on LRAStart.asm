@@ -4,7 +4,7 @@
 
     # Get all players inputs
     li r3, 4
-    branchl r12, 0x801a3680
+    branchl r12, Inputs_GetPlayerHeldInputs
 
     # Check Inputs
     rlwinm. r0, r4, 0, 23, 23   # check A

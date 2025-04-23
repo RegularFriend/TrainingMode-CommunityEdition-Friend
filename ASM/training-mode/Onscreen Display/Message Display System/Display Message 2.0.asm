@@ -59,7 +59,7 @@
 
     # Remove Old Area 3 Window
     lwz r3, 0x0(messageStruct)
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
     b CreateText
 
 GetPlayersArea:
@@ -85,7 +85,7 @@ CreateText:
     li r3, 0x2
     load r4, 0x804a1f58         # get text objects ID?
     lwz r4, 0x0(r4)
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
 
     # STORE PLAYERS TEXT POINTER
     mr r29, r3                  # backup text pointer
@@ -139,7 +139,7 @@ GetYLocation:
     mflr r4                     # get ASCII to print
     lfs f1, -0x37B4(rtoc)       # default text X/Y
     lfs f2, 0x10(textprop)      # background Y
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
 
     # CHANGE TEXT COLOR TO BLACK
     mr r3, text
@@ -147,14 +147,14 @@ GetYLocation:
     li r5, 0x0
     stw r5, 0xF0(sp)
     addi r5, sp, 0xF0
-    branchl r12, 0x803a74f0
+    branchl r12, Text_ChangeTextColor
 
     # CHANGE TEXT SIZE
     mr r3, text
     li r4, 0x0
     lfs f1, 0x14(textprop)      # stretch X (12)
     lfs f2, 0x18(textprop)      # stretch Y (30)
-    branchl r12, 0x803a7548
+    branchl r12, Text_UpdateSubtextSize
 
     b Exit
 
@@ -176,7 +176,7 @@ ShiftQueue:
     beq ShiftQueue_CheckForOneWindowOnly
 
     # Remove Message
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
 
     # Zero Out Entry
     mulli r4, r31, 0x8
@@ -261,7 +261,7 @@ CheckForDuplicates_MatchingWindowLoop:
     # Upon Finding a Match
     # Remove This Window
     lwz r3, 0x0(r4)
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
 
     # Zero Out Entry
     mulli r5, r28, 0x8          # Get Message's Offset

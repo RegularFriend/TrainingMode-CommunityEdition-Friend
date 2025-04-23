@@ -11,12 +11,12 @@
 ########################################################
 
     li r3, MessageStructTotalSize
-    branchl r12, 0x8037f1e4
+    branchl r12, HSD_MemAlloc
     stw r3, 0x4(r31)
 
     # Zero Space
     li r4, MessageStructTotalSize
-    branchl r12, 0x8000c160
+    branchl r12, ZeroAreaLength
 
 ##############################################
 ## Create Message Management Think Function ##
@@ -26,13 +26,13 @@
     li r3, 0xE
     li r4, 0x7
     li r5, 0x0
-    branchl r12, 0x803901f0
+    branchl r12, GObj_Create
 
     # Attach Think Function
     bl MessageThink
     mflr r4                                                 # Get Function Address
     li r5, 0x0
-    branchl r12, 0x8038fd54
+    branchl r12, GObj_AddProc
 
     b exit
 
@@ -143,7 +143,7 @@ MessageThink_Updater_PlayerAreaLoop:
 
     # Remove Text
     lwz r3, 0x0(r27)                                        # Get Text Pointer
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
 
     # Zero Out Entry
     li r3, 0x0
@@ -212,7 +212,7 @@ MessageThink_Updater_NonPlayerArea:
 
     # Remove Text
     lwz r3, 0x0(r29)                                        # Get Text Pointer
-    branchl r12, 0x803a5cc4
+    branchl r12, Text_RemoveText
 
     # Zero Out Entry
     li r3, 0x0

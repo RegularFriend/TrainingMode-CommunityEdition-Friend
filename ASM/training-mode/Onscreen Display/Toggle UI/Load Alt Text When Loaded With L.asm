@@ -26,7 +26,7 @@ CreateText:
     # CREATE TEXT ABOVE PLAYERS HUD ELEMENT
     li r3, 0x0
     lbz r4, -0x4AEB(r13)
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
 
     # BACKUP TEXT POINTER
     mr r30, r3
@@ -77,7 +77,7 @@ IncLoopLeft:
     mflr r4
     lfs f1, 0x14(TextProp)
     lfs f2, 0x18(TextProp)
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
 
     # Change Color
     mr r4, r3
@@ -85,7 +85,7 @@ IncLoopLeft:
     addi r5, sp, 0xF0
     load r6, 0xff7575FF
     stw r6, 0x0(r5)
-    branchl r12, 0x803a74f0
+    branchl r12, Text_ChangeTextColor
 
 ########################
 ## Write OSD Position ##
@@ -114,7 +114,7 @@ EndFixInvalidOSDPosition:
 
     lfs f1, 0x1C(TextProp)
     lfs f2, 0x20(TextProp)
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
     stb r3, 0x48(r31)
 
     # Change Color
@@ -123,7 +123,7 @@ EndFixInvalidOSDPosition:
     addi r5, sp, 0xF0
     load r6, 0x8dff6eff
     stw r6, 0x0(r5)
-    branchl r12, 0x803a74f0
+    branchl r12, Text_ChangeTextColor
 
     # Create XY Text
     mr r3, r30
@@ -131,13 +131,13 @@ EndFixInvalidOSDPosition:
     mflr r4
     lfs f1, 0x24(TextProp)
     lfs f2, 0x28(TextProp)
-    branchl r12, 0x803a6b98
+    branchl r12, Text_InitializeSubtext
 
     # Change Color
     mr r4, r3
     mr r3, r30
     addi r5, sp, 0xF0
-    branchl r12, 0x803a74f0
+    branchl r12, Text_ChangeTextColor
 
 ###########################
 ## Write Right Side Text ##
@@ -146,7 +146,7 @@ EndFixInvalidOSDPosition:
     # CREATE TEXT ABOVE PLAYERS HUD ELEMENT
     li r3, 0x0
     lbz r4, -0x4AEB(r13)
-    branchl r12, 0x803a6754
+    branchl r12, Text_CreateTextStruct
 
     # BACKUP TEXT POINTER
     mr r30, r3
