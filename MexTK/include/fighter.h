@@ -1370,7 +1370,7 @@ struct ftCommonData
     float friction_mult;                       // 0x6c
     float jumpaerial_lsticky;                  // 0x70
     int jumpaerial_lsticktimer;                // 0x74
-    float x78;                                 // 0x78
+    float jumpaerial_back_tilt;                // 0x78
     float x7c;                                 // 0x7c
     float x80;                                 // 0x80
     float x84;                                 // 0x84
