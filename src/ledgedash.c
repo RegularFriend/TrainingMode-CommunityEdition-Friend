@@ -61,9 +61,9 @@ static char **LdshOptions_Overlays[] = {"Off", "On"};
 static float LdshOptions_GameSpeeds[] = {1.f, 5.f/6.f, 2.f/3.f, 1.f/2.f, 1.f/4.f};
 static char *LdshOptions_GameSpeedText[] = {"1", "5/6", "2/3", "1/2", "1/4"};
 static char *LdshOptions_Reset[] = {"None", "Same Side", "Swap", "Swap on Success", "Random"};
-static char *LdshOptions_ResetDelay[] = {"Normal", "Fast", "Slow", "Instant"};
-static int LdshOptions_ResetDelaySuccess[] = { 60, 30, 120, 1 };
-static int LdshOptions_ResetDelayFailure[] = { 20, 1, 60, 1 };
+static char *LdshOptions_ResetDelay[] = {"Slow", "Normal", "Fast", "Instant"};
+static int LdshOptions_ResetDelaySuccess[] = { 120, 60, 30, 1 };
+static int LdshOptions_ResetDelayFailure[] = { 60, 20, 1, 1 };
 
 static EventOption LdshOptions_Main[] = {
     {
@@ -129,6 +129,7 @@ static EventOption LdshOptions_Main[] = {
     {
         .option_kind = OPTKIND_STRING,
         .value_num = sizeof(LdshOptions_ResetDelay) / sizeof(*LdshOptions_ResetDelay),
+        .option_val = 1,
         .option_name = "Reset Delay",
         .desc = "Change how quickly you can start a new ledgedash.",
         .option_values = LdshOptions_ResetDelay,
