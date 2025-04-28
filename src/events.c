@@ -3007,6 +3007,7 @@ void EventMenu_Update(GOBJ *gobj)
     else if ((menuData->mode == MenuMode_Paused) && (currMenu->menu_think != 0))
     {
         update_menu = currMenu->menu_think(gobj);
+        EventMenu_UpdateText(gobj, currMenu);
     }
 
     int exit_menu = 0;
@@ -3377,9 +3378,8 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu) {
         */
 
         // check to run a function
-        if ((currOption->option_kind == OPTKIND_FUNC) && (currOption->onOptionSelect != 0))
+        if (currOption->option_kind == OPTKIND_FUNC && currOption->onOptionSelect != 0)
         {
-
             // execute function
             currOption->onOptionSelect(gobj);
 

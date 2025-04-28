@@ -107,7 +107,7 @@ typedef struct EventOption
     char *desc;                                         // pointer to the description string for this option
     void **option_values;                               // pointer to an array of strings
     void (*onOptionChange)(GOBJ *menu_gobj, int value); // function that runs when option is changed
-    GOBJ *(*onOptionSelect)(GOBJ *menu_gobj);           // function that runs when option is selected
+    void (*onOptionSelect)(GOBJ *menu_gobj);            // function that runs when option is selected
 } EventOption;
 typedef struct Shortcut {
     int buttons_mask;
@@ -119,15 +119,15 @@ typedef struct ShortcutList {
 } ShortcutList;
 struct EventMenu
 {
-    char *name;                         // name of this menu
-    u8 option_num;                      // number of options this menu contains
-    u8 scroll;                          //
-    u8 state;                           // bool used to know if this menu is focused
-    u8 cursor;                          // index of the option currently selected
-    EventOption *options;               // pointer to all of this menu's options
-    EventMenu *prev;                    // pointer to previous menu, used at runtime
-    int (*menu_think)(GOBJ *menu_gobj); // function that runs every frame of this menu. returns a bool which indicates if basic menu code should be execution
-    ShortcutList *shortcuts;            // pointer to shortcuts when shortcut mode is entered on this menu
+    char *name;                    // name of this menu
+    u8 option_num;                 // number of options this menu contains
+    u8 scroll;                     //
+    u8 state;                      // bool used to know if this menu is focused
+    u8 cursor;                     // index of the option currently selected
+    EventOption *options;          // pointer to all of this menu's options
+    EventMenu *prev;               // pointer to previous menu, used at runtime
+    int (*menu_think)(GOBJ *menu); // function that runs every frame.
+    ShortcutList *shortcuts;       // pointer to shortcuts when shortcut mode is entered on this menu
 };
 typedef enum MenuMode {
     MenuMode_Normal,

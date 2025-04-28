@@ -16,6 +16,7 @@ static EventMenu LabMenu_Tech;
 static EventMenu LabMenu_Stage_FOD;
 static EventMenu LabMenu_CustomOSDs;
 static EventMenu LabMenu_SlotManagement;
+static EventMenu LabMenu_AlterInputs;
 static ShortcutList Lab_ShortcutList;
 
 #define AUTORESTORE_DELAY 20
@@ -96,6 +97,9 @@ void CustomTDI_Apply(GOBJ *cpu, GOBJ *hmn, CustomTDI *di);
 void CPUResetVars(void);
 void Lab_ChangeAdvCounterHitNumber(GOBJ *menu_gobj, int value);
 void Lab_ChangeAdvCounterLogic(GOBJ *menu_gobj, int value);
+void Lab_ChangeInputs(GOBJ *menu_gobj, int value);
+void Lab_ChangeAlterInputsFrame(GOBJ *menu_gobj, int value);
+int Lab_SetAlterInputsMenuOptions(GOBJ *menu_gobj);
 
 // ACTIONS #################################################
 
@@ -768,6 +772,8 @@ enum lab_option
 };
 
 static char *LabOptions_OffOn[] = {"Off", "On"};
+static char *LabOptions_CheckBox[] = {"", "X"};
+
 static EventOption LabOptions_Main[OPTLAB_COUNT] = {
     {
         .option_kind = OPTKIND_MENU,
@@ -2444,6 +2450,7 @@ static EventMenu LabMenu_Record = {
 enum state_options {
     OPTSLOT_PLAYER,
     OPTSLOT_SRC,
+    OPTSLOT_MODIFY,
     OPTSLOT_DELETE,
     OPTSLOT_DST,
     OPTSLOT_COPY,
@@ -2470,9 +2477,15 @@ static EventOption LabOptions_SlotManagement[OPTSLOT_COUNT] = {
     {
         .option_kind = OPTKIND_STRING,
         .value_num = sizeof(LabOptions_Slot) / 4,
-        .option_name = "Source Slot",
-        .desc = "Select the slot to copy from or delete.",
+        .option_name = "Slot",
+        .desc = "Select the slot to manage.",
         .option_values = LabOptions_Slot,
+    },
+    {
+        .option_kind = OPTKIND_MENU,
+        .option_name = "Modify Inputs",
+        .desc = "Manually alter this slot's inputs.",
+        .menu = &LabMenu_AlterInputs,
     },
     {
         .option_kind = OPTKIND_FUNC,
@@ -2483,7 +2496,7 @@ static EventOption LabOptions_SlotManagement[OPTSLOT_COUNT] = {
     {
         .option_kind = OPTKIND_STRING,
         .value_num = sizeof(LabOptions_Slot) / 4,
-        .option_name = "Copy Target Slot",
+        .option_name = "Copy Slot To",
         .desc = "Select the slot to copy to.",
         .option_values = LabOptions_Slot,
     },
@@ -2500,6 +2513,149 @@ static EventMenu LabMenu_SlotManagement = {
     .option_num = sizeof(LabOptions_SlotManagement) / sizeof(EventOption),
     .options = &LabOptions_SlotManagement,
     .shortcuts = &Lab_ShortcutList,
+};
+
+// ALTER INPUTS MENU ---------------------------------------------------------
+
+enum alter_inputs_options {
+    OPTINPUT_FRAME,
+    OPTINPUT_LSTICK_X,
+    OPTINPUT_LSTICK_Y,
+    OPTINPUT_CSTICK_X,
+    OPTINPUT_CSTICK_Y,
+    OPTINPUT_TRIGGER,
+
+    OPTINPUT_A,
+    OPTINPUT_B,
+    OPTINPUT_X,
+    OPTINPUT_Y,
+    OPTINPUT_Z,
+    OPTINPUT_L,
+    OPTINPUT_R,
+
+    OPTINPUT_COUNT,
+};
+
+static EventOption LabOptions_AlterInputs[OPTINPUT_COUNT] = {
+    {
+        .option_kind = OPTKIND_INT,
+        .value_min = 1,
+        .option_val = 1,
+        .value_num = 3600,
+        .option_name = "Frame",
+        .desc = "Which frame's inputs to alter.",
+        .option_values = "%d",
+        .onOptionChange = Lab_ChangeAlterInputsFrame,
+    },
+    {
+        .option_kind = OPTKIND_INT,
+        .value_min = -80,
+        .value_num = 161,
+        .option_name = "Stick X",
+        .desc = "",
+        .option_values = "%d",
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_INT,
+        .value_min = -80,
+        .value_num = 161,
+        .option_name = "Stick Y",
+        .desc = "",
+        .option_values = "%d",
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_INT,
+        .value_min = -80,
+        .value_num = 161,
+        .option_name = "C-Stick X",
+        .desc = "",
+        .option_values = "%d",
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_INT,
+        .value_min = -80,
+        .value_num = 161,
+        .option_name = "C-Stick Y",
+        .desc = "",
+        .option_values = "%d",
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_INT,
+        .value_min = 0,
+        .value_num = 141,
+        .option_name = "Analog Trigger",
+        .desc = "",
+        .option_values = "%d",
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "A",
+        .value_num = 2,
+        .desc = "",
+        .option_values = LabOptions_CheckBox,
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "B",
+        .value_num = 2,
+        .desc = "",
+        .option_values = LabOptions_CheckBox,
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "X",
+        .value_num = 2,
+        .desc = "",
+        .option_values = LabOptions_CheckBox,
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Y",
+        .value_num = 2,
+        .desc = "",
+        .option_values = LabOptions_CheckBox,
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Z",
+        .value_num = 2,
+        .desc = "",
+        .option_values = LabOptions_CheckBox,
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "L",
+        .value_num = 2,
+        .desc = "",
+        .option_values = LabOptions_CheckBox,
+        .onOptionChange = Lab_ChangeInputs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "R",
+        .value_num = 2,
+        .desc = "",
+        .option_values = LabOptions_CheckBox,
+        .onOptionChange = Lab_ChangeInputs,
+    },
+};
+
+static EventMenu LabMenu_AlterInputs = {
+    .name = "Alter Inputs",
+    .option_num = sizeof(LabOptions_AlterInputs) / sizeof(EventOption),
+    .options = &LabOptions_AlterInputs,
+    .shortcuts = &Lab_ShortcutList,
+    .menu_think = Lab_SetAlterInputsMenuOptions,
 };
 
 // OVERLAY MENU --------------------------------------------------------------
@@ -2523,7 +2679,7 @@ static Overlay LabValues_OverlayColours[OVERLAY_COLOUR_COUNT] = {
     { .color = { 255, 20 , 20 , 180 } },
     { .color = { 20 , 255, 20 , 180 } },
     { .color = { 20 , 20 , 255, 180 } },
-    { .color = { 220 , 220 , 20, 180 } },
+    { .color = { 220, 220, 20 , 180 } },
     { .color = { 255, 255, 255, 180 } },
     { .color = { 20 , 20 , 20 , 180 } },
 
