@@ -17,6 +17,7 @@ static EventMenu LabMenu_Stage_FOD;
 static EventMenu LabMenu_CustomOSDs;
 static EventMenu LabMenu_SlotManagement;
 static ShortcutList Lab_ShortcutList;
+static EventMenu LabMenu_OSDs;
 
 #define AUTORESTORE_DELAY 20
 #define INTANG_COLANIM 10
@@ -862,6 +863,7 @@ enum gen_option
     OPTGEN_STALE,
     OPTGEN_TAUNT,
     OPTGEN_CUSTOM_OSD,
+    OPTGEN_OSDS,
 
     OPTGEN_COUNT
 };
@@ -1017,6 +1019,12 @@ static EventOption LabOptions_General[OPTGEN_COUNT] = {
         .menu = &LabMenu_CustomOSDs,
         .option_name = "Custom OSDs",
         .desc = "Set up a display for any action state.",
+    },
+    {
+        .option_kind = OPTKIND_MENU,
+        .menu = &LabMenu_OSDs,
+        .option_name = "OSD Menu",
+        .desc = "Enable/disable OSDs",
     },
 };
 static EventMenu LabMenu_General = {
@@ -1357,6 +1365,196 @@ static EventMenu LabMenu_CustomOSDs = {
     .option_num = OPTCUSTOMOSD_MAX_COUNT,
     .options = &LabOptions_CustomOSDs,
     .shortcuts = &Lab_ShortcutList,
+};
+
+// OSDS MENU --------------------------------------------------------------
+
+// Enabled OSDs are stored as a bitmap in memory at the following bit positions.
+// These values must match the OSD IDs from "training-mode/Globals.s".
+// The order of the OSDs in this array must also match the order that they appear in LabOptions_OSDs.
+static int osd_memory_bit_position[] = {
+    0,  // Wavedash
+    1,  // L-Cancel
+    3,  // Act OoS Frame
+    5,  // Dashback
+    8,  // Fighter-specific
+    9,  // Powershield Frame
+    10, // SDI Inputs
+    12, // Lockout Timers
+    13, // Item Throw Interrupts
+    14, // Boost Grab
+    16, // Act OoLag
+    18, // Act OoAirborne
+    19, // Jump Cancel Timing
+    20, // Fastfall Timing
+    21, // Frame Advantage
+    22, // Combo Counter
+    24, // Grab Breakout
+    26, // Ledgedash Info
+    28, // Act OoHitstun
+};
+
+static char *LabValues_OSDs[] = {"Off", "On"};
+
+static EventOption LabOptions_OSDs[] = {
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Wavedash",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "L-Cancel",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Act OoS Frame",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Dashback",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Fighter-specific Tech",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Powershield Frame",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "SDI Inputs",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Lockout Timers",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Item Throw Interrupts",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Boost Grab",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Act OoLag",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Act OoAirborne",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Jump Cancel Timing",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Fastfall Timing",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Frame Advantage",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Combo Counter",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Grab Breakout",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Ledgedash Info",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .value_num = sizeof(LabValues_OSDs) / 4,
+        .option_name = "Act OoHitstun",
+        .desc = "",
+        .option_values = LabValues_OSDs,
+        .onOptionChange = Lab_ChangeOSDs,
+    },
+};
+
+static EventMenu LabMenu_OSDs = {
+    .name = "OSDs",
+    .option_num = sizeof(LabOptions_OSDs) / sizeof(EventOption),
+    .options = &LabOptions_OSDs,
 };
 
 // CPU MENU --------------------------------------------------------------

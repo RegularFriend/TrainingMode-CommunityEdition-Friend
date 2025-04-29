@@ -214,6 +214,8 @@ EventHighScores:
     .set CodesetLength, -0xD9C                          # word
 
     # OSD IDs
+    # These bits must match `osd_memory_bit_position` defined in lab.h in order for the
+    # Lab OSD menu to modify the correct OSD.
     .set OSD.Wavedash, 0
     .set OSD.LCancel, 1
     .set OSD.ActOoS, 3

@@ -200,6 +200,19 @@ void Lab_ChangeOverlays(GOBJ *menu_gobj, int value) {
     }
 }
 
+void Lab_ChangeOSDs(GOBJ *menu_gobj, int value) {
+    Memcard *memcard = R13_PTR(MEMCARD);
+    int new_osds_value = 0;
+
+    for (int i = 0; i < LabMenu_OSDs.option_num; i++) {
+        new_osds_value |= LabOptions_OSDs[i].option_val << osd_memory_bit_position[i];
+    }
+
+    memcard->TM_OSDEnabled = new_osds_value;
+    // Write OSD bitfield to backup address
+    RTOC_INT(-0xDA8) = new_osds_value;
+}
+
 void Lab_ChangePlayerPercent(GOBJ *menu_gobj, int value)
 {
     GOBJ *fighter = Fighter_GetGObj(0);
@@ -5880,6 +5893,13 @@ void Event_Init(GOBJ *gobj)
                 memcard->TM_LabSavedOverlays_CPU[i] = (OverlaySave){0};
             }
         }
+    }
+
+    int enabled_osds = memcard->TM_OSDEnabled;
+    for (int i = 0; i < LabMenu_OSDs.option_num; i++) {
+        int osd_bit_position = osd_memory_bit_position[i];
+        int is_osd_enabled = (enabled_osds & (1 << osd_bit_position)) != 0;
+        LabOptions_OSDs[i].option_val = is_osd_enabled;
     }
 
     // stage options
