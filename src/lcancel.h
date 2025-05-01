@@ -13,6 +13,8 @@ struct LCancelData
     u8 is_fail;        // status of the last l-cancel
     u8 is_fastfall;    // bool used to detect fastfall frame
     u8 fastfall_frame; // frame the player fastfell on
+    u8 current_l_input_timing;    // number of frames an L was input before the current aerial landing
+    u8 is_current_aerial_counted; // whether or not the current aerial has already been tracked as a success or failure 
     struct
     {
         GOBJ *gobj;
@@ -62,3 +64,5 @@ void Barrel_Toggle(GOBJ *menu_gobj, int value);
 GOBJ *Barrel_Spawn(int pos_kind);
 void Barrel_Null();
 void Event_Exit();
+bool is_aerial_landing_state(int state_id);
+bool is_edge_cancel_state(int state_id);
