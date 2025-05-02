@@ -4551,11 +4551,8 @@ void Savestates_Update()
                 HSD_Pad *pad = PadGet(port, PADGET_MASTER);
                 if (pad == NULL) continue; // Skip if no controller in this port
 
-                // check for savestate
-                int blacklist = (HSD_BUTTON_DPAD_DOWN | HSD_BUTTON_DPAD_UP | HSD_TRIGGER_Z | HSD_TRIGGER_R | HSD_BUTTON_A | HSD_BUTTON_B | HSD_BUTTON_X | HSD_BUTTON_Y | HSD_BUTTON_START);
-                
                 // Save state (D-pad right)
-                if ((pad->held & HSD_BUTTON_DPAD_RIGHT) && !(pad->held & blacklist))
+                if (pad->held & HSD_BUTTON_DPAD_RIGHT)
                 {
                     save_timer[port]++;
                     if (save_timer[port] == SAVE_THRESHOLD)
@@ -4573,7 +4570,7 @@ void Savestates_Update()
                 }
 
                 // Load state (D-pad left)
-                if ((pad->down & HSD_BUTTON_DPAD_LEFT) && !(pad->held & blacklist))
+                if (pad->down & HSD_BUTTON_DPAD_LEFT)
                 {
                     // load state
                     Record_LoadSavestate(event_vars->savestate);
