@@ -661,6 +661,8 @@ static GXColor stc_msg_colors[] = {
 #define MSG_COBJLGXLINKS (1 << MSG_GXLINK)
 #define MSG_COBJLGXPRI 8
 
+#define ENABLED_OSDS_BACKUP_ADDRESS -0xDA8
+
 typedef struct TipMgr
 {
     GOBJ *gobj;   // tip gobj
@@ -672,5 +674,9 @@ typedef struct TipMgr
 int Tip_Display(int lifetime, char *fmt, ...);
 void Tip_Destroy(); // 0 = immediately destroy, 1 = force exit
 void Tip_Think(GOBJ *gobj);
+
+static void Backup_Enabled_OSDs(int enabled_osds) {
+    RTOC_INT(ENABLED_OSDS_BACKUP_ADDRESS) = enabled_osds;
+}
 
 #define TIP_TXTJOINT 2

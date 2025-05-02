@@ -209,8 +209,7 @@ void Lab_ChangeOSDs(GOBJ *menu_gobj, int value) {
     }
 
     memcard->TM_OSDEnabled = new_osds_value;
-    // Write OSD bitfield to backup address
-    RTOC_INT(-0xDA8) = new_osds_value;
+    Backup_Enabled_OSDs(new_osds_value);
 }
 
 void Lab_ChangePlayerPercent(GOBJ *menu_gobj, int value)
