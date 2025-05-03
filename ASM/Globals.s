@@ -209,7 +209,6 @@ EventHighScores:
 
     # Custom rtoc offsets
     .set EventCPUBackup_CharID, -0xDA5                  # byte
-    .set FirstBootFlag, -0xDA4                          # byte
     .set CodesetPointer, -0xDA0                         # word
     .set CodesetLength, -0xD9C                          # word
 
