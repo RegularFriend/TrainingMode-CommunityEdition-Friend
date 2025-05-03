@@ -10,11 +10,11 @@ struct LCancelData
     LCancelAssets *lcancel_assets;
     GOBJ *barrel_gobj;
     Vec3 barrel_lastpos;
-    u8 is_fail;        // status of the last l-cancel
-    u8 is_fastfall;    // bool used to detect fastfall frame
+    bool is_fail;      // status of the last l-cancel
+    bool is_fastfall;  // bool used to detect fastfall frame
     u8 fastfall_frame; // frame the player fastfell on
-    u8 current_l_input_timing;    // number of frames an L was input before the current aerial landing
-    u8 is_current_aerial_counted; // whether or not the current aerial has already been tracked as a success or failure 
+    u8 current_l_input_timing;      // number of frames an L was input before the current aerial landing
+    bool is_current_aerial_counted; // whether or not the current aerial has already been tracked as a success or failure
     struct
     {
         GOBJ *gobj;

@@ -205,7 +205,7 @@ void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
     {
         // did i fastfall yet?
         if (hmn_data->flags.is_fastfall)
-            event_data->is_fastfall = 1; // set as fastfall this session
+            event_data->is_fastfall = true; // set as fastfall this session
         else
             event_data->fastfall_frame++; // increment frames
     }
@@ -238,19 +238,19 @@ void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
         event_data->hud.lcl_total++;
 
         // determine succession
-        int is_fail = 1;
+        bool is_fail = true;
         if (is_success_l_cancel || is_edge_cancel)
         {
-            is_fail = 0;
+            is_fail = false;
             event_data->hud.lcl_success++;
         }
         event_data->is_fail = is_fail; // save l-cancel bool
 
         // Play appropriate sfx
-        if (is_fail == 0)
-            SFX_PlayRaw(303, 255, 128, 20, 3);
-        else
+        if (is_fail)
             SFX_PlayCommon(3);
+        else
+            SFX_PlayRaw(303, 255, 128, 20, 3);
 
         // update timing text
         int frame_box_id;
@@ -338,7 +338,7 @@ void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
     if (!can_fastfall && !is_aerial_landing_state(state)) // cant fastfall, reset frames
     {
         event_data->fastfall_frame = 0;
-        event_data->is_fastfall = 0;
+        event_data->is_fastfall = false;
     }
 
     // update HUD anim
@@ -418,7 +418,7 @@ void Tips_Think(LCancelData *event_data, FighterData *hmn_data)
 
             // update tip conditions
             if ((hmn_data->state_id >= ASID_LANDINGAIRN) && (hmn_data->state_id <= ASID_LANDINGAIRLW) && (hmn_data->TM.state_frame == 0) && // is in aerial landing
-                (event_data->is_fail == 0) &&
+                (!event_data->is_fail) &&
                 (event_data->tip.hitbox_active == 0)) // succeeded the last aerial landing
             {
                 // increment condition count
@@ -452,7 +452,7 @@ void Tips_Think(LCancelData *event_data, FighterData *hmn_data)
                     event_data->tip.fastfall_active = 0;
 
                 // check if fastfalling
-                if (hmn_data->flags.is_fastfall == 1)
+                if (hmn_data->flags.is_fastfall)
                     event_data->tip.fastfall_active = 1;
             }
 
@@ -486,7 +486,7 @@ void Tips_Think(LCancelData *event_data, FighterData *hmn_data)
 
             // update tip conditions
             if ((hmn_data->state_id >= ASID_LANDINGAIRN) && (hmn_data->state_id <= ASID_LANDINGAIRLW) && // is in aerial landing
-                (event_data->is_fail == 1) &&                                                      // failed the l-cancel
+                (event_data->is_fail) &&                                                      // failed the l-cancel
                 (hmn_data->input.down & (HSD_TRIGGER_L | HSD_TRIGGER_R | HSD_TRIGGER_Z)))          // was late for an l-cancel by pressing it just now
             {
                 // increment condition count
