@@ -8,7 +8,8 @@
 #define FIREFOX_CHANCE 8 
 #define DOUBLEJUMP_CHANCE_BELOW_LEDGE 5
 #define DOUBLEJUMP_CHANCE_ABOVE_LEDGE 30
-#define ILLUSION_CHANCE 10
+#define ILLUSION_CHANCE_ABOVE_LEDGE 15
+#define ILLUSION_CHANCE_TO_LEDGE 8
 #define FASTFALL_CHANCE 8
 
 #define MAX_ILLUSION_HEIGHT 30.f
@@ -377,8 +378,15 @@ void Event_Think(GOBJ *menu) {
     } else if (air_actionable(cpu)) {
         float distance_to_ledge = Vec2_Distance(&cpu_data->phys.pos, &target_ledge);
         
-        int dj_chance = cpu_data->phys.pos.Y > target_ledge.Y ?
-            DOUBLEJUMP_CHANCE_ABOVE_LEDGE : DOUBLEJUMP_CHANCE_BELOW_LEDGE;
+        int dj_chance, illusion_chance;
+        if (cpu_data->phys.pos.Y > target_ledge.Y) {
+            dj_chance = DOUBLEJUMP_CHANCE_ABOVE_LEDGE;
+            illusion_chance = ILLUSION_CHANCE_ABOVE_LEDGE;
+        } else {
+            dj_chance = DOUBLEJUMP_CHANCE_BELOW_LEDGE;
+            illusion_chance = ILLUSION_CHANCE_TO_LEDGE;
+        }
+            
         // JUMP
         if (
             enabled(OPT_JUMP)
@@ -400,7 +408,7 @@ void Event_Think(GOBJ *menu) {
             && cpu_data->phys.pos.Y > MIN_ILLUSION_HEIGHT
             && cpu_data->phys.pos.Y < MAX_ILLUSION_HEIGHT
             && fabs(target_ledge.X - cpu_data->phys.pos.X) < ILLUSION_DISTANCE
-            && HSD_Randi(ILLUSION_CHANCE) == 0
+            && HSD_Randi(illusion_chance) == 0
         ) {
             cpu_data->cpu.lstickX = 127 * dir;
             cpu_data->cpu.held |= PAD_BUTTON_B;
