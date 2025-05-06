@@ -363,6 +363,7 @@ void Event_Init(GOBJ *gobj) {
     GOBJ *cpu = Fighter_GetGObj(1);
     FighterData *cpu_data = cpu->userdata;
     if (cpu_data->kind == FTKIND_FALCO) {
+        Menu_Main.name = "Falco Edgeguard";
         for (int i = 0; i < countof(FalcoAltText); ++i) {
             AltText *alt = &FalcoAltText[i];
             Options_Main[i].option_name = alt->name;
