@@ -13,7 +13,7 @@
 
     ##################################
     # Number of Events
-    .set Minigames.NumOfEvents, 4 -1
+    .set Minigames.NumOfEvents, 5 -1
 
     .set Event_Eggs, 0
 
@@ -110,20 +110,24 @@
     .long Fox_CSSID | Falco_CSSID                       # Player Characters
     .endm
 
-    .set Event_EdgeguardFirefox, 1
+    .set Event_EdgeguardFox, 1
 
-    .macro Event_EdgeguardFirefox_PlayableCharacters
+    .macro Event_EdgeguardFox_PlayableCharacters
     .endm
 
+    .set Event_EdgeguardFalco, 2
 
-    .set Event_SideBSweetspot, 2
+    .macro Event_EdgeguardFalco_PlayableCharacters
+    .endm
+
+    .set Event_SideBSweetspot, 3
 
     .macro Event_SideBSweetspot_PlayableCharacters
     .byte Event_SideBSweetspot
     .long Fox_CSSID | Falco_CSSID                       # Player Characters
     .endm
 
-    .set Event_EscapeSheik, 3
+    .set Event_EscapeSheik, 4
 
     .macro Event_EscapeSheik_PlayableCharacters
     .byte Event_EscapeSheik
@@ -180,7 +184,8 @@ GeneralTech:
 
 SpacieTech:
     Event_LedgetechCounter_PlayableCharacters
-    Event_EdgeguardFirefox_PlayableCharacters
+    Event_EdgeguardFox_PlayableCharacters
+    Event_EdgeguardFalco_PlayableCharacters
     Event_SideBSweetspot_PlayableCharacters
     Event_EscapeSheik_PlayableCharacters
     .byte -1
@@ -587,35 +592,6 @@ EventHighScores:
     .set GaW.Int, 0x18
     .set Ganondorf.Int, 0x19
     .set Roy.Int, 0x1A
-
-    /*
-    # Character CSS ID
-    .set Doc_CSSID, 0x0
-    .set Mario_CSSID, 0x1
-    .set Luigi_CSSID, 0x2
-    .set Bowser_CSSID, 0x3
-    .set Peach_CSSID, 0x4
-    .set Yoshi_CSSID, 0x5
-    .set DK_CSSID, 0x6
-    .set CaptainFalcon_CSSID, 0x7
-    .set Ganondorf_CSSID, 0x8
-    .set Falco_CSSID, 0x9
-    .set Fox_CSSID, 0xA
-    .set Ness_CSSID, 0xB
-    .set IceClimbers_CSSID, 0xC
-    .set Kirby_CSSID, 0xD
-    .set Samus_CSSID, 0xE
-    .set Zelda_CSSID, 0xF
-    .set Link_CSSID, 0x10
-    .set YLink_CSSID, 0x11
-    .set Pichu_CSSID, 0x12
-    .set Pikachu_CSSID, 0x13
-    .set Jigglypuff_CSSID, 0x14
-    .set Mewtwo_CSSID, 0x15
-    .set GaW_CSSID, 0x16
-    .set Marth_CSSID, 0x17
-    .set Roy_CSSID, 0x18
-    */
 
     # Character CSS Bitflag IDs
     # (used for TM's lookup tables for displaying CSS icons)

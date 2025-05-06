@@ -723,6 +723,47 @@ EventDesc FoxEdgeguard = {
     .defaultOSD = 0xFFFFFFFF,
 };
 
+static EventMatchData FalcoEdgeguard_MatchData = {
+    .timer = MATCH_TIMER_COUNTUP,
+    .matchType = MATCH_MATCHTYPE_TIME,
+    .isDisableMusic = true,
+    .hideGo = true,
+    .hideReady = true,
+    .isCreateHUD = true,
+    .isDisablePause = true,
+    .timerRunOnPause = false,
+    .isHidePauseHUD = true,
+    .isShowLRAStart = true,
+    .isCheckForLRAStart = true,
+    .isShowZRetry = true,
+    .isCheckForZRetry = true,
+    .isShowAnalogStick = true,
+    .isShowScore = false,
+
+    .isRunStockLogic = false,
+    .isDisableHit = false,
+    .useKOCounter = false,
+    .playerKind = -1,
+    .cpuKind = CKIND_FALCO,
+    .stage = -1,
+    .timerSeconds = 0,
+    .timerSubSeconds = 0,
+};
+EventDesc FalcoEdgeguard = {
+    .eventName = "Falco Edgeguard Training\n",
+    .eventDescription = "Finish off the enemy Falco\nafter you hit him offstage!",
+    .eventFile = "edgeguard",
+    .CSSType = SLCHRKIND_EVENT,
+    .isSelectStage = true,
+    .use_savestates = false,
+    .disable_hazards = true,
+    .force_sopo = false,
+    .scoreType = SCORETYPE_KO,
+    .callbackPriority = 3,
+    .matchData = &FalcoEdgeguard_MatchData,
+    .defaultOSD = 0xFFFFFFFF,
+};
+
 static EventMatchData SideBSweet_MatchData = {
     .timer = MATCH_TIMER_COUNTUP,
     .matchType = MATCH_MATCHTYPE_TIME,
@@ -1014,6 +1055,7 @@ static EventPage General_Page = {
 static EventDesc *Spacie_Events[] = {
     &TechCounter,
     &FoxEdgeguard,
+    &FalcoEdgeguard,
     &SideBSweet,
     &EscapeSheik,
 };

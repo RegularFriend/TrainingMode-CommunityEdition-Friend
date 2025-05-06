@@ -127,7 +127,8 @@ GeneralTech:
 #######################
 SpacieTech:
     bl LedgetechCounter
-    bl 0x0 # Firefox Edgeguard
+    bl 0x0 # Fox Edgeguard
+    bl 0x0 # Falco Edgeguard
     bl SideBSweetspot
     bl EscapeSheik
     .long -1

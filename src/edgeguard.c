@@ -5,7 +5,7 @@
 #define RESET_DELAY 30
 
 // 1 in n chance every frame
-#define FIREFOX_CHANCE 8 
+#define UPB_CHANCE 8 
 #define DOUBLEJUMP_CHANCE_BELOW_LEDGE 5
 #define DOUBLEJUMP_CHANCE_ABOVE_LEDGE 30
 #define ILLUSION_CHANCE_ABOVE_LEDGE 15
@@ -16,6 +16,7 @@
 #define MIN_ILLUSION_HEIGHT -15.f
 #define ILLUSION_DISTANCE 75
 #define FIREFOX_DISTANCE 80
+#define FIREBIRD_DISTANCE 70
 #define DEGREES_TO_RADIANS 0.01745329252
 
 static int reset_timer = -1;
@@ -58,6 +59,41 @@ static KBValues HitStrength_KBRange[] = {
         140.f, 200.f, // mag
          65.f,  70.f, // ang
          80.f, 110.f, // dmg
+    },
+};
+
+typedef struct AltText {
+    const char *name, *desc;
+} AltText;
+
+static AltText FalcoAltText[] = {
+    {
+        .name = "Hit Strength",
+        .desc = "How far Falco will be knocked back.",
+    },
+    {
+        .name = "Firebird Low",
+        .desc = "Allow Falco to aim his up special to the ledge.",
+    },
+    {
+        .name = "Firebird Mid",
+        .desc = "Allow Falco to aim his up special to the stage.",
+    },
+    {
+        .name = "Firebird High",
+        .desc = "Allow Falco to aim his up special high.",
+    },
+    {
+        .name = "Double Jump",
+        .desc = "Allow Falco to double jump.",
+    },
+    {
+        .name = "Illusion",
+        .desc = "Allow Falco to side special.",
+    },
+    {
+        .name = "Fast Fall",
+        .desc = "Allow Falco to fast fall.",
     },
 };
 
@@ -324,6 +360,16 @@ void Reset(void) {
 }
 
 void Event_Init(GOBJ *gobj) {
+    GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *cpu_data = cpu->userdata;
+    if (cpu_data->kind == FTKIND_FALCO) {
+        for (int i = 0; i < countof(FalcoAltText); ++i) {
+            AltText *alt = &FalcoAltText[i];
+            Options_Main[i].option_name = alt->name;
+            Options_Main[i].desc = alt->desc;
+        } 
+    }
+
     GetLedgePositions(&ledge_positions);
     Reset();
 }
@@ -342,13 +388,16 @@ void Event_Think(GOBJ *menu) {
         Reset();
     }
     
-    int cpu_state = cpu_data->state_id;
-    int dir = cpu_data->phys.pos.X > 0.f ? -1 : 1;
+    Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
+    Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
+    int state = cpu_data->state_id;
+    int dir = pos.X > 0.f ? -1 : 1;
+    bool can_jump = cpu_data->jump.jumps_used < 2 && enabled(OPT_JUMP);
     
-    Vec2 target_ledge = ledge_positions[cpu_data->phys.pos.X > 0.f];
+    Vec2 target_ledge = ledge_positions[pos.X > 0.f];
     
     // ledge sweetspot is slightly further away and down if above the stage
-    if (cpu_data->phys.pos.Y > 20.f) {
+    if (pos.Y > 20.f) {
         target_ledge.X -= 16 * dir;
         target_ledge.Y -= 4;
     }
@@ -362,7 +411,7 @@ void Event_Think(GOBJ *menu) {
             cpu_data->flags.dead
             || hmn_data->flags.dead
             || cpu_data->phys.air_state == 0
-            || cpu_state == ASID_CLIFFCATCH
+            || state == ASID_CLIFFCATCH
         )
     ) {
         reset_timer = RESET_DELAY;
@@ -370,30 +419,36 @@ void Event_Think(GOBJ *menu) {
 
     if (hmn_data->input.down & PAD_BUTTON_DPAD_LEFT)
         reset_timer = 0;
+        
+    float distance_to_ledge = Vec2_Distance(&cpu_data->phys.pos, &target_ledge);
+    
+    int dj_chance, illusion_chance;
+    if (cpu_data->phys.pos.Y > target_ledge.Y) {
+        dj_chance = DOUBLEJUMP_CHANCE_ABOVE_LEDGE;
+        illusion_chance = ILLUSION_CHANCE_ABOVE_LEDGE;
+    } else {
+        dj_chance = DOUBLEJUMP_CHANCE_BELOW_LEDGE;
+        illusion_chance = ILLUSION_CHANCE_TO_LEDGE;
+    }
+    
+    bool can_upb = enabled(OPT_FF_LOW) | enabled(OPT_FF_MID) | enabled(OPT_FF_HIGH);
+    
+    float upb_distance = cpu_data->kind == FTKIND_FOX ?
+        FIREFOX_DISTANCE : FIREBIRD_DISTANCE;
 
     if (cpu_data->flags.hitstun) {
         // DI inwards
         cpu_data->cpu.lstickX = 90 * dir;
         cpu_data->cpu.lstickY = 90;
     } else if (air_actionable(cpu)) {
-        float distance_to_ledge = Vec2_Distance(&cpu_data->phys.pos, &target_ledge);
-        
-        int dj_chance, illusion_chance;
-        if (cpu_data->phys.pos.Y > target_ledge.Y) {
-            dj_chance = DOUBLEJUMP_CHANCE_ABOVE_LEDGE;
-            illusion_chance = ILLUSION_CHANCE_ABOVE_LEDGE;
-        } else {
-            dj_chance = DOUBLEJUMP_CHANCE_BELOW_LEDGE;
-            illusion_chance = ILLUSION_CHANCE_TO_LEDGE;
-        }
-            
+
         // JUMP
         if (
             enabled(OPT_JUMP)
-            && cpu_data->jump.jumps_used < 2
+            && can_jump
             && (
                 // force jump if at end of range
-                distance_to_ledge > FIREFOX_DISTANCE
+                distance_to_ledge > upb_distance
                 
                 // otherwise, random chance to jump
                 || HSD_Randi(dj_chance) == 0
@@ -404,26 +459,36 @@ void Event_Think(GOBJ *menu) {
             
         // ILLUSION
         } else if (
-            enabled(OPT_ILLUSION)
-            && cpu_data->phys.pos.Y > MIN_ILLUSION_HEIGHT
-            && cpu_data->phys.pos.Y < MAX_ILLUSION_HEIGHT
-            && fabs(target_ledge.X - cpu_data->phys.pos.X) < ILLUSION_DISTANCE
-            && HSD_Randi(illusion_chance) == 0
+            enabled(OPT_ILLUSION) && (
+                // force illusion to ledge if no jump and cannot upb
+                (
+                    !can_upb && !can_jump
+                    && MIN_ILLUSION_HEIGHT < pos.Y
+                    && pos.Y < MIN_ILLUSION_HEIGHT + 5.f
+                )
+            
+                // random chance to illusion
+                || (
+                    pos.Y > MIN_ILLUSION_HEIGHT
+                    && pos.Y < MAX_ILLUSION_HEIGHT
+                    && fabs(target_ledge.X - pos.X) < ILLUSION_DISTANCE
+                    && HSD_Randi(illusion_chance) == 0
+                )
+            )
         ) {
             cpu_data->cpu.lstickX = 127 * dir;
             cpu_data->cpu.held |= PAD_BUTTON_B;
             
         // FIREFOX
         } else if (
-            cpu_data->phys.self_vel.Y <= 1.5f
+            vel.Y <= 1.5f
+            && can_upb
             && (
-                enabled(OPT_FF_LOW) || enabled(OPT_FF_MID) || enabled(OPT_FF_HIGH)
-            ) && (
                 // force upb if at end of range
-                (cpu_data->phys.pos.Y < 0.f && distance_to_ledge > FIREFOX_DISTANCE)
+                (pos.Y < 0.f && distance_to_ledge > upb_distance)
     
                 // otherwise, random chance to upb
-                || (distance_to_ledge < FIREFOX_DISTANCE && HSD_Randi(FIREFOX_CHANCE) == 0)
+                || (distance_to_ledge < upb_distance && HSD_Randi(UPB_CHANCE) == 0)
             )
         ) {
             cpu_data->cpu.lstickY = 127;
@@ -433,7 +498,7 @@ void Event_Think(GOBJ *menu) {
         } else if (
             enabled(OPT_FASTFALL)
             && !cpu_data->flags.is_fastfall
-            && cpu_data->phys.self_vel.Y < 0.f
+            && vel.Y < 0.f
             && HSD_Randi(FASTFALL_CHANCE) == 0
         ) {
             cpu_data->cpu.lstickY = -127;
@@ -445,7 +510,7 @@ void Event_Think(GOBJ *menu) {
         }
         
         // if in firefox starting states
-    } else if (0x161 <= cpu_state && cpu_state <= 0x162) {
+    } else if (0x161 <= state && state <= 0x162) {
         // compute firefox angle
         
         int low = enabled(OPT_FF_LOW);
@@ -454,9 +519,9 @@ void Event_Think(GOBJ *menu) {
         int option_count = low + mid + high;
         int choice = HSD_Randi(option_count);
         
-        float x_to_ledge = fabs(target_ledge.X - cpu_data->phys.pos.X);
-        float high_y = cpu_data->phys.pos.Y + sqrtf(
-            FIREFOX_DISTANCE*FIREFOX_DISTANCE
+        float x_to_ledge = fabs(target_ledge.X - pos.X);
+        float high_y = pos.Y + sqrtf(
+            upb_distance*upb_distance
             - x_to_ledge*x_to_ledge
         );
         
@@ -470,8 +535,8 @@ void Event_Think(GOBJ *menu) {
         }
         
         Vec2 vec_to_target = {
-            .X = target.X - cpu_data->phys.pos.X,
-            .Y = target.Y - cpu_data->phys.pos.Y,
+            .X = target.X - pos.X,
+            .Y = target.Y - pos.Y,
         };
         Vec2_Normalize(&vec_to_target);
         
@@ -480,10 +545,10 @@ void Event_Think(GOBJ *menu) {
     
     } else if (
         // if in firefox ending states
-        (0x162 <= cpu_state && cpu_state <= 0x167)
+        (0x162 <= state && state <= 0x167)
          
         // or special fall
-        || (ASID_FALLSPECIAL <= cpu_state && cpu_state <= ASID_FALLSPECIALB)
+        || (ASID_FALLSPECIAL <= state && state <= ASID_FALLSPECIALB)
     ) {
         // drift towards stage
         cpu_data->cpu.lstickX = 127 * dir;
