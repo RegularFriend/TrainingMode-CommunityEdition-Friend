@@ -709,9 +709,9 @@ static EventMatchData ArmadaShine_MatchData = {
     .timerSubSeconds = 0,
 };
 EventDesc ArmadaShine = {
-    .eventName = "Edgeguard Firefox Training\n",
-    .eventDescription = "Finish off the enemy Fox\nafter he uses Firefox!",
-    .eventFile = 0,
+    .eventName = "Edgeguard Fox Training\n",
+    .eventDescription = "Finish off the enemy Fox\nafter you hit him offstage!",
+    .eventFile = "edgeguard",
     .CSSType = SLCHRKIND_EVENT,
     .isSelectStage = true,
     .use_savestates = false,
