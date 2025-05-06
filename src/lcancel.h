@@ -66,3 +66,4 @@ void Barrel_Null();
 void Event_Exit();
 bool is_aerial_landing_state(int state_id);
 bool is_edge_cancel_state(int state_id);
+bool is_auto_cancel_landing(FighterData *hmn_data);
