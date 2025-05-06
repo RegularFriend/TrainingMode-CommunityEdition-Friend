@@ -682,14 +682,14 @@ EventDesc TechCounter = {
     .defaultOSD = 0xFFFFFFFF,
 };
 
-static EventMatchData ArmadaShine_MatchData = {
+static EventMatchData FoxEdgeguard_MatchData = {
     .timer = MATCH_TIMER_COUNTUP,
     .matchType = MATCH_MATCHTYPE_TIME,
     .isDisableMusic = true,
     .hideGo = true,
     .hideReady = true,
     .isCreateHUD = true,
-    .isDisablePause = false,
+    .isDisablePause = true,
     .timerRunOnPause = false,
     .isHidePauseHUD = true,
     .isShowLRAStart = true,
@@ -708,8 +708,9 @@ static EventMatchData ArmadaShine_MatchData = {
     .timerSeconds = 0,
     .timerSubSeconds = 0,
 };
-EventDesc ArmadaShine = {
-    .eventName = "Edgeguard Fox Training\n",
+    
+EventDesc FoxEdgeguard = {
+    .eventName = "Fox Edgeguard Training\n",
     .eventDescription = "Finish off the enemy Fox\nafter you hit him offstage!",
     .eventFile = "edgeguard",
     .CSSType = SLCHRKIND_EVENT,
@@ -719,7 +720,7 @@ EventDesc ArmadaShine = {
     .force_sopo = false,
     .scoreType = SCORETYPE_KO,
     .callbackPriority = 3,
-    .matchData = &ArmadaShine_MatchData,
+    .matchData = &FoxEdgeguard_MatchData,
     .defaultOSD = 0xFFFFFFFF,
 };
 
@@ -1013,7 +1014,7 @@ static EventPage General_Page = {
 // Page 3 Events
 static EventDesc *Spacie_Events[] = {
     &TechCounter,
-    &ArmadaShine,
+    &FoxEdgeguard,
     &SideBSweet,
     &EscapeSheik,
 };
