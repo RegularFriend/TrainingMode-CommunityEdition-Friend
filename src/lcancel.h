@@ -55,6 +55,9 @@ typedef struct LCancelAssets
 #define LCLARROW_JOBJ 7
 #define LCLARROW_OFFSET 0.365
 
+// Maximum number of frames before a miss is considered "No Press", using zero-based indexing.
+#define MAX_L_PRESS_TIMING 29
+
 static void *item_callbacks[];
 float Bezier(float time, float start, float end);
 void Tips_Toggle(GOBJ *menu_gobj, int value);
@@ -66,3 +69,4 @@ void Barrel_Null();
 void Event_Exit();
 bool is_aerial_landing_state(int state_id);
 bool is_edge_cancel_state(int state_id);
+int min(int a, int b);

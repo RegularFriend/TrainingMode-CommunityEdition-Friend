@@ -253,22 +253,19 @@ void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
             SFX_PlayRaw(303, 255, 128, 20, 3);
 
         // update timing text
-        int frame_box_id;
         if (is_edge_cancel)
         {
             Text_SetText(event_data->hud.text_time, 0, "EC %df", hmn_data->TM.state_prev_frames[0]);
         }
-        else if (event_data->current_l_input_timing >= 30)
+        else if (event_data->current_l_input_timing > MAX_L_PRESS_TIMING)
         {
-            // update text
             Text_SetText(event_data->hud.text_time, 0, "No Press");
-            frame_box_id = 29;
         }
         else
         {
             Text_SetText(event_data->hud.text_time, 0, "%df/7f", event_data->current_l_input_timing + 1);
-            frame_box_id = event_data->current_l_input_timing;
         }
+        int frame_box_id = min(event_data->current_l_input_timing, MAX_L_PRESS_TIMING);
 
         // update arrow
         JOBJ *arrow_jobj;
@@ -789,6 +786,10 @@ bool is_aerial_landing_state(int state_id) {
 
 bool is_edge_cancel_state(int state_id) {
     return (state_id == ASID_FALL || state_id == ASID_OTTOTTO);
+}
+
+int min(int a, int b) {
+    return (((a) < (b)) ? (a) : (b));
 }
 
 static void *item_callbacks[] = {
