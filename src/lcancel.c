@@ -292,9 +292,7 @@ void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
         event_data->is_current_aerial_counted = false;
     }
 
-    // if autocancel landing
-    if (((hmn_data->state_id == ASID_LANDING) && (hmn_data->TM.state_frame == 0)) &&                   // if first frame of landing
-        ((hmn_data->TM.state_prev[0] >= ASID_ATTACKAIRN) && (hmn_data->state_id <= ASID_ATTACKAIRLW))) // came from aerial attack
+    if (is_auto_cancel_landing(hmn_data))
     {
         // state as autocancelled
         Text_SetText(event_data->hud.text_time, 0, "Auto-canceled");
@@ -788,8 +786,15 @@ bool is_edge_cancel_state(int state_id) {
     return (state_id == ASID_FALL || state_id == ASID_OTTOTTO);
 }
 
+bool is_auto_cancel_landing(FighterData *hmn_data) {
+    return hmn_data->state_id == ASID_LANDING
+        && hmn_data->TM.state_frame == 0                   // if first frame of landing
+        && hmn_data->TM.state_prev[0] >= ASID_ATTACKAIRN
+        && hmn_data->TM.state_prev[0] <= ASID_ATTACKAIRLW; // came from aerial attack
+}
+
 int min(int a, int b) {
-    return (((a) < (b)) ? (a) : (b));
+    return a < b ? a : b;
 }
 
 static void *item_callbacks[] = {
