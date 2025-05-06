@@ -24,6 +24,12 @@ enum LanguageKind
     LANG_USA,
 };
 
+enum ScoreType
+{
+    SCORETYPE_KO,
+    SCORETYPE_TIME,
+};
+
 /*** Structs ***/
 
 // Aitch: This is a custom (non-melee) struct used by TM to save overlays.
