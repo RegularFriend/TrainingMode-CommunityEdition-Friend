@@ -1320,8 +1320,7 @@ void EventUpdate()
 void TM_ConsoleThink(GOBJ *gobj)
 {
     // init variables
-    int *data = gobj->userdata;
-    DevText *text = data[0];
+    DevText *text = gobj->userdata;
 
     // check to toggle console
     for (int i = 0; i < 4; i++)
@@ -1345,15 +1344,14 @@ void TM_ConsoleThink(GOBJ *gobj)
 void TM_CreateConsole()
 {
     // init dev text
-    GOBJ *gobj = GObj_Create(0, 0, 0);
-    int *data = calloc(32);
-    GObj_AddUserData(gobj, 4, HSD_Free, data);
-    GObj_AddProc(gobj, TM_ConsoleThink, 0);
-
     DevText *text = DevelopText_CreateDataTable(13, 0, 0, 32, 32, HSD_MemAlloc(0x1000));
     DevelopText_Activate(0, text);
     text->show_cursor = 0;
-    data[0] = text;
+
+    GOBJ *gobj = GObj_Create(0, 0, 0);
+    GObj_AddUserData(gobj, 4, HSD_Free, text);
+    GObj_AddProc(gobj, TM_ConsoleThink, 0);
+
     GXColor color = {21, 20, 59, 80};
     DevelopText_StoreBGColor(text, &color);
     DevelopText_StoreTextScale(text, 10, 12);
