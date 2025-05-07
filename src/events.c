@@ -1319,27 +1319,20 @@ void EventUpdate()
 
 void TM_ConsoleThink(GOBJ *gobj)
 {
-    // init variables
     DevText *text = gobj->userdata;
 
-    // check to toggle console
+    // Toggle console with L/R + Z
     for (int i = 0; i < 4; i++)
     {
         HSD_Pad *pad = PadGet(i, PADGET_MASTER);
         if (pad->held & (HSD_TRIGGER_L | HSD_TRIGGER_R) && (pad->down & HSD_TRIGGER_Z))
         {
-            // toggle visibility
             text->show_text ^= 1;
             text->show_background ^= 1;
             show_console ^= 1;
-
             break;
         }
     }
-
-    // clear text
-    //DevelopText_EraseAllText(text);
-    //DevelopMode_ResetCursorXY(text, 0, 0);
 }
 void TM_CreateConsole()
 {
