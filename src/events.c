@@ -1095,7 +1095,6 @@ static EventVars stc_event_vars = {
 };
 static Savestate *stc_savestate;
 static EventDesc *static_eventInfo;
-static int show_console = 1;
 static int *eventDataBackup;
 static TipMgr stc_tipmgr;
 
@@ -1329,7 +1328,6 @@ void TM_ConsoleThink(GOBJ *gobj)
         {
             text->show_text ^= 1;
             text->show_background ^= 1;
-            show_console ^= 1;
             break;
         }
     }
@@ -1349,13 +1347,6 @@ void TM_CreateConsole()
     DevelopText_StoreBGColor(text, &color);
     DevelopText_StoreTextScale(text, 10, 12);
     stc_event_vars.db_console_text = text;
-
-    if (show_console != 1)
-    {
-        // toggle visibility
-        DevelopText_HideBG(text);
-        DevelopText_HideText(text);
-    }
 }
 
 void OnFileLoad(HSD_Archive *archive) // this function is run right after TmDt is loaded into memory on boot
