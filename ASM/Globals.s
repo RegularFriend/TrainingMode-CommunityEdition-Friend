@@ -100,7 +100,7 @@
 
 
     # Number of Events
-    .set SpacieTech.NumOfEvents, 4 -1
+    .set SpacieTech.NumOfEvents, 6 -1
 
     # Event List
     .set Event_LedgetechCounter, 0
@@ -120,14 +120,19 @@
     .macro Event_EdgeguardFalco_PlayableCharacters
     .endm
 
-    .set Event_SideBSweetspot, 3
+    .set Event_EdgeguardSheik, 3
+
+    .macro Event_EdgeguardSheik_PlayableCharacters
+    .endm
+
+    .set Event_SideBSweetspot, 4
 
     .macro Event_SideBSweetspot_PlayableCharacters
     .byte Event_SideBSweetspot
     .long Fox_CSSID | Falco_CSSID                       # Player Characters
     .endm
 
-    .set Event_EscapeSheik, 4
+    .set Event_EscapeSheik, 5
 
     .macro Event_EscapeSheik_PlayableCharacters
     .byte Event_EscapeSheik

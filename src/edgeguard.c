@@ -1,167 +1,23 @@
-#include "../MexTK/mex.h"
-#include "events.h"
+#include "edgeguard.h"
 
+// how far inland the hmn will start
 #define DISTANCE_FROM_LEDGE 15
+
+// sweetspot distance away from the raw ledge position
+#define SWEETSPOT_OFFSET_X 16
+#define SWEETSPOT_OFFSET_Y 5
+
+// how many frames it takes to reset after the cpu dies or successfully recovers
 #define RESET_DELAY 30
 
-// 1 in n chance every frame
-#define UPB_CHANCE 8 
-#define DOUBLEJUMP_CHANCE_BELOW_LEDGE 5
-#define DOUBLEJUMP_CHANCE_ABOVE_LEDGE 30
-#define ILLUSION_CHANCE_ABOVE_LEDGE 15
-#define ILLUSION_CHANCE_TO_LEDGE 8
-#define FASTFALL_CHANCE 8
-
-#define MAX_ILLUSION_HEIGHT 30.f
-#define MIN_ILLUSION_HEIGHT -15.f
-#define ILLUSION_DISTANCE 75
-#define FIREFOX_DISTANCE 80
-#define FIREBIRD_DISTANCE 70
 #define DEGREES_TO_RADIANS 0.01745329252
 
 static int reset_timer = -1;
 static Vec2 ledge_positions[2];
+static EdgeguardInfo *info;
 
-void Exit(int value);
-
-static const char *OffOn[2] = {"Off", "On"};
-
-enum options {
-    OPT_HITSTRENGTH,
-    OPT_FF_LOW,
-    OPT_FF_MID,
-    OPT_FF_HIGH,
-    OPT_JUMP,
-    OPT_ILLUSION,
-    OPT_FASTFALL,
-    OPT_EXIT,
-};
-
-typedef struct KBValues {
-    float mag_min, mag_max;
-    float ang_min, ang_max;
-    float dmg_min, dmg_max;
-} KBValues;
-
-static const char *Values_HitStrength[] = {"Weak", "Normal", "Hard"};
-static KBValues HitStrength_KBRange[] = {
-    {
-         80.f, 100.f, // mag
-         45.f,  60.f, // ang
-         10.f,  40.f, // dmg
-    },
-    {
-        106.f, 120.f, // mag
-         45.f,  60.f, // ang
-         50.f,  80.f, // dmg
-    },
-    {
-        140.f, 200.f, // mag
-         65.f,  70.f, // ang
-         80.f, 110.f, // dmg
-    },
-};
-
-typedef struct AltText {
-    const char *name, *desc;
-} AltText;
-
-static AltText FalcoAltText[] = {
-    {
-        .name = "Hit Strength",
-        .desc = "How far Falco will be knocked back.",
-    },
-    {
-        .name = "Firebird Low",
-        .desc = "Allow Falco to aim his up special to the ledge.",
-    },
-    {
-        .name = "Firebird Mid",
-        .desc = "Allow Falco to aim his up special to the stage.",
-    },
-    {
-        .name = "Firebird High",
-        .desc = "Allow Falco to aim his up special high.",
-    },
-    {
-        .name = "Double Jump",
-        .desc = "Allow Falco to double jump.",
-    },
-    {
-        .name = "Illusion",
-        .desc = "Allow Falco to side special.",
-    },
-    {
-        .name = "Fast Fall",
-        .desc = "Allow Falco to fast fall.",
-    },
-};
-
-static EventOption Options_Main[] = {
-    {
-        .option_kind = OPTKIND_STRING,
-        .option_name = "Hit Strength",
-        .desc = "How far Fox will be knocked back.",
-        .option_values = Values_HitStrength,
-        .value_num = countof(Values_HitStrength),
-        .option_val = 1
-    },
-    {
-        .option_kind = OPTKIND_STRING,
-        .option_name = "Firefox Low",
-        .desc = "Allow Fox to aim his up special to the ledge.",
-        .option_values = OffOn,
-        .value_num = 2,
-        .option_val = 1,
-    },
-    {
-        .option_kind = OPTKIND_STRING,
-        .option_name = "Firefox Mid",
-        .desc = "Allow Fox to aim his up special to the stage.",
-        .option_values = OffOn,
-        .value_num = 2,
-    },
-    {
-        .option_kind = OPTKIND_STRING,
-        .option_name = "Firefox High",
-        .desc = "Allow Fox to aim his up special high.",
-        .option_values = OffOn,
-        .value_num = 2,
-    },
-    {
-        .option_kind = OPTKIND_STRING,
-        .option_name = "Double Jump",
-        .desc = "Allow Fox to double jump.",
-        .option_values = OffOn,
-        .value_num = 2,
-    },
-    {
-        .option_kind = OPTKIND_STRING,
-        .option_name = "Illusion",
-        .desc = "Allow Fox to side special.",
-        .option_values = OffOn,
-        .value_num = 2,
-    },
-    {
-        .option_kind = OPTKIND_STRING,
-        .option_name = "Fast Fall",
-        .desc = "Allow Fox to fast fall.",
-        .option_values = OffOn,
-        .value_num = 2,
-    },
-    {
-        .option_kind = OPTKIND_FUNC,
-        .option_name = "Exit",
-        .desc = "Return to the Event Select Screen.",
-        .onOptionSelect = Exit,
-    },
-};
-static EventMenu Menu_Main = {
-    .name = "Fox Edgeguard",
-    .option_num = sizeof(Options_Main) / sizeof(EventOption),
-    .options = &Options_Main,
-};
-EventMenu *Event_Menu = &Menu_Main;
+// set in Event_Init based on character
+EventMenu *Event_Menu = &(EventMenu){0};
 
 static void UpdatePosition(GOBJ *fighter) {
     FighterData *data = fighter->userdata;
@@ -222,7 +78,7 @@ static float Vec2_Length(Vec2 *a) {
 }
 
 static bool enabled(int opt_idx) {
-    return Options_Main[opt_idx].option_val;
+    return info->menu->options[opt_idx].option_val;
 }
 
 static int in_hitstun_anim(int state) {
@@ -251,13 +107,13 @@ static bool air_actionable(GOBJ *fighter) {
         || state == ASID_DAMAGEFALL;
 }
 
-void Exit(int value) {
+static void Exit(int value) {
     Match *match = MATCH;
     match->state = 3;
     Match_EndVS();
 }
 
-void Reset(void) {
+static void Reset(void) {
     for (int ply = 0; ply < 2; ++ply) {
         MatchHUDElement *hud = &stc_matchhud->element_data[ply];
         if (hud->is_removed == 1)
@@ -310,7 +166,7 @@ void Reset(void) {
     Fighter_HitboxDisableAll(hmn);
     hmn_data->script.script_current = 0;
 
-    KBValues vals = HitStrength_KBRange[Options_Main[OPT_HITSTRENGTH].option_val];
+    KBValues vals = HitStrength_KBRange[info->menu->options[OPT_HITSTRENGTH].option_val];
     
     float mag = vals.mag_min + (vals.mag_max - vals.mag_min) * HSD_Randf();
     
@@ -362,15 +218,12 @@ void Reset(void) {
 void Event_Init(GOBJ *gobj) {
     GOBJ *cpu = Fighter_GetGObj(1);
     FighterData *cpu_data = cpu->userdata;
-    if (cpu_data->kind == FTKIND_FALCO) {
-        Menu_Main.name = "Falco Edgeguard";
-        for (int i = 0; i < countof(FalcoAltText); ++i) {
-            AltText *alt = &FalcoAltText[i];
-            Options_Main[i].option_name = alt->name;
-            Options_Main[i].desc = alt->desc;
-        } 
-    }
-
+    
+    info = &InfoLookup[cpu_data->kind];
+    if (info->menu == 0)
+        assert("unimplemented character in edgeguard training");
+    Event_Menu = info->menu;
+    
     GetLedgePositions(&ledge_positions);
     Reset();
 }
@@ -389,20 +242,6 @@ void Event_Think(GOBJ *menu) {
         Reset();
     }
     
-    Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
-    Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
-    int state = cpu_data->state_id;
-    int dir = pos.X > 0.f ? -1 : 1;
-    bool can_jump = cpu_data->jump.jumps_used < 2 && enabled(OPT_JUMP);
-    
-    Vec2 target_ledge = ledge_positions[pos.X > 0.f];
-    
-    // ledge sweetspot is slightly further away and down if above the stage
-    if (pos.Y > 20.f) {
-        target_ledge.X -= 16 * dir;
-        target_ledge.Y -= 4;
-    }
-    
     // ensure the player L-cancels the initial bair.
     hmn_data->input.timer_trigger_any_ignore_hitlag = 0;
     
@@ -412,7 +251,7 @@ void Event_Think(GOBJ *menu) {
             cpu_data->flags.dead
             || hmn_data->flags.dead
             || cpu_data->phys.air_state == 0
-            || state == ASID_CLIFFCATCH
+            || cpu_data->state_id == ASID_CLIFFCATCH
         )
     ) {
         reset_timer = RESET_DELAY;
@@ -420,8 +259,44 @@ void Event_Think(GOBJ *menu) {
 
     if (hmn_data->input.down & PAD_BUTTON_DPAD_LEFT)
         reset_timer = 0;
-        
-    float distance_to_ledge = Vec2_Distance(&cpu_data->phys.pos, &target_ledge);
+    
+    info->Think();
+}
+
+// Spacies ------------------------------------------------
+
+#define UPB_CHANCE 8 
+#define DOUBLEJUMP_CHANCE_BELOW_LEDGE 5
+#define DOUBLEJUMP_CHANCE_ABOVE_LEDGE 30
+#define ILLUSION_CHANCE_ABOVE_LEDGE 15
+#define ILLUSION_CHANCE_TO_LEDGE 8
+#define FASTFALL_CHANCE 8
+
+#define MAX_ILLUSION_HEIGHT 30.f
+#define MIN_ILLUSION_HEIGHT -15.f
+#define ILLUSION_DISTANCE 75.f
+#define FIREFOX_DISTANCE 80.f
+#define FIREBIRD_DISTANCE 70.f
+    
+static void Think_Spacies(void) {
+    GOBJ *hmn = Fighter_GetGObj(0);
+    GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *hmn_data = hmn->userdata;
+    FighterData *cpu_data = cpu->userdata;
+
+    Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
+    Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
+    int state = cpu_data->state_id;
+    float dir = pos.X > 0.f ? -1.f : 1.f;
+    bool can_jump = cpu_data->jump.jumps_used < 2 && enabled(OPT_SPACIES_JUMP);
+    
+    Vec2 target_ledge = ledge_positions[pos.X > 0.f];
+    
+    Vec2 vec_to_ledgegrab = {
+        .X = target_ledge.X - pos.X - SWEETSPOT_OFFSET_X*dir,
+        .Y = target_ledge.Y - pos.Y - SWEETSPOT_OFFSET_Y,
+    };
+    float distance_to_ledgegrab = Vec2_Length(&vec_to_ledgegrab);
     
     int dj_chance, illusion_chance;
     if (cpu_data->phys.pos.Y > target_ledge.Y) {
@@ -432,24 +307,29 @@ void Event_Think(GOBJ *menu) {
         illusion_chance = ILLUSION_CHANCE_TO_LEDGE;
     }
     
-    bool can_upb = enabled(OPT_FF_LOW) | enabled(OPT_FF_MID) | enabled(OPT_FF_HIGH);
+    bool can_upb = enabled(OPT_SPACIES_FF_LOW)
+        | enabled(OPT_SPACIES_FF_MID)
+        | enabled(OPT_SPACIES_FF_HIGH);
     
     float upb_distance = cpu_data->kind == FTKIND_FOX ?
         FIREFOX_DISTANCE : FIREBIRD_DISTANCE;
-
+        
+    // HITSTUN
     if (cpu_data->flags.hitstun) {
         // DI inwards
         cpu_data->cpu.lstickX = 90 * dir;
         cpu_data->cpu.lstickY = 90;
+        
+    // ACTIONABLE
     } else if (air_actionable(cpu)) {
 
         // JUMP
         if (
-            enabled(OPT_JUMP)
+            enabled(OPT_SPACIES_JUMP)
             && can_jump
             && (
                 // force jump if at end of range
-                distance_to_ledge > upb_distance
+                distance_to_ledgegrab > upb_distance
                 
                 // otherwise, random chance to jump
                 || HSD_Randi(dj_chance) == 0
@@ -460,7 +340,7 @@ void Event_Think(GOBJ *menu) {
             
         // ILLUSION
         } else if (
-            enabled(OPT_ILLUSION) && (
+            enabled(OPT_SPACIES_ILLUSION) && (
                 // force illusion to ledge if no jump and cannot upb
                 (
                     !can_upb && !can_jump
@@ -472,7 +352,7 @@ void Event_Think(GOBJ *menu) {
                 || (
                     pos.Y > MIN_ILLUSION_HEIGHT
                     && pos.Y < MAX_ILLUSION_HEIGHT
-                    && fabs(target_ledge.X - pos.X) < ILLUSION_DISTANCE
+                    && fabs(vec_to_ledgegrab.X) < ILLUSION_DISTANCE
                     && HSD_Randi(illusion_chance) == 0
                 )
             )
@@ -486,10 +366,10 @@ void Event_Think(GOBJ *menu) {
             && can_upb
             && (
                 // force upb if at end of range
-                (pos.Y < 0.f && distance_to_ledge > upb_distance)
+                (pos.Y < 0.f && distance_to_ledgegrab > upb_distance)
     
                 // otherwise, random chance to upb
-                || (distance_to_ledge < upb_distance && HSD_Randi(UPB_CHANCE) == 0)
+                || (distance_to_ledgegrab < upb_distance && HSD_Randi(UPB_CHANCE) == 0)
             )
         ) {
             cpu_data->cpu.lstickY = 127;
@@ -497,7 +377,7 @@ void Event_Think(GOBJ *menu) {
             
         // FASTFALL
         } else if (
-            enabled(OPT_FASTFALL)
+            enabled(OPT_SPACIES_FASTFALL)
             && !cpu_data->flags.is_fastfall
             && vel.Y < 0.f
             && HSD_Randi(FASTFALL_CHANCE) == 0
@@ -510,20 +390,19 @@ void Event_Think(GOBJ *menu) {
             cpu_data->cpu.lstickX = 127 * dir;
         }
         
-        // if in firefox starting states
+    // FIREFOX STARTUP
     } else if (0x161 <= state && state <= 0x162) {
         // compute firefox angle
         
-        int low = enabled(OPT_FF_LOW);
-        int mid = enabled(OPT_FF_MID);
-        int high = enabled(OPT_FF_HIGH);
+        int low = enabled(OPT_SPACIES_FF_LOW);
+        int mid = enabled(OPT_SPACIES_FF_MID);
+        int high = enabled(OPT_SPACIES_FF_HIGH);
         int option_count = low + mid + high;
         int choice = HSD_Randi(option_count);
         
-        float x_to_ledge = fabs(target_ledge.X - pos.X);
         float high_y = pos.Y + sqrtf(
             upb_distance*upb_distance
-            - x_to_ledge*x_to_ledge
+            - vec_to_ledgegrab.X*vec_to_ledgegrab.X
         );
         
         Vec2 target = { .X = target_ledge.X };
@@ -543,7 +422,8 @@ void Event_Think(GOBJ *menu) {
         
         cpu_data->cpu.lstickX = (s8)(vec_to_target.X * 127.f);
         cpu_data->cpu.lstickY = (s8)(vec_to_target.Y * 127.f);
-    
+        
+    // INACTIONABLE WITH DRIFT
     } else if (
         // if in firefox ending states
         (0x162 <= state && state <= 0x167)
@@ -555,3 +435,120 @@ void Event_Think(GOBJ *menu) {
         cpu_data->cpu.lstickX = 127 * dir;
     }
 }
+
+// Sheik ------------------------------------------------
+
+#define UPB_POOF_HIGH_CHANCE 3
+#define UPB_POOF_INWARDS_CHANCE 3
+
+// how high above ledge sheik must be to upb straight into stage
+#define ABOVE_STAGE_HEIGHT 25.f
+#define UPB_JUMP_HEIGHT 48.f
+#define UPB_JUMP_MAX_X 50.f
+#define UPB_POOF_DISTANCE 40.f
+
+static void Think_Sheik(void) {
+    GOBJ *hmn = Fighter_GetGObj(0);
+    GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *hmn_data = hmn->userdata;
+    FighterData *cpu_data = cpu->userdata;
+
+    Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
+    Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
+    int state = cpu_data->state_id;
+    int hmn_state = hmn_data->state_id;
+    float dir = pos.X > 0.f ? -1.f : 1.f;
+    bool can_jump = cpu_data->jump.jumps_used < 2 && enabled(OPT_SPACIES_JUMP);
+    bool hmn_on_ledge = ASID_CLIFFCATCH <= hmn_state && hmn_state <= ASID_CLIFFJUMPQUICK2;
+    
+    Vec2 target_ledge = ledge_positions[pos.X > 0.f];
+    
+    Vec2 vec_to_ledgegrab = {
+        .X = target_ledge.X - pos.X - SWEETSPOT_OFFSET_X*dir,
+        .Y = target_ledge.Y - pos.Y - SWEETSPOT_OFFSET_Y,
+    };
+    Vec2 vec_to_ledge = {
+        .X = target_ledge.X - pos.X,
+        .Y = target_ledge.Y - pos.Y,
+    };
+    
+    // HITSTUN
+    if (cpu_data->flags.hitstun) {
+        // DI inwards
+        cpu_data->cpu.lstickX = 90 * dir;
+        cpu_data->cpu.lstickY = 90;
+        
+    // ACTIONABLE
+    } else if (air_actionable(cpu)) {
+        
+        // UPB JUMP TO ABOVE_LEDGE
+        if (
+            hmn_on_ledge
+            && vec_to_ledgegrab.Y > ABOVE_STAGE_HEIGHT - UPB_JUMP_HEIGHT
+        ) {
+            cpu_data->cpu.lstickY = 127;
+            cpu_data->cpu.held |= PAD_BUTTON_B;
+        }
+        
+        // UPB JUMP TO LEDGE
+        else if (
+            fabs(UPB_JUMP_HEIGHT - vec_to_ledgegrab.Y) < 1.f
+            && fabs(vec_to_ledgegrab.X) < UPB_JUMP_MAX_X
+        ) {
+            cpu_data->cpu.lstickY = 127;
+            cpu_data->cpu.held |= PAD_BUTTON_B;
+            
+        // WAIT 
+        } else {
+            cpu_data->cpu.lstickX = 127 * dir;
+        }
+        
+    // VANISH STARTUP
+    } else if (state == 0x166) {
+        // choose poof direction
+        if (cpu_data->TM.state_frame == 34) {
+            // aim to sweetspot if hmn not there and can sweetspot
+            if (
+                !hmn_on_ledge 
+                && vec_to_ledgegrab.Y < 0.f
+                && vec_to_ledge.X > 0.f
+            ) {
+                if (vec_to_ledgegrab.X * dir < 0.f)
+                    vec_to_ledgegrab.X = 0.f;
+                Vec2_Normalize(&vec_to_ledgegrab);
+                cpu_data->cpu.lstickX = (s8)(vec_to_ledgegrab.X * 127.f);
+                cpu_data->cpu.lstickY = (s8)(vec_to_ledgegrab.Y * 127.f);
+                
+            // aim to ledge if hmn not there and below ledge
+            } else if (!hmn_on_ledge) {
+                // aim right to ledge
+                Vec2_Normalize(&vec_to_ledge);
+                cpu_data->cpu.lstickX = (s8)(vec_to_ledge.X * 127.f);
+                cpu_data->cpu.lstickY = (s8)(vec_to_ledge.Y * 127.f);
+            
+            // aim right above ledge
+            } else {
+                vec_to_ledge.Y -= 5.f;
+                Vec2_Normalize(&vec_to_ledge);
+                cpu_data->cpu.lstickX = (s8)(vec_to_ledge.X * 127.f);
+                cpu_data->cpu.lstickY = (s8)(vec_to_ledge.Y * 127.f);
+            }
+            
+        // if hmn on ledge 
+        } else if (hmn_on_ledge) {
+            // drift away from ledge for more options
+            cpu_data->cpu.lstickX = dir * -127;
+            
+        // if hmn not on ledge
+        } else {
+            // just jump to ledge
+            cpu_data->cpu.lstickX = sign(vec_to_ledgegrab.X) * 127.f;
+        }
+    
+    // SPECIAL FALL
+    } else if (ASID_FALLSPECIAL <= state && state <= ASID_FALLSPECIALB) {
+        // drift towards stage
+        cpu_data->cpu.lstickX = 127 * dir;
+    }
+}
+
