@@ -186,6 +186,8 @@ static void Reset(void) {
     cpu_data->facing_direction = -side;
 
     float ledge_x = ledge_positions[side_idx].X - DISTANCE_FROM_LEDGE * side;
+    
+    hmn_data->input.down = 0;
 
     // set phys
     cpu_data->phys.kb_vel.X = 0.f;
