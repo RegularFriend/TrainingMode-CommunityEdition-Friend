@@ -76,7 +76,7 @@ static float Vec2_Length(Vec2 *a) {
     return sqrtf(x*x + y*y);
 }
 
-static void simulate_phys(FighterData *data, int future, Vec2 *out) {
+static void SimulatePhys(FighterData *data, int future, Vec2 *out) {
     float gravity = data->phys.air_state == 0 ? 0.f : data->attr.gravity;
     
     *out = (Vec2) { data->phys.pos.X, data->phys.pos.Y };
@@ -94,28 +94,28 @@ static void simulate_phys(FighterData *data, int future, Vec2 *out) {
     }
 }
 
-static float projected_distance(FighterData *a, FighterData *b, int future) {
+static float ProjectedDistance(FighterData *a, FighterData *b, int future) {
     Vec2 a_future, b_future;
-    simulate_phys(a, future, &a_future);
-    simulate_phys(b, future, &b_future);
+    SimulatePhys(a, future, &a_future);
+    SimulatePhys(b, future, &b_future);
     return Vec2_Distance(&a_future, &b_future);
 }
 
-static bool enabled(int opt_idx) {
-    return info->menu->options[opt_idx].option_val;
+static bool Enabled(int opt_idx) {
+    return info->menu->options[opt_idx].val;
 }
 
-static int in_hitstun_anim(int state) {
+static int InHitstunAnim(int state) {
     return ASID_DAMAGEHI1 <= state && state <= ASID_DAMAGEFLYROLL;
 }
 
-static int hitstun_ended(GOBJ *fighter) {
+static int HitstunEnded(GOBJ *fighter) {
     FighterData *data = fighter->userdata;
     float hitstun = *((float*)&data->state_var.state_var1);
     return hitstun == 0.0;
 }
 
-static bool air_actionable(GOBJ *fighter) {
+static bool IsAirActionable(GOBJ *fighter) {
     FighterData *data = fighter->userdata;
 
     // ensure airborne
@@ -124,7 +124,7 @@ static bool air_actionable(GOBJ *fighter) {
 
     int state = data->state_id;
 
-    if (in_hitstun_anim(state) && hitstun_ended(fighter))
+    if (InHitstunAnim(state) && HitstunEnded(fighter))
         return true;
         
     if (ASID_ATTACKAIRN <= state && state <= ASID_ATTACKAIRLW && data->flags.past_iasa)
@@ -134,7 +134,7 @@ static bool air_actionable(GOBJ *fighter) {
         || state == ASID_DAMAGEFALL;
 }
 
-static bool ground_actionable(GOBJ *fighter) {
+static bool IsGroundActionable(GOBJ *fighter) {
     FighterData *data = fighter->userdata;
 
     // ensure grounded
@@ -143,7 +143,7 @@ static bool ground_actionable(GOBJ *fighter) {
 
     int state = data->state_id;
 
-    if (in_hitstun_anim(data) && hitstun_ended(fighter))
+    if (InHitstunAnim(data) && HitstunEnded(fighter))
         return true;
 
     if (state == ASID_LANDING && data->state.frame >= data->attr.normal_landing_lag)
@@ -220,7 +220,7 @@ static void Reset(void) {
     Fighter_HitboxDisableAll(hmn);
     hmn_data->script.script_current = 0;
 
-    KBValues vals = HitStrength_KBRange[info->menu->options[OPT_HITSTRENGTH].option_val];
+    KBValues vals = HitStrength_KBRange[info->menu->options[OPT_HITSTRENGTH].val];
     
     float mag = vals.mag_min + (vals.mag_max - vals.mag_min) * HSD_Randf();
     
@@ -307,8 +307,8 @@ void Event_Think(GOBJ *menu) {
             cpu_data->flags.dead
             || hmn_data->flags.dead
             || cpu_data->state_id == ASID_CLIFFCATCH
-            || ground_actionable(cpu)
-            || (cpu_pos.Y > fabs(cpu_pos.X) && cpu_pos.Y > 100.f && air_actionable(cpu))
+            || IsGroundActionable(cpu)
+            || (cpu_pos.Y > fabs(cpu_pos.X) && cpu_pos.Y > 100.f && IsAirActionable(cpu))
         )
     ) {
         reset_timer = RESET_DELAY;
@@ -348,7 +348,7 @@ static void Think_Spacies(void) {
     Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
     int state = cpu_data->state_id;
     float dir = pos.X > 0.f ? -1.f : 1.f;
-    bool can_jump = cpu_data->jump.jumps_used < 2 && enabled(OPT_SPACIES_JUMP);
+    bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_SPACIES_JUMP);
     
     Vec2 target_ledge = ledge_positions[pos.X > 0.f];
     Vec2 target_ledgegrab = {
@@ -371,9 +371,9 @@ static void Think_Spacies(void) {
         illusion_chance = ILLUSION_CHANCE_TO_LEDGE;
     }
     
-    bool can_upb = enabled(OPT_SPACIES_FF_LOW)
-        | enabled(OPT_SPACIES_FF_MID)
-        | enabled(OPT_SPACIES_FF_HIGH);
+    bool can_upb = Enabled(OPT_SPACIES_FF_LOW)
+        | Enabled(OPT_SPACIES_FF_MID)
+        | Enabled(OPT_SPACIES_FF_HIGH);
     
     float upb_distance = cpu_data->kind == FTKIND_FOX ?
         FIREFOX_DISTANCE : FIREBIRD_DISTANCE;
@@ -385,11 +385,11 @@ static void Think_Spacies(void) {
         cpu_data->cpu.lstickY = 90;
         
     // ACTIONABLE
-    } else if (air_actionable(cpu)) {
+    } else if (IsAirActionable(cpu)) {
 
         // JUMP
         if (
-            enabled(OPT_SPACIES_JUMP)
+            Enabled(OPT_SPACIES_JUMP)
             && can_jump
             && (
                 // force jump if at end of range
@@ -404,7 +404,7 @@ static void Think_Spacies(void) {
             
         // ILLUSION
         } else if (
-            enabled(OPT_SPACIES_ILLUSION) && (
+            Enabled(OPT_SPACIES_ILLUSION) && (
                 // force illusion to ledge if no jump and cannot upb
                 (
                     !can_upb && !can_jump
@@ -441,7 +441,7 @@ static void Think_Spacies(void) {
             
         // FASTFALL
         } else if (
-            enabled(OPT_SPACIES_FASTFALL)
+            Enabled(OPT_SPACIES_FASTFALL)
             && !cpu_data->flags.is_fastfall
             && vel.Y < 0.f
             && HSD_Randi(FASTFALL_CHANCE) == 0
@@ -458,9 +458,9 @@ static void Think_Spacies(void) {
     } else if (0x161 <= state && state <= 0x162) {
         // compute firefox angle
         
-        int low = enabled(OPT_SPACIES_FF_LOW);
-        int mid = enabled(OPT_SPACIES_FF_MID);
-        int high = enabled(OPT_SPACIES_FF_HIGH);
+        int low = Enabled(OPT_SPACIES_FF_LOW);
+        int mid = Enabled(OPT_SPACIES_FF_MID);
+        int high = Enabled(OPT_SPACIES_FF_HIGH);
         int option_count = low + mid + high;
         int choice = HSD_Randi(option_count);
         
@@ -539,7 +539,7 @@ static void Think_Sheik(void) {
     int state = cpu_data->state_id;
     int hmn_state = hmn_data->state_id;
     float dir = pos.X > 0.f ? -1.f : 1.f;
-    bool can_jump = cpu_data->jump.jumps_used < 2 && enabled(OPT_SPACIES_JUMP);
+    bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_SPACIES_JUMP);
     bool hmn_on_ledge = ASID_CLIFFCATCH <= hmn_state && hmn_state <= ASID_CLIFFJUMPQUICK2;
     
     Vec2 target_ledge = ledge_positions[pos.X > 0.f];
@@ -565,9 +565,9 @@ static void Think_Sheik(void) {
     float post_jump_dist_to_ledge = Vec2_Length(&post_jump_vec_to_ledge);
     bool can_upb = post_jump_dist_to_ledge < UPB_POOF_DISTANCE
         && (
-            enabled(OPT_SHEIK_UPB_LEDGE)
-            || enabled(OPT_SHEIK_UPB_STAGE)
-            || enabled(OPT_SHEIK_UPB_HIGH)
+            Enabled(OPT_SHEIK_UPB_LEDGE)
+            || Enabled(OPT_SHEIK_UPB_STAGE)
+            || Enabled(OPT_SHEIK_UPB_HIGH)
         );
     
     int dj_chance;
@@ -582,8 +582,8 @@ static void Think_Sheik(void) {
     
     // AMSAH TECH
     if (
-        enabled(OPT_SHEIK_AMSAH_TECH)
-        && in_hitstun_anim(state)
+        Enabled(OPT_SHEIK_AMSAH_TECH)
+        && InHitstunAnim(state)
         && cpu_data->TM.state_prev[0] == ASID_LANDINGFALLSPECIAL
         && cpu_data->flags.hitlag
         && cpu_data->dmg.hitlag_frames == 1.f
@@ -609,10 +609,10 @@ static void Think_Sheik(void) {
         }
         
     // ACTIONABLE
-    } else if (air_actionable(cpu)) {
+    } else if (IsAirActionable(cpu)) {
         // JUMP
         if (
-            enabled(OPT_SHEIK_JUMP)
+            Enabled(OPT_SHEIK_JUMP)
             && can_jump
             && (
                 // force jump if at end of range
@@ -630,11 +630,11 @@ static void Think_Sheik(void) {
             
         // FAIR
         } else if (
-            enabled(OPT_SHEIK_FAIR)
+            Enabled(OPT_SHEIK_FAIR)
             && !cpu_data->flags.is_fastfall
             && pos.X * dir < hmn_data->phys.pos.X * dir
             && hmn_data->hurt.intang_frames.ledge < 5
-            && projected_distance(hmn_data, cpu_data, 6.f) < FAIR_SIZE
+            && ProjectedDistance(hmn_data, cpu_data, 6.f) < FAIR_SIZE
         ) {
             cpu_data->cpu.held |= PAD_BUTTON_A;
             cpu_data->cpu.lstickX = 127 * dir;
@@ -660,7 +660,7 @@ static void Think_Sheik(void) {
         
         // FASTFALL
         } else if (
-            enabled(OPT_SHEIK_FASTFALL)
+            Enabled(OPT_SHEIK_FASTFALL)
             && !cpu_data->flags.is_fastfall
             && vel.Y < 0.f
             && HSD_Randi(FASTFALL_CHANCE) == 0
@@ -675,12 +675,11 @@ static void Think_Sheik(void) {
     } else if (state == 0x166) {
         // choose poof direction
         if (cpu_data->TM.state_frame == 34) {
-            // int ledge = enabled(OPT_SHEIK_UPB_LEDGE);
-            int ledge = false;
-            int stage_tip = enabled(OPT_SHEIK_UPB_LEDGE);
-            int above_ledge = enabled(OPT_SHEIK_UPB_HIGH) && vec_to_ledgegrab.X < UPB_POOF_DISTANCE;
-            int high = enabled(OPT_SHEIK_UPB_HIGH);
-            int stage_inland = enabled(OPT_SHEIK_UPB_STAGE) && pos.Y > 0.f;
+            int ledge = Enabled(OPT_SHEIK_UPB_LEDGE);
+            int stage_tip = Enabled(OPT_SHEIK_UPB_LEDGE);
+            int above_ledge = Enabled(OPT_SHEIK_UPB_HIGH) && vec_to_ledgegrab.X < UPB_POOF_DISTANCE;
+            int high = Enabled(OPT_SHEIK_UPB_HIGH);
+            int stage_inland = Enabled(OPT_SHEIK_UPB_STAGE) && pos.Y > 0.f;
             
             int option_count = ledge + above_ledge + stage_tip + stage_inland + high;
             int choice = HSD_Randi(option_count);
