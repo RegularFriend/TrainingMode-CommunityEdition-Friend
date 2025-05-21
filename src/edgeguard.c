@@ -16,6 +16,9 @@ static int reset_timer = -1;
 static Vec2 ledge_positions[2];
 static EdgeguardInfo *info;
 
+static inline float fmax(float a, float b) { return a < b ? b : a; }
+static inline float fmin(float a, float b) { return a < b ? a : b; }
+
 // set in Event_Init based on character
 EventMenu *Event_Menu = &(EventMenu){0};
 
@@ -291,10 +294,14 @@ static void Think_Spacies(void) {
     bool can_jump = cpu_data->jump.jumps_used < 2 && enabled(OPT_SPACIES_JUMP);
     
     Vec2 target_ledge = ledge_positions[pos.X > 0.f];
+    Vec2 target_ledgegrab = {
+        .X = target_ledge.X - SWEETSPOT_OFFSET_X*dir,
+        .Y = target_ledge.Y - SWEETSPOT_OFFSET_Y,
+    };
     
     Vec2 vec_to_ledgegrab = {
-        .X = target_ledge.X - pos.X - SWEETSPOT_OFFSET_X*dir,
-        .Y = target_ledge.Y - pos.Y - SWEETSPOT_OFFSET_Y,
+        .X = target_ledgegrab.X - pos.X,
+        .Y = target_ledgegrab.Y - pos.Y,
     };
     float distance_to_ledgegrab = Vec2_Length(&vec_to_ledgegrab);
     
@@ -400,10 +407,15 @@ static void Think_Spacies(void) {
         int option_count = low + mid + high;
         int choice = HSD_Randi(option_count);
         
-        float high_y = pos.Y + sqrtf(
-            upb_distance*upb_distance
-            - vec_to_ledgegrab.X*vec_to_ledgegrab.X
-        );
+        float high_y;
+        if (vec_to_ledgegrab.X < upb_distance) {
+            high_y = pos.Y + sqrtf(
+                upb_distance*upb_distance
+                - vec_to_ledgegrab.X*vec_to_ledgegrab.X
+            );
+        } else {
+            high_y = vec_to_ledgegrab.Y;
+        }
         
         Vec2 target = { .X = target_ledge.X };
         if (low && choice-- == 0) {
@@ -438,11 +450,7 @@ static void Think_Spacies(void) {
 
 // Sheik ------------------------------------------------
 
-#define UPB_POOF_HIGH_CHANCE 3
-#define UPB_POOF_INWARDS_CHANCE 3
-
-// how high above ledge sheik must be to upb straight into stage
-#define ABOVE_STAGE_HEIGHT 25.f
+#define UPB_POOF_BELOW_LEDGE_CHANCE 10
 #define UPB_JUMP_HEIGHT 48.f
 #define UPB_JUMP_MAX_X 50.f
 #define UPB_POOF_DISTANCE 40.f
@@ -462,15 +470,28 @@ static void Think_Sheik(void) {
     bool hmn_on_ledge = ASID_CLIFFCATCH <= hmn_state && hmn_state <= ASID_CLIFFJUMPQUICK2;
     
     Vec2 target_ledge = ledge_positions[pos.X > 0.f];
+    Vec2 target_ledgegrab = {
+        .X = target_ledge.X - SWEETSPOT_OFFSET_X*dir,
+        .Y = target_ledge.Y - SWEETSPOT_OFFSET_Y,
+    };
     
     Vec2 vec_to_ledgegrab = {
-        .X = target_ledge.X - pos.X - SWEETSPOT_OFFSET_X*dir,
-        .Y = target_ledge.Y - pos.Y - SWEETSPOT_OFFSET_Y,
+        .X = target_ledgegrab.X - pos.X,
+        .Y = target_ledgegrab.Y - pos.Y,
     };
     Vec2 vec_to_ledge = {
         .X = target_ledge.X - pos.X,
         .Y = target_ledge.Y - pos.Y,
     };
+    
+    // how close sheik will be to the ledge after the jump
+    Vec2 post_jump_vec_to_ledge = {
+        .X = fmax(fabs(vec_to_ledge.X) - UPB_JUMP_MAX_X, 0.f) * dir,
+        .Y = vec_to_ledge.Y - UPB_JUMP_HEIGHT,
+    };
+    float post_jump_dist_to_ledge = Vec2_Length(&post_jump_vec_to_ledge);
+    
+    bool can_upb = post_jump_dist_to_ledge < UPB_POOF_DISTANCE;
     
     // HITSTUN
     if (cpu_data->flags.hitstun) {
@@ -480,66 +501,79 @@ static void Think_Sheik(void) {
         
     // ACTIONABLE
     } else if (air_actionable(cpu)) {
-        
-        // UPB JUMP TO ABOVE_LEDGE
         if (
-            hmn_on_ledge
-            && vec_to_ledgegrab.Y > ABOVE_STAGE_HEIGHT - UPB_JUMP_HEIGHT
-        ) {
-            cpu_data->cpu.lstickY = 127;
-            cpu_data->cpu.held |= PAD_BUTTON_B;
-        }
-        
-        // UPB JUMP TO LEDGE
-        else if (
-            fabs(UPB_JUMP_HEIGHT - vec_to_ledgegrab.Y) < 1.f
-            && fabs(vec_to_ledgegrab.X) < UPB_JUMP_MAX_X
-        ) {
-            cpu_data->cpu.lstickY = 127;
-            cpu_data->cpu.held |= PAD_BUTTON_B;
+            // random chance to upb
+            (
+                vec_to_ledgegrab.Y > 10.f
+                && can_upb
+                && HSD_Randi(UPB_POOF_BELOW_LEDGE_CHANCE) == 0
+            )
             
+            // force upb if at end of range
+            || (
+                vec_to_ledgegrab.Y > UPB_JUMP_HEIGHT 
+                && post_jump_dist_to_ledge < UPB_POOF_DISTANCE
+            )
+        ) {
+            cpu_data->cpu.lstickY = 127;
+            cpu_data->cpu.held |= PAD_BUTTON_B;
+        
         // WAIT 
         } else {
             cpu_data->cpu.lstickX = 127 * dir;
         }
-        
     // VANISH STARTUP
     } else if (state == 0x166) {
         // choose poof direction
         if (cpu_data->TM.state_frame == 34) {
-            // aim to sweetspot if hmn not there and can sweetspot
-            if (
-                !hmn_on_ledge 
-                && vec_to_ledgegrab.Y < 0.f
-                && vec_to_ledge.X > 0.f
-            ) {
-                if (vec_to_ledgegrab.X * dir < 0.f)
-                    vec_to_ledgegrab.X = 0.f;
-                Vec2_Normalize(&vec_to_ledgegrab);
-                cpu_data->cpu.lstickX = (s8)(vec_to_ledgegrab.X * 127.f);
-                cpu_data->cpu.lstickY = (s8)(vec_to_ledgegrab.Y * 127.f);
-                
-            // aim to ledge if hmn not there and below ledge
-            } else if (!hmn_on_ledge) {
-                // aim right to ledge
-                Vec2_Normalize(&vec_to_ledge);
-                cpu_data->cpu.lstickX = (s8)(vec_to_ledge.X * 127.f);
-                cpu_data->cpu.lstickY = (s8)(vec_to_ledge.Y * 127.f);
+            int ledge = true;
+            int above_ledge = vec_to_ledgegrab.X < UPB_POOF_DISTANCE;
+            int stage_tip = true;
+            int stage_inland = pos.Y > 0.f;
+            int high = true;
             
-            // aim right above ledge
-            } else {
-                vec_to_ledge.Y -= 5.f;
-                Vec2_Normalize(&vec_to_ledge);
-                cpu_data->cpu.lstickX = (s8)(vec_to_ledge.X * 127.f);
-                cpu_data->cpu.lstickY = (s8)(vec_to_ledge.Y * 127.f);
+            int option_count = ledge + above_ledge + stage_tip + stage_inland + high;
+            int choice = HSD_Randi(option_count);
+            
+            Vec2 target = {0};
+            
+            // upb to ledge
+            if (ledge && choice-- == 0) {
+                target = target_ledgegrab;
+                if (target.X * dir < 0.f)
+                    target.X = 0.f;
+                    
+            // upb above ledge
+            } else if (above_ledge && choice-- == 0) {
+                float high_y = pos.Y + sqrtf(
+                    UPB_POOF_DISTANCE*UPB_POOF_DISTANCE
+                    - vec_to_ledgegrab.X*vec_to_ledgegrab.X
+                );
+                target = (Vec2) { target_ledge.X, high_y };
+                
+            // upb to stage tip
+            } else if (stage_tip && choice-- == 0) {
+                target = target_ledge;
+                target.Y -= 5.f;
+                
+            // upb inwards to stage
+            } else if (stage_inland && choice-- == 0) {
+                target = (Vec2) { 0.f, 0.f }; // TODO BETTER TARGETING
+                
+            // upb high to platform
+            } else if (high && choice-- == 0) {
+                target = (Vec2) { pos.X + dir, pos.Y + 1.f }; // TODO BETTER TARGETING
             }
             
-        // if hmn on ledge 
-        } else if (hmn_on_ledge) {
-            // drift away from ledge for more options
-            cpu_data->cpu.lstickX = dir * -127;
+            Vec2 poof_dir = {
+                target.X - pos.X,
+                target.Y - pos.Y,
+            };
+            Vec2_Normalize(&poof_dir);
             
-        // if hmn not on ledge
+            cpu_data->cpu.lstickX = (s8)(poof_dir.X * 127.f);
+            cpu_data->cpu.lstickY = (s8)(poof_dir.Y * 127.f);
+            
         } else {
             // just jump to ledge
             cpu_data->cpu.lstickX = sign(vec_to_ledgegrab.X) * 127.f;
@@ -551,4 +585,3 @@ static void Think_Sheik(void) {
         cpu_data->cpu.lstickX = 127 * dir;
     }
 }
-
