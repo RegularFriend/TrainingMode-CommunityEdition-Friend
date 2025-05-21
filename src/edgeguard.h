@@ -183,6 +183,12 @@ static EventMenu Menu_Main_Falco = {
 
 enum options_sheik {
     OPT_SHEIK_HITSTRENTH,
+    OPT_SHEIK_UPB_LEDGE,
+    OPT_SHEIK_UPB_STAGE,
+    OPT_SHEIK_UPB_HIGH,
+    OPT_SHEIK_JUMP,
+    OPT_SHEIK_FASTFALL,
+    OPT_SHEIK_FAIR,
     OPT_SHIEK_EXIT,
     
     OPT_SHEIK_COUNT
@@ -190,6 +196,51 @@ enum options_sheik {
 
 static EventOption Options_Main_Sheik[] = {
     HitStrengthOption,
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Vanish to ledge",
+        .desc = "Allow Sheik to vanish to ledge and the tip of the stage.",
+        .option_values = OffOn,
+        .value_num = 2,
+        .option_val = 1,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Vanish to stage",
+        .desc = "Allow Sheik to vanish deep into stage.",
+        .option_values = OffOn,
+        .value_num = 2,
+        .option_val = 1,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Vanish high",
+        .desc = "Allow Sheik to vanish above the ledge and to platforms.",
+        .option_values = OffOn,
+        .value_num = 2,
+        .option_val = 1,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Double Jump",
+        .desc = "Allow Sheik to double jump.",
+        .option_values = OffOn,
+        .value_num = 2,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Fast Fall",
+        .desc = "Allow Sheik to fast fall.",
+        .option_values = OffOn,
+        .value_num = 2,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Fair",
+        .desc = "Allow Sheik to fair the player.",
+        .option_values = OffOn,
+        .value_num = 2,
+    },
     ExitOption,
 };
 

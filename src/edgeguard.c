@@ -3,10 +3,6 @@
 // how far inland the hmn will start
 #define DISTANCE_FROM_LEDGE 15
 
-// sweetspot distance away from the raw ledge position
-#define SWEETSPOT_OFFSET_X 16
-#define SWEETSPOT_OFFSET_Y 5
-
 // how many frames it takes to reset after the cpu dies or successfully recovers
 #define RESET_DELAY 30
 
@@ -80,6 +76,31 @@ static float Vec2_Length(Vec2 *a) {
     return sqrtf(x*x + y*y);
 }
 
+static void simulate_phys(FighterData *data, int future, Vec2 *out) {
+    float gravity = data->phys.air_state == 0 ? 0.f : data->attr.gravity;
+    
+    *out = (Vec2) { data->phys.pos.X, data->phys.pos.Y };
+    float y_vel = data->phys.self_vel.Y;
+    
+    float min_y_vel = data->flags.is_fastfall ?
+        -data->attr.fastfall_velocity
+        : -data->attr.terminal_velocity;
+                
+    for (int i = 0; i < future; ++i) {
+        out->X += data->phys.self_vel.X;
+        out->Y += y_vel;
+        y_vel -= gravity;
+        y_vel = fmax(y_vel, min_y_vel);
+    }
+}
+
+static float projected_distance(FighterData *a, FighterData *b, int future) {
+    Vec2 a_future, b_future;
+    simulate_phys(a, future, &a_future);
+    simulate_phys(b, future, &b_future);
+    return Vec2_Distance(&a_future, &b_future);
+}
+
 static bool enabled(int opt_idx) {
     return info->menu->options[opt_idx].option_val;
 }
@@ -104,6 +125,9 @@ static bool air_actionable(GOBJ *fighter) {
     int state = data->state_id;
 
     if (in_hitstun_anim(state) && hitstun_ended(fighter))
+        return true;
+        
+    if (ASID_ATTACKAIRN <= state && state <= ASID_ATTACKAIRLW && data->flags.past_iasa)
         return true;
 
     return (ASID_JUMPF <= state && state <= ASID_FALLAERIALB)
@@ -280,6 +304,9 @@ void Event_Think(GOBJ *menu) {
 #define ILLUSION_DISTANCE 75.f
 #define FIREFOX_DISTANCE 80.f
 #define FIREBIRD_DISTANCE 70.f
+
+#define SWEETSPOT_OFFSET_X 16
+#define SWEETSPOT_OFFSET_Y 5
     
 static void Think_Spacies(void) {
     GOBJ *hmn = Fighter_GetGObj(0);
@@ -454,6 +481,15 @@ static void Think_Spacies(void) {
 #define UPB_JUMP_HEIGHT 48.f
 #define UPB_JUMP_MAX_X 50.f
 #define UPB_POOF_DISTANCE 40.f
+#define FAIR_SIZE 18
+
+#define DOUBLEJUMP_CHANCE_BELOW_LEDGE 20
+#define DOUBLEJUMP_CHANCE_ABOVE_LEDGE 120
+#define FASTFALL_CHANCE 15
+#define FAIR_CHANCE 5
+
+#define SWEETSPOT_OFFSET_X 20
+#define SWEETSPOT_OFFSET_Y 5
 
 static void Think_Sheik(void) {
     GOBJ *hmn = Fighter_GetGObj(0);
@@ -490,8 +526,19 @@ static void Think_Sheik(void) {
         .Y = vec_to_ledge.Y - UPB_JUMP_HEIGHT,
     };
     float post_jump_dist_to_ledge = Vec2_Length(&post_jump_vec_to_ledge);
+    bool can_upb = post_jump_dist_to_ledge < UPB_POOF_DISTANCE
+        && (
+            enabled(OPT_SHEIK_UPB_LEDGE)
+            || enabled(OPT_SHEIK_UPB_STAGE)
+            || enabled(OPT_SHEIK_UPB_HIGH)
+        );
     
-    bool can_upb = post_jump_dist_to_ledge < UPB_POOF_DISTANCE;
+    int dj_chance;
+    if (cpu_data->phys.pos.Y > target_ledge.Y - 10.f) {
+        dj_chance = DOUBLEJUMP_CHANCE_ABOVE_LEDGE;
+    } else {
+        dj_chance = DOUBLEJUMP_CHANCE_BELOW_LEDGE;
+    }
     
     // HITSTUN
     if (cpu_data->flags.hitstun) {
@@ -501,7 +548,37 @@ static void Think_Sheik(void) {
         
     // ACTIONABLE
     } else if (air_actionable(cpu)) {
+        // JUMP
         if (
+            enabled(OPT_SHEIK_JUMP)
+            && can_jump
+            && (
+                // force jump if at end of range
+                (
+                    post_jump_dist_to_ledge > UPB_POOF_DISTANCE
+                    && vec_to_ledgegrab.Y > 10.f
+                )
+                
+                // otherwise, random chance to jump
+                || HSD_Randi(dj_chance) == 0
+            )
+        ) {
+            cpu_data->cpu.held |= PAD_BUTTON_Y;
+            cpu_data->cpu.lstickX = 127 * dir;
+            
+        // FAIR
+        } else if (
+            enabled(OPT_SHEIK_FAIR)
+            && !cpu_data->flags.is_fastfall
+            && pos.X * dir < hmn_data->phys.pos.X * dir
+            && hmn_data->hurt.intang_frames.ledge < 5
+            && projected_distance(hmn_data, cpu_data, 6.f) < FAIR_SIZE
+        ) {
+            cpu_data->cpu.held |= PAD_BUTTON_A;
+            cpu_data->cpu.lstickX = 127 * dir;
+            
+        // UP B
+        } else if (
             // random chance to upb
             (
                 vec_to_ledgegrab.Y > 10.f
@@ -512,12 +589,22 @@ static void Think_Sheik(void) {
             // force upb if at end of range
             || (
                 vec_to_ledgegrab.Y > UPB_JUMP_HEIGHT 
+                && can_upb
                 && post_jump_dist_to_ledge < UPB_POOF_DISTANCE
             )
         ) {
             cpu_data->cpu.lstickY = 127;
             cpu_data->cpu.held |= PAD_BUTTON_B;
         
+        // FASTFALL
+        } else if (
+            enabled(OPT_SHEIK_FASTFALL)
+            && !cpu_data->flags.is_fastfall
+            && vel.Y < 0.f
+            && HSD_Randi(FASTFALL_CHANCE) == 0
+        ) {
+            cpu_data->cpu.lstickY = -127;
+            
         // WAIT 
         } else {
             cpu_data->cpu.lstickX = 127 * dir;
@@ -526,11 +613,12 @@ static void Think_Sheik(void) {
     } else if (state == 0x166) {
         // choose poof direction
         if (cpu_data->TM.state_frame == 34) {
-            int ledge = true;
-            int above_ledge = vec_to_ledgegrab.X < UPB_POOF_DISTANCE;
-            int stage_tip = true;
-            int stage_inland = pos.Y > 0.f;
-            int high = true;
+            // int ledge = enabled(OPT_SHEIK_UPB_LEDGE);
+            int ledge = false;
+            int stage_tip = enabled(OPT_SHEIK_UPB_LEDGE);
+            int above_ledge = enabled(OPT_SHEIK_UPB_HIGH) && vec_to_ledgegrab.X < UPB_POOF_DISTANCE;
+            int high = enabled(OPT_SHEIK_UPB_HIGH);
+            int stage_inland = enabled(OPT_SHEIK_UPB_STAGE) && pos.Y > 0.f;
             
             int option_count = ledge + above_ledge + stage_tip + stage_inland + high;
             int choice = HSD_Randi(option_count);
@@ -538,11 +626,21 @@ static void Think_Sheik(void) {
             Vec2 target = {0};
             
             // upb to ledge
-            if (ledge && choice-- == 0) {
-                target = target_ledgegrab;
-                if (target.X * dir < 0.f)
-                    target.X = 0.f;
+            if ((ledge && choice-- == 0) || option_count == 0) {
+                target = target_ledge;
+                target.Y -= 13.f;
                     
+            // upb to stage tip
+            } else if (stage_tip && choice-- == 0) {
+                target = target_ledge;
+                target.Y -= 2.f;
+                if (pos.Y < target_ledge.Y)
+                    target.Y -= 2.f;
+                if (pos.Y < target_ledge.Y-10.f)
+                    target.Y += 1.f;
+                if (pos.Y < target_ledge.Y-28.f)
+                    target.Y += 0.5f;
+                
             // upb above ledge
             } else if (above_ledge && choice-- == 0) {
                 float high_y = pos.Y + sqrtf(
@@ -551,18 +649,13 @@ static void Think_Sheik(void) {
                 );
                 target = (Vec2) { target_ledge.X, high_y };
                 
-            // upb to stage tip
-            } else if (stage_tip && choice-- == 0) {
-                target = target_ledge;
-                target.Y -= 5.f;
+            // upb high to platform
+            } else if (high && choice-- == 0) {
+                target = (Vec2) { pos.X + dir, pos.Y + 1.f }; // TODO BETTER TARGETING
                 
             // upb inwards to stage
             } else if (stage_inland && choice-- == 0) {
                 target = (Vec2) { 0.f, 0.f }; // TODO BETTER TARGETING
-                
-            // upb high to platform
-            } else if (high && choice-- == 0) {
-                target = (Vec2) { pos.X + dir, pos.Y + 1.f }; // TODO BETTER TARGETING
             }
             
             Vec2 poof_dir = {
@@ -575,8 +668,11 @@ static void Think_Sheik(void) {
             cpu_data->cpu.lstickY = (s8)(poof_dir.Y * 127.f);
             
         } else {
-            // just jump to ledge
-            cpu_data->cpu.lstickX = sign(vec_to_ledgegrab.X) * 127.f;
+            if (pos.Y > target_ledge.Y) {
+                cpu_data->cpu.lstickX = dir * 127.f;
+            } else {
+                cpu_data->cpu.lstickX = sign(vec_to_ledgegrab.X) * 127.f;
+            }
         }
     
     // SPECIAL FALL
