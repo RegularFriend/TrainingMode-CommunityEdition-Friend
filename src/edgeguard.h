@@ -189,6 +189,7 @@ enum options_sheik {
     OPT_SHEIK_JUMP,
     OPT_SHEIK_FASTFALL,
     OPT_SHEIK_FAIR,
+    OPT_SHEIK_AMSAH_TECH,
     OPT_SHIEK_EXIT,
     
     OPT_SHEIK_COUNT
@@ -198,7 +199,7 @@ static EventOption Options_Main_Sheik[] = {
     HitStrengthOption,
     {
         .option_kind = OPTKIND_STRING,
-        .option_name = "Vanish to ledge",
+        .option_name = "Vanish to Ledge",
         .desc = "Allow Sheik to vanish to ledge and the tip of the stage.",
         .option_values = OffOn,
         .value_num = 2,
@@ -206,7 +207,7 @@ static EventOption Options_Main_Sheik[] = {
     },
     {
         .option_kind = OPTKIND_STRING,
-        .option_name = "Vanish to stage",
+        .option_name = "Vanish to Stage",
         .desc = "Allow Sheik to vanish deep into stage.",
         .option_values = OffOn,
         .value_num = 2,
@@ -214,7 +215,7 @@ static EventOption Options_Main_Sheik[] = {
     },
     {
         .option_kind = OPTKIND_STRING,
-        .option_name = "Vanish high",
+        .option_name = "Vanish High",
         .desc = "Allow Sheik to vanish above the ledge and to platforms.",
         .option_values = OffOn,
         .value_num = 2,
@@ -238,6 +239,13 @@ static EventOption Options_Main_Sheik[] = {
         .option_kind = OPTKIND_STRING,
         .option_name = "Fair",
         .desc = "Allow Sheik to fair the player.",
+        .option_values = OffOn,
+        .value_num = 2,
+    },
+    {
+        .option_kind = OPTKIND_STRING,
+        .option_name = "Amsah Tech",
+        .desc = "Allow Sheik to Amsah Tech.",
         .option_values = OffOn,
         .value_num = 2,
     },

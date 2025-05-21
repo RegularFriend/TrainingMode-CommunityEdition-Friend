@@ -134,6 +134,31 @@ static bool air_actionable(GOBJ *fighter) {
         || state == ASID_DAMAGEFALL;
 }
 
+static bool ground_actionable(GOBJ *fighter) {
+    FighterData *data = fighter->userdata;
+
+    // ensure grounded
+    if (data->phys.air_state == 1)
+        return false;
+
+    int state = data->state_id;
+
+    if (in_hitstun_anim(data) && hitstun_ended(fighter))
+        return true;
+
+    if (state == ASID_LANDING && data->state.frame >= data->attr.normal_landing_lag)
+        return true;
+        
+    return state == ASID_WAIT
+        || state == ASID_WALKSLOW
+        || state == ASID_WALKMIDDLE
+        || state == ASID_WALKFAST
+        || state == ASID_RUN
+        || state == ASID_SQUATWAIT
+        || state == ASID_OTTOTTOWAIT
+        || state == ASID_GUARD;
+}
+
 static void Exit(int value) {
     Match *match = MATCH;
     match->state = 3;
@@ -272,13 +297,16 @@ void Event_Think(GOBJ *menu) {
     // ensure the player L-cancels the initial bair.
     hmn_data->input.timer_trigger_any_ignore_hitlag = 0;
     
+    Vec2 cpu_pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
+    
     if (
         reset_timer == -1
         && (
             cpu_data->flags.dead
             || hmn_data->flags.dead
-            || cpu_data->phys.air_state == 0
             || cpu_data->state_id == ASID_CLIFFCATCH
+            || ground_actionable(cpu)
+            || (cpu_pos.Y > fabs(cpu_pos.X) && cpu_pos.Y > 100.f && air_actionable(cpu))
         )
     ) {
         reset_timer = RESET_DELAY;
@@ -487,9 +515,16 @@ static void Think_Spacies(void) {
 #define DOUBLEJUMP_CHANCE_ABOVE_LEDGE 120
 #define FASTFALL_CHANCE 15
 #define FAIR_CHANCE 5
+#define AMSAH_TECH_CHANCE 2
 
 #define SWEETSPOT_OFFSET_X 20
 #define SWEETSPOT_OFFSET_Y 5
+
+// There is a frame between inputting the DI for the amsah tech
+// and inputting the tech direction. We need to make sure that
+// we tech the same as we DI, so we set this flag to prevent the CPU
+// from DIing in as usual in that frame.
+static bool amsah_teching = false;
 
 static void Think_Sheik(void) {
     GOBJ *hmn = Fighter_GetGObj(0);
@@ -540,11 +575,36 @@ static void Think_Sheik(void) {
         dj_chance = DOUBLEJUMP_CHANCE_BELOW_LEDGE;
     }
     
+    if (!cpu_data->flags.hitstun)
+        amsah_teching = false;
+    
+    // AMSAH TECH
+    if (
+        enabled(OPT_SHEIK_AMSAH_TECH)
+        && in_hitstun_anim(state)
+        && cpu_data->TM.state_prev[0] == ASID_LANDINGFALLSPECIAL
+        && cpu_data->flags.hitlag
+        && cpu_data->dmg.hitlag_frames == 1.f
+        && HSD_Randi(AMSAH_TECH_CHANCE) == 0
+    ) {
+        float hit_angle = Fighter_GetKnockbackAngle(cpu_data);
+        cpu_data->cpu.held |= PAD_TRIGGER_R;
+        cpu_data->cpu.lstickX = pos.X < hmn_data->phys.pos.X ? -80 : 80;
+        cpu_data->cpu.lstickY = -80;
+        cpu_data->cpu.cstickY = -127;
+        amsah_teching = true;
+    
+        
     // HITSTUN
-    if (cpu_data->flags.hitstun) {
-        // DI inwards
-        cpu_data->cpu.lstickX = 90 * dir;
-        cpu_data->cpu.lstickY = 90;
+    } else if (cpu_data->flags.hitstun) {
+        if (amsah_teching) {
+            cpu_data->cpu.lstickX = pos.X < hmn_data->phys.pos.X ? -80 : 80;
+            cpu_data->cpu.lstickY = -80;
+        } else {
+            // DI inwards
+            cpu_data->cpu.lstickX = 90 * dir;
+            cpu_data->cpu.lstickY = 90;
+        }
         
     // ACTIONABLE
     } else if (air_actionable(cpu)) {
