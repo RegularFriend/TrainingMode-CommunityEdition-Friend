@@ -2,36 +2,16 @@
     .include "../../../Globals.s"
     .include "../../../m-ex/Header.s"
 
-    .set entity, 31
     .set playerdata, 31
     .set player, 30
-    .set text, 29
     .set FramesSince, 28
     .set ASBeforeWait, 27
-    .set REG_Color, 26
-
-##########################################################
-## 804a1f5c -> 804a1fd4 = Static Stock Icon Text Struct ##
-## Is 0x80 long and is zero'd at the start ##
-## of every VS Match ##
-## Store Text Info here ##
-##########################################################
 
     backupall
 
     # Get Player Pointers
     mr player, r3
     lwz playerdata, 0x2c(player)
-
-    # CHECK IF ENABLED
-    li r0, OSD.ActOoWait                        # PowerShield ID
-    # lwz r4, -0xdbc(rtoc) #get frame data toggle bits
-    lwz r4, MemcardData(r13)
-    lwz r4, 0x1F24(r4)
-    li r3, 1
-    slw r0, r3, r0
-    and. r0, r0, r4
-    beq Exit
 
 CheckForFollower:
     mr r3, playerdata
@@ -47,12 +27,21 @@ WaitSearchLoop:
     mulli r3, r5, 0x2
     add r3, r3, r4
     lhzx r3, r3, playerdata
-    cmpwi r3, 0xE
-    beq WaitSearchExit
+    cmpwi r3, ASID_Wait
+    beq WaitSearchExit_Wait
+    cmpwi r3, ASID_Landing
+    beq WaitSearchExit_Landing
     addi r5, r5, 1
     cmpwi r5, 6
     bge Exit
     b WaitSearchLoop
+    
+WaitSearchExit_Landing:
+    li FramesSince, -3
+    b WaitSearchExit
+    
+WaitSearchExit_Wait:
+    li FramesSince, 0
 
 WaitSearchExit:
     # Get AS Before Wait
@@ -62,7 +51,6 @@ WaitSearchExit:
     lhzx ASBeforeWait, r3, playerdata
     # Get Frames In Wait
     li r4, TM_FramesInPrevASStart               # Frame Count Start
-    li FramesSince, 0                           # Init Frame Count
 
 FrameCountLoop:
     cmpwi r5, 0
@@ -114,6 +102,13 @@ NotTeching:
     b ComingFromWhitelist
 
 NotWavedash:
+    cmpwi ASBeforeWait, ASID_AttackAirN
+    blt NotAerial
+    cmpwi ASBeforeWait, ASID_AttackAirLe
+    blt NotAerial
+    b ComingFromWhitelist
+    
+NotAerial:
     b Exit
 
 ComingFromWhitelist:

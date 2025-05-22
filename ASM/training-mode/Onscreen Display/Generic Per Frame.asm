@@ -8,6 +8,76 @@
     .set player, 30
 
     backupall
+    
+OSD_ActOoWait:
+    # CHECK IF ENABLED
+    li r0, OSD.ActOoWait                        # PowerShield ID
+    # lwz r4, -0xdbc(rtoc) #get frame data toggle bits
+    lwz r4, MemcardData(r13)
+    lwz r4, 0x1F24(r4)
+    li r3, 1
+    slw r0, r3, r0
+    and. r0, r0, r4
+    beq ActOoWait_End
+
+    # Act Oo Wait
+    li r4, 0
+ActOoWait_SearchForWait:
+    # r3 = data->TM.prev_state[r4]
+    mulli r3, r4, 2
+    add r3, r3, playerdata
+    lhz r3, TM_PrevASStart(r3)
+    
+    cmpwi r3, ASID_Wait
+    beq ActOoWait_FoundWait
+    cmpwi r3, ASID_Landing
+    beq ActOoWait_FoundWait
+    
+    # If the player walks/turns as an intermediate state,
+    # skip this intermediate state and show the OSD for the next state.
+    cmpwi r3, ASID_WalkSlow
+    beq ActOoWait_NextPrevState
+    cmpwi r3, ASID_WalkMiddle
+    beq ActOoWait_NextPrevState
+    cmpwi r3, ASID_WalkFast
+    beq ActOoWait_NextPrevState
+    cmpwi r3, ASID_Turn
+    beq ActOoWait_NextPrevState
+    cmpwi r3, ASID_Squat
+    beq ActOoWait_NextPrevState
+    b ActOoWait_End
+    
+ActOoWait_NextPrevState:
+    addi r4, r4, 1
+    cmpwi r4, TM_PrevASSlots
+    beq ActOoWait_End
+    b ActOoWait_SearchForWait
+    
+ActOoWait_FoundWait:
+    # Make Sure Player Didn't Buffer Crouch, Shield, Walk, or Turn
+    lwz r3, 0x10(playerdata)
+    cmpwi r3, ASID_Wait
+    beq ActOoWait_End
+    cmpwi r3, ASID_WalkSlow
+    beq ActOoWait_End
+    cmpwi r3, ASID_WalkMiddle
+    beq ActOoWait_End
+    cmpwi r3, ASID_WalkFast
+    beq ActOoWait_End
+    cmpwi r3, ASID_Squat
+    beq ActOoWait_End
+    cmpwi r3, ASID_GuardOn
+    beq ActOoWait_End
+    cmpwi r3, ASID_Turn
+    beq ActOoWait_End
+    cmpwi r3, ASID_SquatWait
+    beq ActOoWait_End
+
+    # Display OSD if enabled
+    SetBreakpoint
+    mr r3, player
+    branchl r12, 0x8000551c
+ActOoWait_End:
 
 OSD_FighterSpecificTech:
     li r0, OSD.FighterSpecificTech    # OSD ID
