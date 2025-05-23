@@ -719,7 +719,7 @@ EventDesc TechCounter = {
     .defaultOSD = 0xFFFFFFFF,
 };
 
-static EventMatchData FoxEdgeguard_MatchData = {
+static EventMatchData Edgeguard_MatchData = {
     .timer = MATCH_TIMER_COUNTUP,
     .matchType = MATCH_MATCHTYPE_TIME,
     .isDisableMusic = true,
@@ -740,111 +740,28 @@ static EventMatchData FoxEdgeguard_MatchData = {
     .isDisableHit = false,
     .useKOCounter = false,
     .playerKind = -1,
-    .cpuKind = CKIND_FOX,
+    .cpuKind = -1,
     .stage = -1,
     .timerSeconds = 0,
     .timerSubSeconds = 0,
 };
-EventDesc FoxEdgeguard = {
-    .eventName = "Fox Edgeguard Training\n",
-    .eventDescription = "Finish off the enemy Fox\nafter you hit him offstage!",
+EventDesc Edgeguard = {
+    .eventName = "Edgeguard Training\n",
+    .eventDescription = "Finish off the enemy\nafter you hit them offstage!",
     .eventFile = "edgeguard",
     .jumpTableIndex = -1,
-    .CSSType = SLCHRKIND_EVENT,
-    .allowed_characters = { .hmn = -1, .cpu = -1 },
+    .CSSType = SLCHRKIND_TRAINING,
+    .allowed_characters = {
+        .hmn = -1,
+        .cpu = CSSID_FOX | CSSID_FALCO | CSSID_ZELDA
+    },
     .isSelectStage = true,
     .use_savestates = false,
     .disable_hazards = true,
     .force_sopo = false,
     .scoreType = SCORETYPE_KO,
     .callbackPriority = 3,
-    .matchData = &FoxEdgeguard_MatchData,
-    .defaultOSD = 0xFFFFFFFF,
-};
-
-static EventMatchData FalcoEdgeguard_MatchData = {
-    .timer = MATCH_TIMER_COUNTUP,
-    .matchType = MATCH_MATCHTYPE_TIME,
-    .isDisableMusic = true,
-    .hideGo = true,
-    .hideReady = true,
-    .isCreateHUD = true,
-    .isDisablePause = true,
-    .timerRunOnPause = false,
-    .isHidePauseHUD = true,
-    .isShowLRAStart = true,
-    .isCheckForLRAStart = true,
-    .isShowZRetry = true,
-    .isCheckForZRetry = true,
-    .isShowAnalogStick = true,
-    .isShowScore = false,
-
-    .isRunStockLogic = false,
-    .isDisableHit = false,
-    .useKOCounter = false,
-    .playerKind = -1,
-    .cpuKind = CKIND_FALCO,
-    .stage = -1,
-    .timerSeconds = 0,
-    .timerSubSeconds = 0,
-};
-EventDesc FalcoEdgeguard = {
-    .eventName = "Falco Edgeguard Training\n",
-    .eventDescription = "Finish off the enemy Falco\nafter you hit him offstage!",
-    .eventFile = "edgeguard",
-    .jumpTableIndex = -1,
-    .CSSType = SLCHRKIND_EVENT,
-    .allowed_characters = { .hmn = -1, .cpu = -1 },
-    .isSelectStage = true,
-    .use_savestates = false,
-    .disable_hazards = true,
-    .force_sopo = false,
-    .scoreType = SCORETYPE_KO,
-    .callbackPriority = 3,
-    .matchData = &FalcoEdgeguard_MatchData,
-    .defaultOSD = 0xFFFFFFFF,
-};
-
-static EventMatchData SheikEdgeguard_MatchData = {
-    .timer = MATCH_TIMER_COUNTUP,
-    .matchType = MATCH_MATCHTYPE_TIME,
-    .isDisableMusic = true,
-    .hideGo = true,
-    .hideReady = true,
-    .isCreateHUD = true,
-    .isDisablePause = true,
-    .timerRunOnPause = false,
-    .isHidePauseHUD = true,
-    .isShowLRAStart = true,
-    .isCheckForLRAStart = true,
-    .isShowZRetry = true,
-    .isCheckForZRetry = true,
-    .isShowAnalogStick = true,
-    .isShowScore = false,
-
-    .isRunStockLogic = false,
-    .isDisableHit = false,
-    .useKOCounter = false,
-    .playerKind = -1,
-    .cpuKind = CKIND_SHEIK,
-    .stage = -1,
-    .timerSeconds = 0,
-    .timerSubSeconds = 0,
-};
-EventDesc SheikEdgeguard = {
-    .eventName = "Sheik Edgeguard Training\n",
-    .eventDescription = "Finish off the enemy Falco\nafter you hit him offstage!",
-    .eventFile = "edgeguard",
-    .jumpTableIndex = -1,
-    .CSSType = SLCHRKIND_EVENT,
-    .allowed_characters = { .hmn = -1, .cpu = -1 },
-    .isSelectStage = true,
-    .use_savestates = false,
-    .disable_hazards = true,
-    .force_sopo = false,
-    .scoreType = SCORETYPE_KO,
-    .callbackPriority = 3,
-    .matchData = &SheikEdgeguard_MatchData,
+    .matchData = &Edgeguard_MatchData,
     .defaultOSD = 0xFFFFFFFF,
 };
 
@@ -1157,9 +1074,7 @@ static EventPage General_Page = {
 // Page 3 Events
 static EventDesc *Spacie_Events[] = {
     &TechCounter,
-    &FoxEdgeguard,
-    &FalcoEdgeguard,
-    &SheikEdgeguard,
+    &Edgeguard,
     &SideBSweet,
     &EscapeSheik,
 };
