@@ -120,6 +120,12 @@ enum JumpTableIndex {
     JUMP_SLIDEOFF,
     JUMP_WAVESHINESDI
 };
+typedef struct AllowedCharacters
+{
+    // whitelist bitfields of CSSID_* characters
+    int hmn;
+    int cpu;
+} AllowedCharacters;
 typedef struct EventDesc
 {
     char *eventName;
@@ -132,7 +138,7 @@ typedef struct EventDesc
     u8 disable_hazards : 1; // removes stage hazards
     u8 force_sopo : 1;
     u8 CSSType;
-    int CSSList;
+    AllowedCharacters allowed_characters;
     u8 scoreType;
     u8 callbackPriority;
     EventMatchData *matchData;
