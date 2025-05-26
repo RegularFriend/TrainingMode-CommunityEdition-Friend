@@ -1281,12 +1281,6 @@ void EventLoad()
     GObj_AddUserData(gobj, 4, HSD_Free, userdata);
     GObj_AddProc(gobj, cb, pri);
 
-    // Run this event's init function
-    if (evFunction->Event_Init != 0)
-    {
-        evFunction->Event_Init(gobj);
-    }
-
     // store pointer to the event's data
     userdata[0] = event_desc;
 
@@ -1294,14 +1288,6 @@ void EventLoad()
     stc_event_vars.game_timer = 0;
     GOBJ *timer_gobj = GObj_Create(0, 7, 0);
     GObj_AddProc(timer_gobj, Event_IncTimer, 0);
-
-    // init the pause menu
-    GOBJ *menu_gobj = EventMenu_Init(event_desc, *evFunction->menu_start);
-
-    // Init static structure containing event variables
-    stc_event_vars.event_desc = event_desc;
-    stc_event_vars.event_gobj = gobj;
-    stc_event_vars.menu_gobj = menu_gobj;
 
     // init savestate struct
     stc_savestate = calloc(sizeof(Savestate));
@@ -1316,6 +1302,20 @@ void EventLoad()
     // Store update function
     HSD_Update *update = stc_hsd_update;
     update->onFrame = EventUpdate;
+    
+    // Init static structure containing event variables
+    stc_event_vars.event_desc = event_desc;
+    stc_event_vars.event_gobj = gobj;
+
+    // Run this event's init function
+    if (evFunction->Event_Init != 0)
+    {
+        evFunction->Event_Init(gobj);
+    }
+
+    // init the pause menu
+    GOBJ *menu_gobj = EventMenu_Init(event_desc, *evFunction->menu_start);
+    stc_event_vars.menu_gobj = menu_gobj;
 };
 
 void EventUpdate()
