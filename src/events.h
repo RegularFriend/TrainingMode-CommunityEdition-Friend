@@ -10,6 +10,8 @@
 #define MENU_POPMAXOPTION 5
 #define countof(A) (sizeof(A)/sizeof(*A))
 
+#define ANALOG_TRIGGER_THRESHOLD 43
+
 #define TMLOG(...) DevelopText_AddString(event_vars->db_console_text, __VA_ARGS__)
 
 // disable all logs in release mode

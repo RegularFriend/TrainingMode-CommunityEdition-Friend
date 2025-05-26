@@ -2043,31 +2043,6 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
             }
         }
 
-        /*
-    // remove all generators with linkNo 2 (blastzone)
-    ptclGen *gen = *stc_ptclgen;
-    while (gen != 0)
-    {
-        // get next
-        ptclGen *gen_next = gen->next;
-
-        // if linkNo 2, destroy it
-        if (gen->link_no == 2)
-        {
-            // set a flag for some reason
-            gen->type |= 0x80;
-
-            // kill gen
-            gen = psKillGenerator(gen, *stc_ptclgencurr);
-        }
-
-        // save last
-        *stc_ptclgencurr = gen;
-        // get next
-        gen = gen_next;
-    }
-*/
-
         // remove all camera shake gobjs (p_link 18, entity_class 3)
         GOBJ *gobj = (*stc_gobj_lookup)[MATCHPLINK_MATCHCAM];
         while (gobj != 0)
@@ -3210,7 +3185,7 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu) {
     int inputs = inputs_rapid;
     if (
         (inputs_held & HSD_TRIGGER_R) != 0
-        || (pad->triggerRight >= 24)
+        || (pad->triggerRight >= ANALOG_TRIGGER_THRESHOLD)
     ) {
         inputs = inputs_held;
     }

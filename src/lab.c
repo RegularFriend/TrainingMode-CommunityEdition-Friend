@@ -2,8 +2,6 @@
 
 #include <stddef.h>
 
-#define LOW_ANALOG_TRIGGER_THRESHOLD 24
-
 // Static Variables
 static char nullString[] = " ";
 static DIDraw didraws[6];
