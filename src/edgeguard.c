@@ -15,8 +15,7 @@ static EdgeguardInfo *info;
 static inline float fmax(float a, float b) { return a < b ? b : a; }
 static inline float fmin(float a, float b) { return a < b ? a : b; }
 
-// set in Event_Init based on character
-EventMenu *Event_Menu = &(EventMenu){0};
+EventMenu *Event_Menu = &Menu_Main;
 
 static void UpdatePosition(GOBJ *fighter) {
     FighterData *data = fighter->userdata;
@@ -102,7 +101,7 @@ static float ProjectedDistance(FighterData *a, FighterData *b, int future) {
 }
 
 static bool Enabled(int opt_idx) {
-    return info->menu->options[opt_idx].val;
+    return info->recovery_menu->options[opt_idx].val;
 }
 
 static int InHitstunAnim(int state) {
@@ -222,7 +221,7 @@ static void Reset(void) {
     Fighter_HitboxDisableAll(hmn);
     hmn_data->script.script_current = 0;
 
-    KBValues vals = HitStrength_KBRange[info->menu->options[OPT_INITIAL_HITSTRENGTH].val];
+    KBValues vals = HitStrength_KBRange[Options_Main[OPT_MAIN_HITSTRENGTH].val];
     
     float mag = vals.mag_min + (vals.mag_max - vals.mag_min) * HSD_Randf();
     
@@ -266,7 +265,7 @@ static void Reset(void) {
     cpu_data->dmg.percent = cpu_dmg;
     Fighter_SetHUDDamage(cpu_data->ply, cpu_dmg);
     
-    int hmn_dmg = info->menu->options[OPT_INITIAL_PERCENT].val;
+    int hmn_dmg = Options_Main[OPT_MAIN_PERCENT].val;
     hmn_data->dmg.percent = hmn_dmg;
     Fighter_SetHUDDamage(hmn_data->ply, hmn_dmg);
 }
@@ -286,9 +285,10 @@ void Event_Init(GOBJ *gobj) {
     FighterData *cpu_data = cpu->userdata;
     
     info = &InfoLookup[cpu_data->kind];
-    if (info->menu == 0)
+    if (info->recovery_menu == 0)
         assert("unimplemented character in edgeguard training");
-    Event_Menu = info->menu;
+    Options_Main[OPT_MAIN_RECOVERY].menu = info->recovery_menu;
+    
     GetLedgePositions(&ledge_positions);
 }
 

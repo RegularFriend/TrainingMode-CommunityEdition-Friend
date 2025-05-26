@@ -1307,15 +1307,15 @@ void EventLoad()
     stc_event_vars.event_desc = event_desc;
     stc_event_vars.event_gobj = gobj;
 
+    // init the pause menu
+    GOBJ *menu_gobj = EventMenu_Init(event_desc, *evFunction->menu_start);
+    stc_event_vars.menu_gobj = menu_gobj;
+    
     // Run this event's init function
     if (evFunction->Event_Init != 0)
     {
         evFunction->Event_Init(gobj);
     }
-
-    // init the pause menu
-    GOBJ *menu_gobj = EventMenu_Init(event_desc, *evFunction->menu_start);
-    stc_event_vars.menu_gobj = menu_gobj;
 };
 
 void EventUpdate()

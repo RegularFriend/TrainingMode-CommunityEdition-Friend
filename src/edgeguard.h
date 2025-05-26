@@ -37,48 +37,56 @@ static KBValues HitStrength_KBRange[] = {
     },
 };
 
-enum options_final {
-    OPT_FINAL_EXIT,
-    
-    OPT_FINAL_COUNT
-};
-
 enum options_initial {
-    OPT_INITIAL_HITSTRENGTH,
-    OPT_INITIAL_PERCENT,
+    OPT_MAIN_RECOVERY,
+    OPT_MAIN_HITSTRENGTH,
+    OPT_MAIN_PERCENT,
+    OPT_MAIN_EXIT,
     
-    OPT_INITIAL_COUNT
+    OPT_MAIN_COUNT
 };
 
-#define ExitOption {\
-    .kind = OPTKIND_FUNC,\
-    .name = "Exit",\
-    .desc = "Return to the Event Select Screen.",\
-    .OnSelect = Exit,\
-}
+static EventOption Options_Main[] = {
+    {
+        .kind = OPTKIND_MENU,
+        .menu = 0, // Set in Event_Init
+        .name = "Recovery Options",
+        .desc = "Alter the CPU's recovery options.",
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Hit Strength",
+        .desc = "How far the CPU will be knocked back.",
+        .values = Values_HitStrength,
+        .value_num = countof(Values_HitStrength),
+        .val = 1,
+    },
+    {
+        .kind = OPTKIND_INT,
+        .value_num = 999,
+        .name = "Player Percent",
+        .desc = "Adjust the player's percent.",
+        .values = "%d%%",
+        .OnChange = ChangePlayerPercent,
+    },
+    {
+        .kind = OPTKIND_FUNC,
+        .name = "Exit",
+        .desc = "Return to the Event Select Screen.",
+        .OnSelect = Exit,
+    }
+};
 
-// must be the first option
-#define InitialOptions {\
-    .kind = OPTKIND_STRING,\
-    .name = "Hit Strength",\
-    .desc = "How far the CPU will be knocked back.",\
-    .values = Values_HitStrength,\
-    .value_num = countof(Values_HitStrength),\
-    .val = 1,\
-},\
-{\
-    .kind = OPTKIND_INT,\
-    .value_num = 999,\
-    .name = "Player Percent",\
-    .desc = "Adjust the player's percent.",\
-    .values = "%d%%",\
-    .OnChange = ChangePlayerPercent,\
-}
+static EventMenu Menu_Main = {
+    .name = "Edgeguard",
+    .option_num = sizeof(Options_Main) / sizeof(EventOption),
+    .options = &Options_Main,
+};
 
 // Fox -------------------------------------------------
 
 enum options_spacies {
-    OPT_SPACIES_FF_LOW = OPT_INITIAL_COUNT,
+    OPT_SPACIES_FF_LOW,
     OPT_SPACIES_FF_MID,
     OPT_SPACIES_FF_HIGH,
     OPT_SPACIES_JUMP,
@@ -86,8 +94,7 @@ enum options_spacies {
     OPT_SPACIES_FASTFALL,
 };
 
-static EventOption Options_Main_Fox[] = {
-    InitialOptions,
+static EventOption Options_Fox[] = {
     {
         .kind = OPTKIND_STRING,
         .name = "Firefox Low",
@@ -131,18 +138,16 @@ static EventOption Options_Main_Fox[] = {
         .values = OffOn,
         .value_num = 2,
     },
-    ExitOption,
 };
-static EventMenu Menu_Main_Fox = {
-    .name = "Fox Edgeguard",
-    .option_num = sizeof(Options_Main_Fox) / sizeof(EventOption),
-    .options = &Options_Main_Fox,
+static EventMenu Menu_Fox = {
+    .name = "Fox Recovery",
+    .option_num = sizeof(Options_Fox) / sizeof(EventOption),
+    .options = &Options_Fox,
 };
 
 // Falco -------------------------------------------------
 
-static EventOption Options_Main_Falco[] = {
-    InitialOptions,
+static EventOption Options_Falco[] = {
     {
         .kind = OPTKIND_STRING,
         .name = "Firebird Low",
@@ -186,18 +191,17 @@ static EventOption Options_Main_Falco[] = {
         .values = OffOn,
         .value_num = 2,
     },
-    ExitOption,
 };
-static EventMenu Menu_Main_Falco = {
-    .name = "Falco Edgeguard",
-    .option_num = sizeof(Options_Main_Falco) / sizeof(EventOption),
-    .options = &Options_Main_Falco,
+static EventMenu Menu_Falco = {
+    .name = "Falco Recovery",
+    .option_num = sizeof(Options_Falco) / sizeof(EventOption),
+    .options = &Options_Falco,
 };
 
 // Sheik -------------------------------------------------
 
 enum options_sheik {
-    OPT_SHEIK_PERCENT = OPT_INITIAL_COUNT,
+    OPT_SHEIK_PERCENT,
     OPT_SHEIK_UPB_LEDGE,
     OPT_SHEIK_UPB_STAGE,
     OPT_SHEIK_UPB_HIGH,
@@ -210,8 +214,7 @@ enum options_sheik {
     OPT_SHEIK_COUNT
 };
 
-static EventOption Options_Main_Sheik[] = {
-    InitialOptions,
+static EventOption Options_Sheik[] = {
     {
         .kind = OPTKIND_STRING,
         .name = "Vanish to Ledge",
@@ -264,26 +267,25 @@ static EventOption Options_Main_Sheik[] = {
         .values = OffOn,
         .value_num = 2,
     },
-    ExitOption,
 };
 
-static EventMenu Menu_Main_Sheik = {
-    .name = "Sheik Edgeguard",
-    .option_num = sizeof(Options_Main_Sheik) / sizeof(EventOption),
-    .options = &Options_Main_Sheik,
+static EventMenu Menu_Sheik = {
+    .name = "Sheik Recovery",
+    .option_num = sizeof(Options_Sheik) / sizeof(EventOption),
+    .options = &Options_Sheik,
 };
 
 // Info lookup -----------------------------------------
 
 typedef struct EdgeguardInfo {
-    EventMenu *menu;
+    EventMenu *recovery_menu;
     void (*Think)(void);
 } EdgeguardInfo;
 
 static EdgeguardInfo InfoLookup[] = {
     {0}, // MARIO
     {
-        .menu = &Menu_Main_Fox,
+        .recovery_menu = &Menu_Fox,
         .Think = Think_Spacies,
     },
     {0}, // FALCON
@@ -292,7 +294,7 @@ static EdgeguardInfo InfoLookup[] = {
     {0}, // BOWSER
     {0}, // LINK
     {
-        .menu = &Menu_Main_Sheik,
+        .recovery_menu = &Menu_Sheik,
         .Think = Think_Sheik,
     },
     {0}, // NESS
@@ -310,7 +312,7 @@ static EdgeguardInfo InfoLookup[] = {
     {0}, // YOUNGLINK
     {0}, // DRMARIO
     {
-        .menu = &Menu_Main_Falco,
+        .recovery_menu = &Menu_Falco,
         .Think = Think_Spacies,
     },
     {0}, // PICHU

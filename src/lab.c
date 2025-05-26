@@ -4370,8 +4370,6 @@ void Record_MemcardLoad(int slot, int file_no)
     if (file_found == 1)
     {
 
-        int load_pre_tick = OSGetTick();
-
         // setup load
         MemcardSave memcard_save;
         memcard_save.data = HSD_MemAlloc(file_size);
@@ -4457,9 +4455,6 @@ void Record_MemcardLoad(int slot, int file_no)
         }
 
         HSD_Free(memcard_save.data);
-
-        int load_post_tick = OSGetTick();
-        int load_time = OSTicksToMilliseconds(load_post_tick - load_pre_tick);
     }
 }
 int Record_MenuThink(GOBJ *menu_gobj)
