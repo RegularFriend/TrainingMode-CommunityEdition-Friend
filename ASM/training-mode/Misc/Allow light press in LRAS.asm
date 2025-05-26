@@ -22,7 +22,7 @@ LRAS_Loop:
         mr r20, r3
         mr r3, r20
         lbz r5, 0x1C(r3) # triggerLeft
-        cmpwi r5, 20
+        cmpwi r5, AnalogTriggerThreshold
         bge CheckLEnd
         andi. r0, r4, PAD_TRIGGER_L
         bne CheckLEnd
@@ -31,7 +31,7 @@ LRAS_Loop:
         
     CheckR:
         lbz r5, 0x1D(r3) # triggerRight
-        cmpwi r5, 20
+        cmpwi r5, AnalogTriggerThreshold
         bge CheckREnd
         andi. r0, r4, PAD_TRIGGER_R
         bne CheckREnd

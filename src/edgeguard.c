@@ -166,6 +166,8 @@ static void Exit(int value) {
 }
 
 static void Reset(void) {
+    event_vars->Savestate_Load(event_vars->savestate, Savestate_Silent);
+
     for (int ply = 0; ply < 2; ++ply) {
         MatchHUDElement *hud = &stc_matchhud->element_data[ply];
         if (hud->is_removed == 1)
@@ -278,6 +280,8 @@ static void ChangePlayerPercent(GOBJ *menu_gobj, int dmg) {
 }
 
 void Event_Init(GOBJ *gobj) {
+    event_vars = *event_vars_ptr;
+    
     GOBJ *cpu = Fighter_GetGObj(1);
     FighterData *cpu_data = cpu->userdata;
     
@@ -285,12 +289,17 @@ void Event_Init(GOBJ *gobj) {
     if (info->menu == 0)
         assert("unimplemented character in edgeguard training");
     Event_Menu = info->menu;
-    
     GetLedgePositions(&ledge_positions);
-    Reset();
 }
 
 void Event_Think(GOBJ *menu) {
+    // For some reason, Savestate_Save crashes in Event_Init.
+    // So we need to init on first think frame.
+    if (event_vars->game_timer == 1) {
+        event_vars->Savestate_Save(event_vars->savestate, Savestate_Silent);
+        Reset();
+    }
+    
     GOBJ *hmn = Fighter_GetGObj(0);
     GOBJ *cpu = Fighter_GetGObj(1);
     FighterData *hmn_data = hmn->userdata;

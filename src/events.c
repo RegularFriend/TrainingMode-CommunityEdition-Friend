@@ -1421,7 +1421,8 @@ void OnStartMelee()
 /// Miscellaneous Functions ///
 ///////////////////////////////
 
-int Savestate_Save(Savestate *savestate)
+// use enum savestate_flags for flags
+int Savestate_Save(Savestate *savestate, int flags)
 {
     typedef struct BackupQueue
     {
@@ -1431,40 +1432,30 @@ int Savestate_Save(Savestate *savestate)
 
     // ensure no players are in problematic states
     int canSave = 1;
-
-    // Aitch: intentionally remove checks for unsafe savestates.
-    // I much prefer people to be able to make buggy savestates.
-    // They can only report issues if they can encounter them.
-    //
-    // These incredibly conservative checks are not helpful to the people using training mode,
-    // nor are they to the people fixing the bugs.
-    // To solve the issues, we should not be preventing savestates, but instead saving the necessary state.
-    //
-    // I am keeping this code here commented so we have a good starting point to look towards when
-    // figuring out the new data we need to save, when the users report issues.
-    //
-    //GOBJ **gobj_list = R13_PTR(GOBJLIST);
-    //GOBJ *fighter = gobj_list[8];
-    //while (fighter != 0)
-    //{
-
-    //    FighterData *fighter_data = fighter->userdata;
-
-    //    if ((fighter_data->cb.OnDeath != 0) ||
-    //       (fighter_data->cb.OnDeath2 != 0) ||
-    //       (fighter_data->cb.OnDeath3 != 0) ||
-    //       (fighter_data->heldItem != 0) ||
-    //       (fighter_data->x1978 != 0) ||
-    //       (fighter_data->accessory != 0) ||
-    //       ((fighter_data->kind == FTKIND_NESS) && ((fighter_data->state_id >= 342) && (fighter_data->state_id <= 344)))) // hardcode ness' usmash because it doesnt destroy the yoyo via onhit callback...
-    //    {
-    //       // cannot save
-    //       canSave = 0;
-    //       break;
-    //    }
-
-    //    fighter = fighter->next;
-    //}
+    
+    if (flags & Savestate_Checks) {
+        GOBJ **gobj_list = R13_PTR(-0x3E74);
+        GOBJ *fighter = gobj_list[8];
+        while (fighter != 0)
+        {
+           FighterData *fighter_data = fighter->userdata;
+    
+           if ((fighter_data->cb.OnDeath_Persist != 0) ||
+              (fighter_data->cb.OnDeath_State != 0) ||
+              (fighter_data->cb.OnDeath3 != 0) ||
+              (fighter_data->item_held != 0) ||
+              (fighter_data->x1978 != 0) ||
+              (fighter_data->accessory != 0) ||
+              ((fighter_data->kind == FTKIND_NESS) && ((fighter_data->state_id >= 342) && (fighter_data->state_id <= 344)))) // hardcode ness' usmash because it doesnt destroy the yoyo via onhit callback...
+           {
+              // cannot save
+              canSave = 0;
+              break;
+           }
+    
+           fighter = fighter->next;
+        }
+    }
 
     // loop through all players
     int isSaved = 0;
@@ -1604,29 +1595,32 @@ int Savestate_Save(Savestate *savestate)
         }
     }
 
-    // Play SFX
-    if (isSaved == 0)
-    {
-        SFX_PlayCommon(3);
-    }
-    if (isSaved == 1)
-    {
-        // play sfx
-        SFX_PlayCommon(1);
-
-        // if not in frame advance, flash screen. I wrote it like this because the second condition kept getting optimized out
-        if ((Pause_CheckStatus(0) != 1))
+    if ((flags & Savestate_Silent) == 0) {
+        // Play SFX
+        if (isSaved == 0)
         {
-            if ((Pause_CheckStatus(1) != 2))
+            SFX_PlayCommon(3);
+        }
+        if (isSaved == 1)
+        {
+            // play sfx
+            SFX_PlayCommon(1);
+    
+            // if not in frame advance, flash screen. I wrote it like this because the second condition kept getting optimized out
+            if ((Pause_CheckStatus(0) != 1))
             {
-                ScreenFlash_Create(2, 0);
+                if ((Pause_CheckStatus(1) != 2))
+                {
+                    ScreenFlash_Create(2, 0);
+                }
             }
         }
     }
 
     return isSaved;
 }
-int Savestate_Load(Savestate *savestate, int is_mirrored)
+// use enum savestate_flags for flags
+int Savestate_Load(Savestate *savestate, int flags)
 {
     typedef struct BackupQueue
     {
@@ -1694,7 +1688,7 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
 
                     fighter_data->state_id = ft_data->state_id;
                     fighter_data->facing_direction = ft_data->facing_direction;
-                    if (is_mirrored)
+                    if (flags & Savestate_Mirror)
                     {
                         fighter_data->facing_direction *= -1;
                     }
@@ -1704,7 +1698,7 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
 
                     // restore phys struct
                     memcpy(&fighter_data->phys, &ft_data->phys, sizeof(fighter_data->phys)); // copy physics
-                    if (is_mirrored)
+                    if (flags & Savestate_Mirror)
                     {
                         fighter_data->phys.anim_vel.X *= -1;
                         fighter_data->phys.self_vel.X *= -1;
@@ -1741,7 +1735,7 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
                     thiscoll->joint_5 = joint_5;
                     thiscoll->joint_6 = joint_6;
                     thiscoll->joint_7 = joint_7;
-                    if (is_mirrored)
+                    if (flags & Savestate_Mirror)
                     {
                         thiscoll->topN_Curr.X *= -1;
                         thiscoll->topN_CurrCorrect.X *= -1;
@@ -1826,7 +1820,7 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
 
                     // copy physics again to work around some bugs. Notably, this fixes savestates during dash.
                     memcpy(&fighter_data->phys, &ft_data->phys, sizeof(fighter_data->phys));
-                    if (is_mirrored)
+                    if (flags & Savestate_Mirror)
                     {
                         fighter_data->phys.anim_vel.X *= -1;
                         fighter_data->phys.self_vel.X *= -1;
@@ -1900,7 +1894,7 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
                     void *alloc = thiscam->alloc;
                     CmSubject *next = thiscam->next;
                     memcpy(thiscam, savedcam, sizeof(ft_data->camera_subject));
-                    if (is_mirrored)
+                    if (flags & Savestate_Mirror)
                     {
                         // These adjustments of mirroring camera are not perfect for now. Please fix this if you know suitable adjustments
                         thiscam->cam_pos.X *= -1;
@@ -1980,15 +1974,8 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
             SFX_StopCrowd();
         }
     }
-
-    // Restore event data and Play SFX
-    if (isLoaded == 0)
-    {
-        SFX_PlayCommon(3);
-    }
-    if (isLoaded == 1)
-    {
-
+    
+    if (isLoaded == 1) {
         // restore frame
         Match *match = stc_match;
         match->time_frames = savestate->frame;
@@ -2058,9 +2045,15 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
 
             gobj = gobj_next;
         }
-
-        // play sfx
-        SFX_PlayCommon(0);
+    }
+    
+    // sfx
+    if ((flags & Savestate_Silent) == 0) {
+        if (isLoaded == 0) {
+            SFX_PlayCommon(3);
+        } else {
+            SFX_PlayCommon(0);
+        }
     }
 
     return isLoaded;
@@ -2087,12 +2080,12 @@ void Update_Savestates()
                 if (((pad->down & HSD_BUTTON_DPAD_RIGHT) != 0) && ((pad->held & (blacklist)) == 0))
                 {
                     // save state
-                    Savestate_Save(stc_savestate);
+                    Savestate_Save(stc_savestate, 0);
                 }
                 else if (((pad->down & HSD_BUTTON_DPAD_LEFT) != 0) && ((pad->held & (blacklist)) == 0))
                 {
                     // load state
-                    Savestate_Load(stc_savestate, false);
+                    Savestate_Load(stc_savestate, 0);
                 }
             }
         }

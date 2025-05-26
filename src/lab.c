@@ -3958,7 +3958,7 @@ void Record_InitState(GOBJ *menu_gobj)
 {
     stc_playback_cancelled_hmn = false;
     stc_playback_cancelled_cpu = false;
-    if (event_vars->Savestate_Save(rec_state))
+    if (event_vars->Savestate_Save(rec_state, 0))
         Record_OnSuccessfulSave(1);
 }
 void Record_ResaveState(GOBJ *menu_gobj)
@@ -3986,7 +3986,7 @@ void Record_PruneState(GOBJ *menu_gobj)
 {
     stc_playback_cancelled_hmn = false;
     stc_playback_cancelled_cpu = false;
-    if (event_vars->Savestate_Save(rec_state))
+    if (event_vars->Savestate_Save(rec_state, 0))
         Record_OnSuccessfulSave(0);
 
     // If we re-save during mirroring, then we NEED to show the new savestate as unmirrored.
@@ -4306,7 +4306,7 @@ void Record_OnSuccessfulSave(int deleteRecordings)
     }
 
     // also save to personal savestate
-    event_vars->Savestate_Save(event_vars->savestate);
+    event_vars->Savestate_Save(event_vars->savestate, 0);
     event_vars->savestate_saved_while_mirrored = event_vars->loaded_mirrored;
 
     // take screenshot
@@ -4452,7 +4452,7 @@ void Record_MemcardLoad(int slot, int file_no)
             menu_data->currMenu = curr_menu;
 
             // save to personal savestate
-            event_vars->Savestate_Save(event_vars->savestate);
+            event_vars->Savestate_Save(event_vars->savestate, 0);
             event_vars->savestate_saved_while_mirrored = event_vars->loaded_mirrored;
         }
 
@@ -4505,8 +4505,10 @@ void Record_LoadSavestate(Savestate *savestate) {
 
     stc_playback_cancelled_hmn = false;
     stc_playback_cancelled_cpu = false;
-
-    event_vars->Savestate_Load(savestate, mirror);
+    
+    int flags = 0;
+    if (mirror) flags |= Savestate_Mirror;
+    event_vars->Savestate_Load(savestate, flags);
 
     int plys[2] = {0, 1};
     int chances[2] = {
@@ -4574,7 +4576,7 @@ void Savestates_Update()
                     if (save_timer[port] == SAVE_THRESHOLD)
                     {
                         // save state
-                        event_vars->Savestate_Save(event_vars->savestate);
+                        event_vars->Savestate_Save(event_vars->savestate, 0);
                         event_vars->savestate_saved_while_mirrored = event_vars->loaded_mirrored;
                         save_timer[port] = 0; // Reset timer after saving
                         lockout_timer = LOCKOUT_DURATION;

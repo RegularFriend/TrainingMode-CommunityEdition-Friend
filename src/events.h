@@ -421,8 +421,8 @@ typedef struct EventVars
     GOBJ *menu_gobj;                                                                         // event menu gobj
     int game_timer;                                                                          // amount of game frames passed
     u8 hide_menu;                                                                            // enable this to hide the base menu. used for custom menus.
-    int (*Savestate_Save)(Savestate *savestate);                                             // function pointer to save state
-    int (*Savestate_Load)(Savestate *savestate, int is_mirrored);                            // function pointer to load state
+    int (*Savestate_Save)(Savestate *savestate, int flags);                                  // function pointer to save state
+    int (*Savestate_Load)(Savestate *savestate, int flags);                                  // function pointer to load state
     GOBJ *(*Message_Display)(int msg_kind, int queue_num, int msg_color, char *format, ...); // function pointer to display message
     int *(*Tip_Display)(int lifetime, char *fmt, ...);
     void (*Tip_Destroy)();      // function pointer to destroy tip
@@ -449,8 +449,8 @@ void EventMenu_COBJThink(GOBJ *gobj);
 void EventMenu_Draw(GOBJ *eventMenu);
 int Text_AddSubtextManual(Text *text, char *string, int posx, int posy, int scalex, int scaley);
 EventMenu *EventMenu_GetCurrentMenu(GOBJ *gobj);
-int Savestate_Save(Savestate *savestate);
-int Savestate_Load(Savestate *savestate, int is_mirrored);
+int Savestate_Save(Savestate *savestate, int flags);
+int Savestate_Load(Savestate *savestate, int flags);
 void Update_Savestates();
 int GOBJToID(GOBJ *gobj);
 int FtDataToID(FighterData *fighter_data);
@@ -735,3 +735,14 @@ void Tip_Destroy(); // 0 = immediately destroy, 1 = force exit
 void Tip_Think(GOBJ *gobj);
 
 #define TIP_TXTJOINT 2
+
+enum savestate_flags {
+    // save: perform initial safety checks 
+    Savestate_Checks = 1 << 0,
+    
+    // save/load: don't play sfx and screen flash 
+    Savestate_Silent = 1 << 1,
+    
+    // load: mirror savestate
+    Savestate_Mirror = 1 << 2,
+};

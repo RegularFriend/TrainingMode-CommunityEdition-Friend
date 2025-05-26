@@ -8,7 +8,10 @@
     # Score Types
     .set KO, 0x0
     .set Time, 0x1
-
+    
+    # Utility
+    .set AnalogTriggerThreshold, 43
+    
     ##################################
     # This must match the order of the
     # JumpTableIndex in events.h

@@ -13,24 +13,8 @@
     
     load r3, 0x804c20bc # stc_css_pad
     lbz r3, 0x1C(r3) # triggerLeft
-    cmpwi r3, 20
+    cmpwi r3, AnalogTriggerThreshold
     bge OpenFDD
-
-    /*
-    rlwinm. r0, r4, 0, 27, 27   # CHECK FOR Z
-    bne OpenOptions
-
-    # Check for Tutotial (R)
-    # Check For Training Mode ISO Game ID First
-    lis r5, 0x8000
-    lwz r5, 0x0(r5)
-    load r6, 0x47544d45         # GTME
-    cmpw r5, r6
-    bne CheckToSwitchPage
-    # Check for R
-    rlwinm. r0, r4, 0, 26, 26   # CHECK FOR R
-    bne PlayMovie
-    */
 
 CheckToSwitchPage:
     li r3, 4
