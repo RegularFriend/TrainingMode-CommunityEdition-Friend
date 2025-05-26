@@ -220,7 +220,7 @@ static void Reset(void) {
     Fighter_HitboxDisableAll(hmn);
     hmn_data->script.script_current = 0;
 
-    KBValues vals = HitStrength_KBRange[info->menu->options[OPT_HITSTRENGTH].val];
+    KBValues vals = HitStrength_KBRange[info->menu->options[OPT_INITIAL_HITSTRENGTH].val];
     
     float mag = vals.mag_min + (vals.mag_max - vals.mag_min) * HSD_Randf();
     
@@ -259,14 +259,22 @@ static void Reset(void) {
     cpu_data->flags.hitlag = 1;
     cpu_data->flags.hitlag_unk = 1;
 
-    // random percent
-    int dmg = vals.dmg_min + HSD_Randi(vals.dmg_max - vals.dmg_min);
+    // percent
+    int cpu_dmg = vals.dmg_min + HSD_Randi(vals.dmg_max - vals.dmg_min);
+    cpu_data->dmg.percent = cpu_dmg;
+    Fighter_SetHUDDamage(cpu_data->ply, cpu_dmg);
+    
+    int hmn_dmg = info->menu->options[OPT_INITIAL_PERCENT].val;
+    hmn_data->dmg.percent = hmn_dmg;
+    Fighter_SetHUDDamage(hmn_data->ply, hmn_dmg);
+}
 
-    cpu_data->dmg.percent = dmg;
-    Fighter_SetHUDDamage(cpu_data->ply, dmg);
+static void ChangePlayerPercent(GOBJ *menu_gobj, int dmg) {
+    GOBJ *hmn = Fighter_GetGObj(0);
+    FighterData *hmn_data = hmn->userdata;
 
-    hmn_data->dmg.percent = 0;
-    Fighter_SetHUDDamage(hmn_data->ply, 0);
+    hmn_data->dmg.percent = dmg;
+    Fighter_SetHUDDamage(hmn_data->ply, dmg);
 }
 
 void Event_Init(GOBJ *gobj) {

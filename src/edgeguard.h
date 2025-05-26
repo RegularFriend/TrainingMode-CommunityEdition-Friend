@@ -6,11 +6,9 @@ static void Reset();
 
 static void Think_Spacies(void);
 static void Think_Sheik(void);
+static void ChangePlayerPercent(GOBJ *menu_gobj, int value);
 
 // Common values -------------------------------------------------
-
-// hit strength MUST be the first option
-#define OPT_HITSTRENGTH 0
 
 static const char *OffOn[2] = {"Off", "On"};
 
@@ -39,6 +37,19 @@ static KBValues HitStrength_KBRange[] = {
     },
 };
 
+enum options_final {
+    OPT_FINAL_EXIT,
+    
+    OPT_FINAL_COUNT
+};
+
+enum options_initial {
+    OPT_INITIAL_HITSTRENGTH,
+    OPT_INITIAL_PERCENT,
+    
+    OPT_INITIAL_COUNT
+};
+
 #define ExitOption {\
     .kind = OPTKIND_FUNC,\
     .name = "Exit",\
@@ -47,32 +58,36 @@ static KBValues HitStrength_KBRange[] = {
 }
 
 // must be the first option
-#define HitStrengthOption {\
+#define InitialOptions {\
     .kind = OPTKIND_STRING,\
     .name = "Hit Strength",\
     .desc = "How far the CPU will be knocked back.",\
     .values = Values_HitStrength,\
     .value_num = countof(Values_HitStrength),\
     .val = 1,\
+},\
+{\
+    .kind = OPTKIND_INT,\
+    .value_num = 999,\
+    .name = "Player Percent",\
+    .desc = "Adjust the player's percent.",\
+    .values = "%d%%",\
+    .OnChange = ChangePlayerPercent,\
 }
 
 // Fox -------------------------------------------------
 
 enum options_spacies {
-    OPT_SPACIES_HITSTRENGTH,
-    OPT_SPACIES_FF_LOW,
+    OPT_SPACIES_FF_LOW = OPT_INITIAL_COUNT,
     OPT_SPACIES_FF_MID,
     OPT_SPACIES_FF_HIGH,
     OPT_SPACIES_JUMP,
     OPT_SPACIES_ILLUSION,
     OPT_SPACIES_FASTFALL,
-    OPT_SPACIES_EXIT,
-    
-    OPT_SPACIES_COUNT
 };
 
 static EventOption Options_Main_Fox[] = {
-    HitStrengthOption,
+    InitialOptions,
     {
         .kind = OPTKIND_STRING,
         .name = "Firefox Low",
@@ -127,7 +142,7 @@ static EventMenu Menu_Main_Fox = {
 // Falco -------------------------------------------------
 
 static EventOption Options_Main_Falco[] = {
-    HitStrengthOption,
+    InitialOptions,
     {
         .kind = OPTKIND_STRING,
         .name = "Firebird Low",
@@ -182,7 +197,7 @@ static EventMenu Menu_Main_Falco = {
 // Sheik -------------------------------------------------
 
 enum options_sheik {
-    OPT_SHEIK_HITSTRENTH,
+    OPT_SHEIK_PERCENT = OPT_INITIAL_COUNT,
     OPT_SHEIK_UPB_LEDGE,
     OPT_SHEIK_UPB_STAGE,
     OPT_SHEIK_UPB_HIGH,
@@ -196,7 +211,7 @@ enum options_sheik {
 };
 
 static EventOption Options_Main_Sheik[] = {
-    HitStrengthOption,
+    InitialOptions,
     {
         .kind = OPTKIND_STRING,
         .name = "Vanish to Ledge",
