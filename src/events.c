@@ -1429,10 +1429,6 @@ int Savestate_Save(Savestate *savestate)
         FighterData *fighter_data;
     } BackupQueue;
 
-#if TM_DEBUG > 0
-    int save_pre_tick = OSGetTick();
-#endif
-
     // ensure no players are in problematic states
     int canSave = 1;
 
@@ -1628,11 +1624,6 @@ int Savestate_Save(Savestate *savestate)
         }
     }
 
-#if TM_DEBUG > 0
-    int save_post_tick = OSGetTick();
-    int save_time = OSTicksToMilliseconds(save_post_tick - save_pre_tick);
-#endif
-
     return isSaved;
 }
 int Savestate_Load(Savestate *savestate, int is_mirrored)
@@ -1642,10 +1633,6 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
         GOBJ *fighter;
         FighterData *fighter_data;
     } BackupQueue;
-
-#if TM_DEBUG > 0
-    int load_pre_tick = OSGetTick();
-#endif
 
     // loop through all players
     int isLoaded = 0;
@@ -1939,9 +1926,6 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
 
                     // process dynamics
 
-#if TM_DEBUG > 0
-                    int dyn_pre_tick = OSGetTick();
-#endif
                     int dyn_proc_num = 45;
 
                     // simulate dynamics a bunch to fall in place
@@ -1949,11 +1933,6 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
                     {
                         Fighter_ProcDynamics(fighter);
                     }
-
-#if TM_DEBUG > 0
-                    int dyn_post_tick = OSGetTick();
-                    int dyn_time = OSTicksToMilliseconds(dyn_post_tick - dyn_pre_tick);
-#endif
 
                     // remove all items belonging to this fighter
                     GOBJ *item = (*stc_gobj_lookup)[MATCHPLINK_ITEM];
@@ -2108,12 +2087,6 @@ int Savestate_Load(Savestate *savestate, int is_mirrored)
         // play sfx
         SFX_PlayCommon(0);
     }
-
-#if TM_DEBUG > 0
-    int load_post_tick = OSGetTick();
-    int load_time = OSTicksToMilliseconds(load_post_tick - load_pre_tick);
-    sizeof(FtSaveState);
-#endif
 
     return isLoaded;
 }
