@@ -753,7 +753,7 @@ EventDesc Edgeguard = {
     .CSSType = SLCHRKIND_TRAINING,
     .allowed_characters = {
         .hmn = -1,
-        .cpu = CSSID_FOX | CSSID_FALCO | CSSID_ZELDA
+        .cpu = CSSID_FOX | CSSID_FALCO | CSSID_ZELDA | CSSID_CAPTAIN_FALCON
     },
     .isSelectStage = true,
     .use_savestates = false,

@@ -14,6 +14,7 @@ static EdgeguardInfo *info;
 
 static inline float fmax(float a, float b) { return a < b ? b : a; }
 static inline float fmin(float a, float b) { return a < b ? a : b; }
+static inline float fclamp(float n, float min, float max) { return fmin(max, fmax(min, n)); }
 
 EventMenu *Event_Menu = &Menu_Main;
 
@@ -554,10 +555,8 @@ static void Think_Sheik(void) {
     Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
     Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
     int state = cpu_data->state_id;
-    int hmn_state = hmn_data->state_id;
     float dir = pos.X > 0.f ? -1.f : 1.f;
     bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_SPACIES_JUMP);
-    bool hmn_on_ledge = ASID_CLIFFCATCH <= hmn_state && hmn_state <= ASID_CLIFFJUMPQUICK2;
     
     Vec2 target_ledge = ledge_positions[pos.X > 0.f];
     Vec2 target_ledgegrab = {
@@ -759,3 +758,70 @@ static void Think_Sheik(void) {
         cpu_data->cpu.lstickX = 127 * dir;
     }
 }
+
+// Falcon ------------------------------------------------
+
+#define SWEETSPOT_OFFSET_X 17
+#define SWEETSPOT_OFFSET_Y 8
+#define UPB_HEIGHT 48
+
+#define UPB_CHANCE 10
+
+static void Think_Falcon(void) {
+    GOBJ *hmn = Fighter_GetGObj(0);
+    GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *hmn_data = hmn->userdata;
+    FighterData *cpu_data = cpu->userdata;
+
+    Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
+    Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
+    int state = cpu_data->state_id;
+    float dir = pos.X > 0.f ? -1.f : 1.f;
+    
+    Vec2 target_ledge = ledge_positions[pos.X > 0.f];
+    Vec2 target_ledgegrab = {
+        .X = target_ledge.X - SWEETSPOT_OFFSET_X*dir,
+        .Y = target_ledge.Y - SWEETSPOT_OFFSET_Y,
+    };
+    
+    Vec2 vec_to_ledgegrab = {
+        .X = target_ledgegrab.X - pos.X,
+        .Y = target_ledgegrab.Y - pos.Y,
+    };
+    Vec2 vec_to_ledge = {
+        .X = target_ledge.X - pos.X,
+        .Y = target_ledge.Y - pos.Y,
+    };
+    
+    if (cpu_data->flags.hitstun) {
+        // DI inwards
+        cpu_data->cpu.lstickX = 90 * dir;
+        cpu_data->cpu.lstickY = 90;
+    } else if (IsAirActionable(cpu)) {
+        // UPB
+        if (
+            (
+                Enabled(OPT_FALCON_UPB)
+                && vec_to_ledgegrab.Y < UPB_HEIGHT
+                && HSD_Randi(UPB_CHANCE) == 0
+            )
+        
+            // force upb if at end of range
+            || vec_to_ledgegrab.Y > UPB_HEIGHT
+        ) {
+            cpu_data->cpu.lstickY = 127;
+            cpu_data->cpu.held |= PAD_BUTTON_B;
+            
+        // WAIT
+        } else {
+            cpu_data->cpu.lstickX = 127 * dir;
+        }
+        
+    // UPB DRIFT
+    } else if (state == 0x162) {
+        Vec2 future;
+        SimulatePhys(cpu_data, 5, &future);
+        cpu_data->cpu.lstickX = future.X < target_ledgegrab.X ? 127 : -127;
+    }
+}
+
