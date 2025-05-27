@@ -6326,6 +6326,13 @@ void Event_Think_LabState_Normal(GOBJ *event) {
 // Think Function
 void Event_Think(GOBJ *event)
 {
+    // Save a minor state at event start, so people can reset if they SD.
+    // This cannot be done in Event_Init, so we do it here.
+    if (!event_vars->savestate->is_exist) {
+        event_vars->Savestate_Save(event_vars->savestate, Savestate_Silent);
+        event_vars->savestate_saved_while_mirrored = event_vars->loaded_mirrored;
+    }
+    
     LabData *eventData = event->userdata;
 
     Lab_CustomOSDsThink();
