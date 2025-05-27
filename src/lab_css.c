@@ -1111,6 +1111,10 @@ void Menu_Confirm_Think(GOBJ *menu_gobj)
             event_desc->matchData->stage = stage_kind;
             *onload_fileno = import_data.file_info[this_file_index].file_no;
             *onload_slot = import_data.memcard_slot;
+            
+            // prevent sheik/zelda transformation
+            for (int i = 0; i < 4; ++i)
+                stc_css_pad[i].held &= ~PAD_BUTTON_A;
 
             SFX_PlayCommon(1);
         }
