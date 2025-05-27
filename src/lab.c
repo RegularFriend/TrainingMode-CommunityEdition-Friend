@@ -4513,17 +4513,17 @@ void Record_LoadSavestate(Savestate *savestate) {
 
     for (int i = 0; i < 2; ++i) {
         int chance = chances[i];
+        if (!chance) continue;
+
         int ply = plys[i];
         GOBJ *fighter = Fighter_GetGObj(ply);
         FighterData *fighter_data = fighter->userdata;
         int percent = fighter_data->dmg.percent;
-
-        if (chance) {
-            int change = HSD_Randi(chance+1);
-            percent += change;
-            if (percent > 999) percent = 999;
-            fighter_data->dmg.percent = percent;
-        }
+        
+        int change = HSD_Randi(chance+1);
+        percent += change;
+        if (percent > 999) percent = 999;
+        fighter_data->dmg.percent = percent;
 
         Fighter_SetHUDDamage(ply, percent);
     }
