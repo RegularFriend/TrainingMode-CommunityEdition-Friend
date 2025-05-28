@@ -3171,7 +3171,7 @@ AttackOnShieldNoOptionToggled:
     beq AttackOnShieldUpSmashThink
     cmpwi r3, 0x4
     beq AttackOnShieldShineThink
-    cmpwi r3, 0x7
+    cmpwi r3, 0x8
     beq AttackOnShieldWavedashThink
     b AttackOnShieldShieldWait
 
@@ -3281,10 +3281,12 @@ AttackOnShieldCheckForShieldHit:
     cmpwi r3, 0x5
     beq AttackOnShieldSpotdodge
     cmpwi r3, 0x6
-    beq AttackOnShieldRoll
+    beq AttackOnShieldRollAway
     cmpwi r3, 0x7
-    beq AttackOnShieldWavedash
+    beq AttackOnShieldRollTowards
     cmpwi r3, 0x8
+    beq AttackOnShieldWavedash
+    cmpwi r3, 0x9
     beq AttackOnShieldNone
 
 AttackOnShieldInputGrab:
@@ -3331,12 +3333,24 @@ AttackOnShieldSpotdodge:
     stw r3, 0x4(r31)
     b AttackOnShieldThinkExit
 
-AttackOnShieldRoll:
+AttackOnShieldRollAway:
     li r3, 0xC0
     stw r3, 0x1A88(r29)                                 # Press R
     # Push Towards Opponent's Direction
     bl GetDirectionInRelationToP1
     li r4, 127
+    mullw r3, r3, r4
+    stb r3, 0x1A8C(r29)                                 # Press Away
+    li r3, 48                                           # Init Timer
+    stw r3, 0x4(r31)
+    b AttackOnShieldThinkExit
+    
+AttackOnShieldRollTowards:
+    li r3, 0xC0
+    stw r3, 0x1A88(r29)                                 # Press R
+    # Push Towards Opponent's Direction
+    bl GetDirectionInRelationToP1
+    li r4, -127
     mullw r3, r3, r4
     stb r3, 0x1A8C(r29)                                 # Press Away
     li r3, 48                                           # Init Timer
@@ -3406,7 +3420,7 @@ AttackOnShieldWindowInfo:
     blrl
 # amount of options, amount of options in each window
 
-    .long 0x0008FFFF                                    # 1 window, OoS Option has 10 options
+    .long 0x0009FFFF                                    # 1 window, OoS Option has 11 options
 
 ####################################################
 
@@ -3417,52 +3431,21 @@ AttackOnShieldWindowText:
 ## OoS Option ##
 ################
 
-    # Window Title = OoS Option
-    .long 0x4f6f5320
-    .long 0x4f707469
-    .long 0x6f6e0000
+    .string "OoS Option"
+    
+    .string "Grab"
+    .string "Nair"
+    .string "Up B"
+    .string "Up Smash"
+    .string "Shine"
+    .string "Spotdodge"
+    .string "Roll Away"
+    .string "Roll Towards"
+    .string "Wavedash Away"
+    .string "None"
 
-    # Option 1 = Grab
-    .long 0x47726162
-    .long 0x00000000
-
-    # Option 2 = Nair
-    .long 0x4e616972
-    .long 0x00000000
-
-    # Option 3 = Up B
-    .long 0x55702042
-    .long 0x00000000
-
-    # Option 5 = Up Smash
-    .long 0x55702d53
-    .long 0x6d617368
-    .long 0x00000000
-
-    # Option 6 = Shine
-    .long 0x5368696e
-    .long 0x65000000
-
-    # Option 7 = Spotdodge
-    .long 0x53706f74
-    .long 0x646f6467
-    .long 0x65000000
-
-    # Option 8 = Roll Away
-    .long 0x526f6c6c
-    .long 0x20417761
-    .long 0x79000000
-
-    # Option 9 = Wavedash Away
-    .long 0x57617665
-    .long 0x64617368
-    .long 0x20417761
-    .long 0x79000000
-
-    # Option 10 = None
-    .long 0x4E6F6E65
-    .long 0x00000000
-
+    .align 2
+    
 AttackOnShieldLoadExit:
     restore
     blr
