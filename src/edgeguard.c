@@ -14,6 +14,7 @@ static EdgeguardInfo *info;
 
 static inline float fmax(float a, float b) { return a < b ? b : a; }
 static inline float fmin(float a, float b) { return a < b ? a : b; }
+static inline float fclamp(float n, float min, float max) { return fmin(max, fmax(min, n)); }
 
 EventMenu *Event_Menu = &Menu_Main;
 
@@ -188,8 +189,6 @@ static void Reset(void) {
 
     float ledge_x = ledge_positions[side_idx].X - DISTANCE_FROM_LEDGE * side;
     
-    hmn_data->input.down = 0;
-
     // set phys
     cpu_data->phys.kb_vel.X = 0.f;
     cpu_data->phys.kb_vel.Y = 0.f;
@@ -324,14 +323,17 @@ void Event_Think(GOBJ *menu) {
             cpu_data->flags.dead
             || hmn_data->flags.dead
             || cpu_data->state_id == ASID_CLIFFCATCH
+            || cpu_data->state_id == ASID_DOWNWAITU
+            || cpu_data->state_id == ASID_DOWNWAITD
             || IsGroundActionable(cpu)
             || (cpu_pos.Y > fabs(cpu_pos.X) && cpu_pos.Y > 100.f && IsAirActionable(cpu))
         )
     ) {
         reset_timer = RESET_DELAY;
     }
-
-    if (hmn_data->input.down & PAD_BUTTON_DPAD_LEFT)
+    
+    HSD_Pad *pad = PadGet(hmn_data->pad_index, PADGET_MASTER);
+    if (pad->down & HSD_BUTTON_DPAD_LEFT)
         reset_timer = 0;
     
     info->Think();
@@ -554,10 +556,8 @@ static void Think_Sheik(void) {
     Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
     Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
     int state = cpu_data->state_id;
-    int hmn_state = hmn_data->state_id;
     float dir = pos.X > 0.f ? -1.f : 1.f;
     bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_SPACIES_JUMP);
-    bool hmn_on_ledge = ASID_CLIFFCATCH <= hmn_state && hmn_state <= ASID_CLIFFJUMPQUICK2;
     
     Vec2 target_ledge = ledge_positions[pos.X > 0.f];
     Vec2 target_ledgegrab = {
@@ -759,3 +759,162 @@ static void Think_Sheik(void) {
         cpu_data->cpu.lstickX = 127 * dir;
     }
 }
+
+// Falcon ------------------------------------------------
+
+#define SWEETSPOT_OFFSET_X 13
+#define SWEETSPOT_OFFSET_Y 8
+#define UPB_HEIGHT 48
+
+#define UPB_CHANCE 4
+#define UPB_DRIFT_CHANGE_CHANCE 40
+#define DOWNB_CHANCE 3
+#define DOUBLEJUMP_CHANCE_BELOW_LEDGE 3
+#define DOUBLEJUMP_CHANCE_ABOVE_LEDGE 5 
+#define FASTFALL_CHANCE 15
+
+int drift_back_timer = 0;
+
+static void Think_Falcon(void) {
+    GOBJ *hmn = Fighter_GetGObj(0);
+    GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *hmn_data = hmn->userdata;
+    FighterData *cpu_data = cpu->userdata;
+
+    Vec2 pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
+    Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
+    int state = cpu_data->state_id;
+    float dir = pos.X > 0.f ? -1.f : 1.f;
+    
+    Vec2 target_ledge = ledge_positions[pos.X > 0.f];
+    Vec2 target_ledgegrab = {
+        .X = target_ledge.X - SWEETSPOT_OFFSET_X*dir,
+        .Y = target_ledge.Y - SWEETSPOT_OFFSET_Y,
+    };
+    
+    Vec2 vec_to_ledgegrab = {
+        .X = target_ledgegrab.X - pos.X,
+        .Y = target_ledgegrab.Y - pos.Y,
+    };
+    Vec2 vec_to_ledge = {
+        .X = target_ledge.X - pos.X,
+        .Y = target_ledge.Y - pos.Y,
+    };
+    bool past_ledge = fabs(pos.X) < fabs(target_ledgegrab.X);
+    bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_FALCON_JUMP);
+    
+    int dj_chance;
+    if (cpu_data->phys.pos.Y > target_ledge.Y - 10.f) {
+        dj_chance = DOUBLEJUMP_CHANCE_ABOVE_LEDGE;
+    } else {
+        dj_chance = DOUBLEJUMP_CHANCE_BELOW_LEDGE;
+    }
+    
+    if (cpu_data->flags.hitstun) {
+        // DI inwards
+        cpu_data->cpu.lstickX = 90 * dir;
+        cpu_data->cpu.lstickY = 90;
+    } else if (IsAirActionable(cpu)) {
+        // JUMP
+        if (
+            Enabled(OPT_FALCON_JUMP)
+            && can_jump
+            && (
+                // force jump if at end of range
+                vec_to_ledgegrab.Y > UPB_HEIGHT
+                
+                // otherwise, random chance to jump
+                || HSD_Randi(dj_chance) == 0
+            )
+        ) {
+            cpu_data->cpu.held |= PAD_BUTTON_Y;
+            cpu_data->cpu.lstickX = 127 * dir;
+            
+        // UPB
+        } else if (
+            Enabled(OPT_FALCON_UPB) 
+            && (
+                // random change to upb
+                (
+                    vel.Y <= 1.f
+                    && !past_ledge
+                    && vec_to_ledgegrab.Y < UPB_HEIGHT
+                    && HSD_Randi(UPB_CHANCE) == 0
+                )
+                // force upb if at end of range
+                || vec_to_ledgegrab.Y > UPB_HEIGHT
+            )
+        ) {
+            cpu_data->cpu.lstickY = 127;
+            cpu_data->cpu.held |= PAD_BUTTON_B;
+            
+        // FALCON KICK
+        } else if (
+            Enabled(OPT_FALCON_DOWNB)
+            && pos.Y > 60.f
+            && vel.Y < 0.f
+            && fabs(vec_to_ledge.X) > 50.f
+            && cpu_data->jump.jumps_used == 2  
+            && HSD_Randi(DOWNB_CHANCE) == 0
+        ) {
+            cpu_data->cpu.lstickY = -127;
+            cpu_data->cpu.held |= PAD_BUTTON_B;
+            
+        // WAIT
+        } else {
+            cpu_data->cpu.lstickX = 127 * dir;
+        }
+        
+    // UPB DRIFT
+    } else if (state == 0x162) {
+        bool in_drift_back_zone = past_ledge
+            || (
+                vec_to_ledgegrab.Y < 0.f && (
+                    (vel.Y > 1.f && -vec_to_ledgegrab.Y / 1.5f > fabs(vec_to_ledgegrab.X))
+                    || (vel.Y <= 1.f && -vec_to_ledgegrab.Y / 3.f > fabs(vec_to_ledgegrab.X))
+                )
+            );
+            
+        if (!in_drift_back_zone)
+            drift_back_timer = 0;
+
+        if (drift_back_timer) {
+            drift_back_timer--;
+            if (drift_back_timer)
+                cpu_data->cpu.lstickX = -127 * dir;
+            else
+                // frame with no drift - this allows faster drift change
+                cpu_data->cpu.lstickX = 0;
+        } else {
+            if (
+                Enabled(OPT_FALCON_DRIFT_BACK)
+                && vec_to_ledgegrab.Y < 0.f
+                && cpu_data->TM.state_frame > 14
+                && in_drift_back_zone
+                && HSD_Randi(UPB_DRIFT_CHANGE_CHANCE) == 0
+            ) {
+                drift_back_timer = HSD_Randi(20) + 5;
+                // frame with no drift - this allows faster drift change
+                cpu_data->cpu.lstickX = 0;
+            } else {
+                cpu_data->cpu.lstickX = 127 * dir;
+            }
+        }
+    } else if (ASID_FALLSPECIAL <= state && state <= ASID_FALLSPECIALB) {
+        // FASTFALL
+        if (
+            Enabled(OPT_FALCON_FASTFALL)
+            && !cpu_data->flags.is_fastfall
+            && vel.Y < 0.f
+            && (past_ledge ||
+                -vec_to_ledgegrab.Y / 3.f > fabs(vec_to_ledgegrab.X)
+            )
+            && HSD_Randi(FASTFALL_CHANCE) == 0
+        ) {
+            cpu_data->cpu.lstickY = -127;
+        } else {
+            cpu_data->cpu.lstickX = 127 * dir;
+        }
+    }
+}
+

@@ -6,6 +6,7 @@ static void Reset();
 
 static void Think_Spacies(void);
 static void Think_Sheik(void);
+static void Think_Falcon(void);
 static void ChangePlayerPercent(GOBJ *menu_gobj, int value);
 
 // Common values -------------------------------------------------
@@ -201,7 +202,6 @@ static EventMenu Menu_Falco = {
 // Sheik -------------------------------------------------
 
 enum options_sheik {
-    OPT_SHEIK_PERCENT,
     OPT_SHEIK_UPB_LEDGE,
     OPT_SHEIK_UPB_STAGE,
     OPT_SHEIK_UPB_HIGH,
@@ -209,7 +209,6 @@ enum options_sheik {
     OPT_SHEIK_FASTFALL,
     OPT_SHEIK_FAIR,
     OPT_SHEIK_AMSAH_TECH,
-    OPT_SHIEK_EXIT,
     
     OPT_SHEIK_COUNT
 };
@@ -275,6 +274,64 @@ static EventMenu Menu_Sheik = {
     .options = &Options_Sheik,
 };
 
+// Captain Falcon --------------------------------------
+
+enum options_falcon {
+    OPT_FALCON_UPB,
+    OPT_FALCON_DRIFT_BACK,
+    OPT_FALCON_JUMP,
+    OPT_FALCON_FASTFALL,
+    OPT_FALCON_DOWNB,
+
+    OPT_FALCON_COUNT
+};
+
+static EventOption Options_Falcon[] = {
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Falcon Dive",
+        .desc = "Allow Falcon to Up B.",
+        .values = OffOn,
+        .value_num = 2,
+        .val = 1,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Drift Back",
+        .desc = "Allow Falcon to drift backwards.",
+        .values = OffOn,
+        .value_num = 2,
+        .val = 1,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Double Jump",
+        .desc = "Allow Falcon to double jump.",
+        .values = OffOn,
+        .value_num = 2,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Fast Fall",
+        .desc = "Allow Falcon to fast fall.",
+        .values = OffOn,
+        .value_num = 2,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Falcon Kick",
+        .desc = "Allow Falcon to Down B.",
+        .values = OffOn,
+        .value_num = 2,
+    },
+};
+
+static EventMenu Menu_Falcon = {
+    .name = "Falcon Recovery",
+    .option_num = sizeof(Options_Falcon) / sizeof(EventOption),
+    .options = &Options_Falcon,
+};
+
 // Info lookup -----------------------------------------
 
 typedef struct EdgeguardInfo {
@@ -288,7 +345,10 @@ static EdgeguardInfo InfoLookup[] = {
         .recovery_menu = &Menu_Fox,
         .Think = Think_Spacies,
     },
-    {0}, // FALCON
+    {
+        .recovery_menu = &Menu_Falcon,
+        .Think = Think_Falcon,
+    },
     {0}, // DK
     {0}, // KIRBY
     {0}, // BOWSER
