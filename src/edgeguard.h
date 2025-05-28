@@ -279,8 +279,9 @@ static EventMenu Menu_Sheik = {
 enum options_falcon {
     OPT_FALCON_UPB,
     OPT_FALCON_DRIFT_BACK,
-    OPT_FALCON_EDGECANCEL,
-    OPT_FALCON_FAST_FALL,
+    OPT_FALCON_JUMP,
+    OPT_FALCON_FASTFALL,
+    OPT_FALCON_DOWNB,
 
     OPT_FALCON_COUNT
 };
@@ -300,6 +301,14 @@ static EventOption Options_Falcon[] = {
         .desc = "Allow Falcon to drift backwards.",
         .values = OffOn,
         .value_num = 2,
+        .val = 1,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Double Jump",
+        .desc = "Allow Falcon to double jump.",
+        .values = OffOn,
+        .value_num = 2,
     },
     {
         .kind = OPTKIND_STRING,
@@ -310,8 +319,8 @@ static EventOption Options_Falcon[] = {
     },
     {
         .kind = OPTKIND_STRING,
-        .name = "Edgecancel",
-        .desc = "Allow Falcon to edgecancel his UpB.",
+        .name = "Falcon Kick",
+        .desc = "Allow Falcon to Down B.",
         .values = OffOn,
         .value_num = 2,
     },
