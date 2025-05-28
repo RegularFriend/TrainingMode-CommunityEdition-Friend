@@ -6023,7 +6023,7 @@ void Event_Init(GOBJ *gobj)
     }
 
     // Aitch: VERY nice for debugging. Please don't remove.
-    TMLOG("HMN: %x\tCPU: %x\n", (u32)hmn_data, (u32)cpu_data);
+    OSReport("HMN: %x\tCPU: %x\n", (u32)hmn_data, (u32)cpu_data);
 }
 
 // Update Function

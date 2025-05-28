@@ -7,6 +7,7 @@ static void Reset();
 static void Think_Spacies(void);
 static void Think_Sheik(void);
 static void Think_Falcon(void);
+static void Think_Marth(void);
 static void ChangePlayerPercent(GOBJ *menu_gobj, int value);
 
 // Common values -------------------------------------------------
@@ -332,6 +333,29 @@ static EventMenu Menu_Falcon = {
     .options = &Options_Falcon,
 };
 
+// Marth --------------------------------------
+
+enum options_marth {
+    OPT_MARTH_JUMP,
+    OPT_MARTH_COUNT
+};
+
+static EventOption Options_Marth[] = {
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Double Jump",
+        .desc = "Allow Marth to double jump.",
+        .values = OffOn,
+        .value_num = 2,
+    },
+};
+
+static EventMenu Menu_Marth = {
+    .name = "Marth Recovery",
+    .option_num = sizeof(Options_Marth) / sizeof(EventOption),
+    .options = &Options_Marth,
+};
+
 // Info lookup -----------------------------------------
 
 typedef struct EdgeguardInfo {
@@ -367,7 +391,10 @@ static EdgeguardInfo InfoLookup[] = {
     {0}, // JIGGLYPUFF
     {0}, // MEWTWO
     {0}, // LUIGI
-    {0}, // MARTH
+    {
+        .recovery_menu = &Menu_Marth,
+        .Think = Think_Marth,
+    },
     {0}, // ZELDA
     {0}, // YOUNGLINK
     {0}, // DRMARIO

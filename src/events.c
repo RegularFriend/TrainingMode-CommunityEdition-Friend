@@ -754,6 +754,7 @@ EventDesc Edgeguard = {
     .allowed_characters = {
         .hmn = -1,
         .cpu = CSSID_FOX | CSSID_FALCO | CSSID_ZELDA | CSSID_CAPTAIN_FALCON
+            | CSSID_MARTH
     },
     .isSelectStage = true,
     .use_savestates = false,

@@ -24,14 +24,16 @@
     lwz r9, MemcardData(r13)
     addi r9, r9, 3344
     
-    SetBreakpoint
-    
     # load allowed cpu characters
     lwz r4, MemcardData(r13)
     lbz r3, 0x0535(r4)
     lbz r4, CurrentEventPage(r4)
     rtocbl r12, TM_GetEventCharList
     lwz r6, 0x4(r3)
+    li r6, 0
+    li r4, Marth.Ext
+    b WriteCPU
+    
         
     cmpwi r6, 0
     blt RestoreCPU
