@@ -2437,9 +2437,7 @@ int Update_CheckPause()
     {
         if (LabOptions_Record[OPTREC_STARTPAUSED].val && Record_GetCurrFrame() == 0)
         {
-            GOBJ *hmn = Fighter_GetGObj(0);
-            FighterData *hmn_data = hmn->userdata;
-            HSD_Pad *pad = PadGet(hmn_data->pad_index, PADGET_MASTER);
+            HSD_Pad *pad = PadGet(stc_hmn_controller, PADGET_MASTER);
             
             int input = false;
             int buttons = PAD_TRIGGER_Z | PAD_TRIGGER_L | PAD_TRIGGER_R
@@ -2449,8 +2447,8 @@ int Update_CheckPause()
             input |= fabs(pad->fstickY) >= STICK_DEADZONE; 
             input |= fabs(pad->fsubstickX) >= STICK_DEADZONE; 
             input |= fabs(pad->fsubstickY) >= STICK_DEADZONE; 
-            input |= pad->ftriggerLeft >= 0.1;
-            input |= pad->ftriggerRight >= 0.1;
+            input |= pad->triggerLeft >= ANALOG_TRIGGER_THRESHOLD;
+            input |= pad->triggerRight >= ANALOG_TRIGGER_THRESHOLD;
             
             if (update->pause_kind == PAUSEKIND_SYS) {
                 isChange = input;
