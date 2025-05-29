@@ -2003,72 +2003,74 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
                 break;
             }
         }
-
-        switch (asdi_kind)
-        {
-            case (ASDI_NONE):
+        
+        // only apply ASDI setting when not using custom TDI.
+        if (
+            (tdi_kind != CPUTDI_CUSTOM || eventData->cpu_hitnum > stc_tdi_val_num)
+            && tdi_kind != CPUTDI_RANDOM_CUSTOM
+        ) {
+            switch (asdi_kind)
             {
-                // follow TDI, or custom SDI
-                break;
-            }
-            case (ASDI_AUTO):
-            {
-                // follow TDI, or custom SDI
-                break;
-            }
-            case (ASDI_AWAY):
-            {
-                int dir = Fighter_GetOpponentDir(cpu_data, hmn_data) * -1;
-                if (dir == 1)
+                case (ASDI_NONE):
+                case (ASDI_AUTO):
                 {
-                    cpu_data->cpu.cstickX = 127;
-                    cpu_data->cpu.cstickY = 0;
+                    // follow TDI, or custom SDI
+                    break;
                 }
-                else
+                case (ASDI_AWAY):
+                {
+                    int dir = Fighter_GetOpponentDir(cpu_data, hmn_data) * -1;
+                    if (dir == 1)
+                    {
+                        cpu_data->cpu.cstickX = 127;
+                        cpu_data->cpu.cstickY = 0;
+                    }
+                    else
+                    {
+                        cpu_data->cpu.cstickX = -127;
+                        cpu_data->cpu.cstickY = 0;
+                    }
+                    break;
+                }
+                case (ASDI_TOWARD):
+                {
+                    int dir = Fighter_GetOpponentDir(cpu_data, hmn_data);
+                    if (dir == 1)
+                    {
+                        cpu_data->cpu.cstickX = 127;
+                        cpu_data->cpu.cstickY = 0;
+                    }
+                    else
+                    {
+                        cpu_data->cpu.cstickX = -127;
+                        cpu_data->cpu.cstickY = 0;
+                    }
+                    break;
+                }
+                case (ASDI_LEFT):
                 {
                     cpu_data->cpu.cstickX = -127;
                     cpu_data->cpu.cstickY = 0;
+                    break;
                 }
-                break;
-            }
-            case (ASDI_TOWARD):
-            {
-                int dir = Fighter_GetOpponentDir(cpu_data, hmn_data);
-                if (dir == 1)
+                case (ASDI_RIGHT):
                 {
                     cpu_data->cpu.cstickX = 127;
                     cpu_data->cpu.cstickY = 0;
+                    break;
                 }
-                else
+                case (ASDI_UP):
                 {
-                    cpu_data->cpu.cstickX = -127;
-                    cpu_data->cpu.cstickY = 0;
+                    cpu_data->cpu.cstickX = 0;
+                    cpu_data->cpu.cstickY = 127;
+                    break;
                 }
-                break;
-            }
-            case (ASDI_LEFT):
-            {
-                cpu_data->cpu.cstickX = -127;
-                cpu_data->cpu.cstickY = 0;
-                break;
-            }
-            case (ASDI_RIGHT):
-            {
-                cpu_data->cpu.cstickX = 127;
-                cpu_data->cpu.cstickY = 0;
-                break;
-            }
-            case (ASDI_UP):
-            {
-                cpu_data->cpu.cstickX = 0;
-                cpu_data->cpu.cstickY = 127;
-                break;
-            }
-            case (ASDI_DOWN):
-            {
-                cpu_data->cpu.cstickX = 0;
-                cpu_data->cpu.cstickY = -127;
-                break;
+                case (ASDI_DOWN):
+                {
+                    cpu_data->cpu.cstickX = 0;
+                    cpu_data->cpu.cstickY = -127;
+                    break;
+                }
             }
         }
 
