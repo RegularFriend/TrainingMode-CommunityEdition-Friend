@@ -30,10 +30,6 @@
     lbz r4, CurrentEventPage(r4)
     rtocbl r12, TM_GetEventCharList
     lwz r6, 0x4(r3)
-    li r6, 0
-    li r4, Marth.Ext
-    b WriteCPU
-    
         
     cmpwi r6, 0
     blt RestoreCPU
