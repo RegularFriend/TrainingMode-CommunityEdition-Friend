@@ -344,11 +344,11 @@ void Event_Think(GOBJ *menu) {
 
 // Spacies ------------------------------------------------
 
-#define UPB_CHANCE 8 
-#define JUMP_CHANCE_BELOW_LEDGE 5
+#define UPB_CHANCE 12 
+#define JUMP_CHANCE_BELOW_LEDGE 4
 #define JUMP_CHANCE_ABOVE_LEDGE 30
-#define ILLUSION_CHANCE_ABOVE_LEDGE 15
-#define ILLUSION_CHANCE_TO_LEDGE 8
+#define ILLUSION_CHANCE_ABOVE_LEDGE 30
+#define ILLUSION_CHANCE_TO_LEDGE 12
 #define FASTFALL_CHANCE 8
 
 #define MAX_ILLUSION_HEIGHT 30.f
@@ -422,7 +422,10 @@ static void Think_Spacies(void) {
             )
         ) {
             cpu_data->cpu.held |= PAD_BUTTON_Y;
-            cpu_data->cpu.lstickX = 127 * dir;
+            if (distance_to_ledgegrab > upb_distance)
+                cpu_data->cpu.lstickX = 127 * dir;
+            else 
+                cpu_data->cpu.lstickX = 127 * (HSD_Randi(3) - 1);
             
         // ILLUSION
         } else if (
@@ -496,11 +499,11 @@ static void Think_Spacies(void) {
             high_y = vec_to_ledgegrab.Y;
         }
         
-        Vec2 target = { .X = target_ledge.X };
+        Vec2 target = { .X = target_ledgegrab.X };
         if (low && choice-- == 0) {
-            target.Y = target_ledge.Y;
+            target.Y = target_ledgegrab.Y;
         } else if (mid && choice-- == 0) {
-            target.Y = (target_ledge.Y + high_y) / 2.f;
+            target.Y = (target_ledgegrab.Y + high_y) / 2.f;
         } else if (high && choice-- == 0) {
             target.Y = high_y;
         }
@@ -935,7 +938,7 @@ static void Think_Falcon(void) {
 
 #define JUMP_CHANCE 5
 #define UPB_EARLY_CHANCE 100
-#define SIDEB_DELAY_CHANCE 50
+#define SIDEB_DELAY_CHANCE 40
 #define FAIR_CHANCE 4
 
 static void Think_Marth(void) {
@@ -961,7 +964,6 @@ static void Think_Marth(void) {
     };
     
     int hmn_state = hmn_data->state_id;
-    bool used_sideb = cpu_data->fighter_var.ft_var1;
     bool past_ledgegrab = fabs(pos.X) < fabs(target_ledgegrab.X);
     bool can_jump = cpu_data->jump.jumps_used < 2;
     bool can_upb = vec_to_ledgegrab.Y < UPB_STRAIGHT_HEIGHT
@@ -986,7 +988,7 @@ static void Think_Marth(void) {
         // SIDE B WAIT
         } else if (
             vel.Y < 0.0f
-            && (vec_to_ledgegrab.Y < 30.f || (!used_sideb && vec_to_ledgegrab.Y < 40.f)) 
+            && (vec_to_ledgegrab.Y < 40.f) 
             && (
                 stc_stage->kind != GRKIND_BATTLE ||
                 fabs(SimulatePhys(cpu_data, 25).X) > fabs(target_ledgegrab.X)
