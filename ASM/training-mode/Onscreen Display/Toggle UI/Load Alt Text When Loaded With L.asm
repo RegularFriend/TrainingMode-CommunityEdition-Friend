@@ -99,7 +99,7 @@ IncLoopLeft:
     lbz r5, 0x1F28(r5)
 
     # Fix value if invalid from removed max osd setting
-    cmpwi r5, 3
+    cmpwi r5, 4
     blt EndFixInvalidOSDPosition
     li r5, 0
 EndFixInvalidOSDPosition:
@@ -109,7 +109,9 @@ EndFixInvalidOSDPosition:
     cmpwi r5, 1
     beql OSDPositionTextSides
     cmpwi r5, 2
-    beql OSDPositionTextTop
+    beql OSDPositionTextTopLeft
+    cmpwi r5, 3
+    beql OSDPositionTextTopRight
     mflr r5
 
     lfs f1, 0x1C(TextProp)
@@ -274,9 +276,14 @@ OSDPositionTextSides:
     .string "Sides"
     .align 2
 
-OSDPositionTextTop:
+OSDPositionTextTopLeft:
     blrl
-    .string "Top"
+    .string "Top Left"
+    .align 2
+
+OSDPositionTextTopRight:
+    blrl
+    .string "Top Right"
     .align 2
 
 XYText:

@@ -2526,7 +2526,7 @@ void Message_Manager(GOBJ *mngr_gobj)
 
                 Memcard *memcard = R13_PTR(MEMCARD);
                 int osd_pos_type = memcard->TM_OSDPosition;
-                if (osd_pos_type > 2)
+                if (osd_pos_type > 3)
                     osd_pos_type = 0;
 
                 Vec3 base_pos;
@@ -2548,6 +2548,11 @@ void Message_Manager(GOBJ *mngr_gobj)
                     // top
                     base_pos = stc_msg_queue_pos_top[i];
                     pos_delta = stc_msg_queue_offsets_horizontal[i];
+                    if (osd_pos_type == 3) {
+                        // top right
+                        base_pos.X *= -1;
+                        pos_delta.X *= -1;
+                    }
                 }
 
                 // Get the onscreen position for this queue

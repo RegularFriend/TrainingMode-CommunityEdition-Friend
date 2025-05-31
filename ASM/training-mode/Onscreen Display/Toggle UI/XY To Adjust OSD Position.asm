@@ -5,7 +5,7 @@
     .set Text, 30
     .set TextProp, 28
 
-    .set OptionCount, 3
+    .set OptionCount, 4
 
 # Injected into CursorMovement Check
 
@@ -75,7 +75,9 @@ UpdateText:
     cmpwi r6, 1
     beql OSDPositionTextSides
     cmpwi r6, 2
-    beql OSDPositionTextTop
+    beql OSDPositionTextTopLeft
+    cmpwi r6, 3
+    beql OSDPositionTextTopRight
     mflr r6
 
     branchl r12, Text_UpdateSubtextContents
@@ -99,9 +101,14 @@ OSDPositionTextSides:
     .string "Sides"
     .align 2
 
-OSDPositionTextTop:
+OSDPositionTextTopLeft:
     blrl
-    .string "Top"
+    .string "Top Left"
+    .align 2
+
+OSDPositionTextTopRight:
+    blrl
+    .string "Top Right"
     .align 2
 
 ########################################
