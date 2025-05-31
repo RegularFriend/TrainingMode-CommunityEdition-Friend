@@ -451,7 +451,7 @@ void Record_Think(GOBJ *rec_gobj);
 void Record_Update(int ply, RecInputData *inputs, int rec_mode);
 void Record_SetInputs(GOBJ *fighter, RecInputs *inputs, bool mirror);
 int Record_RearrangeButtons(RecInputs *inputs);
-void Record_LoadSavestate();
+void Record_LoadSavestate(Savestate *savestate);
 int Record_MenuThink(GOBJ *menu_gobj);
 int Record_OptimizedSave(Savestate *savestate);
 int Record_OptimizedLoad(Savestate *savestate);
