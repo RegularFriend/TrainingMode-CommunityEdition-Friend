@@ -7227,14 +7227,11 @@ GrabMashOutThink_ThrowDelay_TimerSkip:
     beq GrabMashOutThink_ThrowDelay_Grabbed
     cmpwi r3, ASID_CaptureWaitHi
     beq GrabMashOutThink_ThrowDelay_Grabbed
-    # If just grabbed, skip
+    # If just grabbed, unlock P1
     cmpwi r3, ASID_CapturePulledLw
-    beq GrabMashOutThink_CheckTimer
+    beq GrabMashOutThink_UnlockAndCheckTimer
     cmpwi r3, ASID_CapturePulledHi
-    beq GrabMashOutThink_CheckTimer
-    # Check if P1 acted early
-    cmpwi r3, ASID_Wait
-    bne GrabMashOutThink_ThrowDelay_ActedEarly
+    beq GrabMashOutThink_UnlockAndCheckTimer
     b GrabMashOutThink_CheckTimer
 
 GrabMashOutThink_ThrowDelay_Grabbed:
@@ -7243,18 +7240,6 @@ GrabMashOutThink_ThrowDelay_Grabbed:
     stfs f1, GrabBreakout(REG_EventData)
     # Change state to attack
     li r3, EventState_MashOutThink
-    stb r3, EventState(EventData)
-    b GrabMashOutThink_CheckTimer
-
-GrabMashOutThink_ThrowDelay_ActedEarly:
-    # Play Error Noise
-    li r3, 0xAF
-    bl PlaySFX
-    # Set Timer
-    li r3, ResetTimer-40
-    stb r3, Timer(REG_EventData)
-    # Change state to reset
-    li r3, EventState_Reset
     stb r3, EventState(EventData)
     b GrabMashOutThink_CheckTimer
 
@@ -7278,6 +7263,11 @@ GrabMashOutThink_BrokeOut:
 
 GrabMashOutThink_Reset:
     b GrabMashOutThink_CheckTimer
+
+GrabMashOutThink_UnlockAndCheckTimer:
+    # Unlock P1
+    li r3, 0
+    stb r3, 0x618(REG_P1Data)
 
 GrabMashOutThink_CheckTimer:
     # Check if timer exists
@@ -7408,6 +7398,9 @@ GrabMashOut_InitializePositions_FacingEnd:
     # Enter P1 Into Wait
     mr r3, REG_P1GObj
     branchl r12, AS_Wait
+    # Change P1 pad index (let P3 control)
+    li r3, 2
+    stb r3, 0x618(REG_P1Data)
     # Enter P2 Into Wait
     mr r3, REG_P2GObj
     branchl r12, AS_Wait
