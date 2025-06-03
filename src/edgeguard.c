@@ -17,6 +17,7 @@ static inline float fmax(float a, float b) { return a < b ? b : a; }
 static inline float fmin(float a, float b) { return a < b ? a : b; }
 static inline float fclamp(float n, float min, float max) { return fmin(max, fmax(min, n)); }
 static inline float Progress(float n, float a, float b) { return (n - a) / (b - a); }
+static inline bool Within(float a, float b, float tolerance) { return fabs(b - a) < tolerance; }
 
 EventMenu *Event_Menu = &Menu_Main;
 
@@ -120,15 +121,21 @@ static int HitstunEnded(GOBJ *fighter) {
 
 static bool IsAirActionable(GOBJ *fighter) {
     FighterData *data = fighter->userdata;
-
+    
     // ensure airborne
     if (data->phys.air_state == 0)
         return false;
 
     int state = data->state_id;
 
-    if (InHitstunAnim(state) && HitstunEnded(fighter))
-        return true;
+    if (InHitstunAnim(state)) {
+        if (HitstunEnded(fighter))
+            return true;
+        
+        FtDamage *dmg = (FtDamage *)&data->state_var;
+        if (dmg->is_meteor && dmg->meteor_lockout == 0)
+            return true;
+    }
         
     if (ASID_ATTACKAIRN <= state && state <= ASID_ATTACKAIRLW && data->flags.past_iasa)
         return true;
@@ -446,7 +453,7 @@ static void Think_Spacies(void) {
         FIREFOX_DISTANCE : FIREBIRD_DISTANCE;
         
     // HITSTUN
-    if (cpu_data->flags.hitstun) {
+    if (cpu_data->flags.hitlag) {
         // DI inwards
         cpu_data->cpu.lstickX = 90 * dir;
         cpu_data->cpu.lstickY = 90;
@@ -585,9 +592,8 @@ static void Think_Spacies(void) {
 
 #define JUMP_CHANCE_BELOW_LEDGE 20
 #define JUMP_CHANCE_ABOVE_LEDGE 120
-#define FASTFALL_CHANCE 15
 #define FAIR_CHANCE 5
-#define AMSAH_TECH_CHANCE 2
+#define AMSAH_TECH_CHANCE 1
 
 #define SWEETSPOT_OFFSET_X 20
 #define SWEETSPOT_OFFSET_Y 5
@@ -608,7 +614,7 @@ static void Think_Sheik(void) {
     Vec2 vel = { cpu_data->phys.self_vel.X, cpu_data->phys.self_vel.Y };
     int state = cpu_data->state_id;
     float dir = pos.X > 0.f ? -1.f : 1.f;
-    bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_SPACIES_JUMP);
+    bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_SHEIK_JUMP);
     
     Vec2 target_ledge = ledge_positions[pos.X > 0.f];
     Vec2 target_ledgegrab = {
@@ -632,6 +638,8 @@ static void Think_Sheik(void) {
     };
     float post_jump_dist_to_ledge = Vec2_Length(&post_jump_vec_to_ledge);
     bool can_upb = post_jump_dist_to_ledge < UPB_POOF_DISTANCE
+        && vel.Y < 1.f
+        && (!can_jump || post_jump_dist_to_ledge < 1.f)
         && (
             Enabled(OPT_SHEIK_UPB_LEDGE)
             || Enabled(OPT_SHEIK_UPB_STAGE)
@@ -666,15 +674,13 @@ static void Think_Sheik(void) {
     
         
     // HITSTUN
-    } else if (cpu_data->flags.hitstun) {
-        if (amsah_teching) {
-            cpu_data->cpu.lstickX = pos.X < hmn_data->phys.pos.X ? -80 : 80;
-            cpu_data->cpu.lstickY = -80;
-        } else {
-            // DI inwards
-            cpu_data->cpu.lstickX = 90 * dir;
-            cpu_data->cpu.lstickY = 90;
-        }
+    } else if (cpu_data->flags.hitlag && !amsah_teching) {
+        // DI inwards
+        cpu_data->cpu.lstickX = 90 * dir;
+        cpu_data->cpu.lstickY = 90;
+    } else if (cpu_data->flags.hitstun && amsah_teching) {
+        cpu_data->cpu.lstickX = pos.X < hmn_data->phys.pos.X ? -80 : 80;
+        cpu_data->cpu.lstickY = -80;
         
     // ACTIONABLE
     } else if (IsAirActionable(cpu)) {
@@ -726,15 +732,6 @@ static void Think_Sheik(void) {
             cpu_data->cpu.lstickY = 127;
             cpu_data->cpu.held |= PAD_BUTTON_B;
         
-        // FASTFALL
-        } else if (
-            Enabled(OPT_SHEIK_FASTFALL)
-            && !cpu_data->flags.is_fastfall
-            && vel.Y < 0.f
-            && HSD_Randi(FASTFALL_CHANCE) == 0
-        ) {
-            cpu_data->cpu.lstickY = -127;
-            
         // WAIT 
         } else {
             cpu_data->cpu.lstickX = 127 * dir;
@@ -861,7 +858,7 @@ static void Think_Falcon(void) {
         dj_chance = JUMP_CHANCE_BELOW_LEDGE;
     }
     
-    if (cpu_data->flags.hitstun) {
+    if (cpu_data->flags.hitlag) {
         // DI inwards
         cpu_data->cpu.lstickX = 90 * dir;
         cpu_data->cpu.lstickY = 90;
@@ -893,7 +890,10 @@ static void Think_Falcon(void) {
                     && HSD_Randi(UPB_CHANCE) == 0
                 )
                 // force upb if at end of range
-                || vec_to_ledgegrab.Y > UPB_HEIGHT
+                || (
+                    vel.Y <= 0.f
+                    && vec_to_ledgegrab.Y > UPB_HEIGHT
+                )
             )
         ) {
             cpu_data->cpu.lstickY = 127;
@@ -982,9 +982,9 @@ static void Think_Falcon(void) {
 #define FAIR_SIZE 25
 
 #define JUMP_CHANCE 5
-#define UPB_EARLY_CHANCE 100
-#define SIDEB_DELAY_CHANCE 40
-#define FAIR_CHANCE 4
+#define UPB_EARLY_CHANCE 40
+#define SIDEB_DELAY_CHANCE 10
+#define FAIR_CHANCE 3
 
 static void Think_Marth(void) {
     GOBJ *hmn = Fighter_GetGObj(0);
@@ -1013,16 +1013,17 @@ static void Think_Marth(void) {
     bool can_jump = cpu_data->jump.jumps_used < 2;
     bool can_upb = vec_to_ledgegrab.Y < UPB_STRAIGHT_HEIGHT
         && vec_to_ledgegrab.X * dir < UPB_CURLED_DISTANCE
-        && (stc_stage->kind != GRKIND_BATTLE || !past_ledgegrab);
+        && (stc_stage->kind != GRKIND_BATTLE || vec_to_ledgegrab.X * dir > 3.f);
 
-    if (cpu_data->flags.hitstun) {
+    if (cpu_data->flags.hitlag) {
         // DI inwards
         cpu_data->cpu.lstickX = 90 * dir;
         cpu_data->cpu.lstickY = 90;
     } else if (IsAirActionable(cpu)) {
         // SIDE B FAR
         if (
-            fabs(vec_to_ledgegrab.X) > 70.f
+            Enabled(OPT_MARTH_SIDEB_RECOVER)
+            && fabs(vec_to_ledgegrab.X) > 70.f
             && !past_ledgegrab
             && vel.Y < -0.5f
             && fabs(vel.X) > 0.8f
@@ -1032,8 +1033,10 @@ static void Think_Marth(void) {
             
         // SIDE B WAIT
         } else if (
-            vel.Y < 0.0f
-            && (vec_to_ledgegrab.Y < 40.f) 
+            Enabled(OPT_MARTH_SIDEB_DELAY)
+            && vel.Y < 0.0f
+            && vec_to_ledgegrab.Y > 10.f 
+            && vec_to_ledgegrab.Y < 35.f 
             && (
                 stc_stage->kind != GRKIND_BATTLE ||
                 fabs(SimulatePhys(cpu_data, 25).X) > fabs(target_ledgegrab.X)
@@ -1047,7 +1050,8 @@ static void Think_Marth(void) {
         } else if (
             // random chance
             (
-                JUMP_HEIGHT - 5.f < vec_to_ledgegrab.Y 
+                Enabled(OPT_MARTH_JUMP)
+                && JUMP_HEIGHT - 5.f < vec_to_ledgegrab.Y
                 && vec_to_ledgegrab.Y < JUMP_HEIGHT
                 && can_jump
                 && fabs(vec_to_ledgegrab.X) < JUMP_DISTANCE
@@ -1056,7 +1060,8 @@ static void Think_Marth(void) {
             
             // force jump if can't upb
             || (
-                vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT
+                Enabled(OPT_MARTH_JUMP)
+                && vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT
                 && can_jump
             )
         ) {
@@ -1066,7 +1071,8 @@ static void Think_Marth(void) {
         
         // FAIR
         } else if (
-            !cpu_data->flags.is_fastfall
+            Enabled(OPT_MARTH_FAIR)
+            && !cpu_data->flags.is_fastfall
             && pos.X * dir < hmn_data->phys.pos.X * dir
             && hmn_data->hurt.intang_frames.ledge < 4
             && ProjectedDistance(hmn_data, cpu_data, 5) < FAIR_SIZE
@@ -1080,15 +1086,23 @@ static void Think_Marth(void) {
         } else if (
             // random chance
             (
-                vec_to_ledgegrab.Y < UPB_STRAIGHT_HEIGHT
+                Enabled(OPT_MARTH_UPB_EARLY)
+                && vec_to_ledgegrab.Y > 40.f
+                && vec_to_ledgegrab.Y < UPB_STRAIGHT_HEIGHT
                 && can_upb
                 && HSD_Randi(UPB_EARLY_CHANCE) == 0
             )
         
             // force upb
             || (
-                vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT
-                && !can_jump
+                (
+                    vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT
+                    || (
+                        vec_to_ledgegrab.X < UPB_CURLED_DISTANCE
+                        && vec_to_ledgegrab.Y > UPB_CURLED_HEIGHT
+                    )
+                )
+                && (!can_jump || !Enabled(OPT_MARTH_JUMP))
                 && vel.Y < 0.f
             )
         ) {
@@ -1103,30 +1117,34 @@ static void Think_Marth(void) {
     // DOLPHIN SLASH
     } else if (state == 0x170) {
         // choose curl
-        if (cpu_data->TM.state_frame < 6) {
+        if (cpu_data->TM.state_frame == 3) {
             float curl; // -1 = full curl backwards, 1 = full curl forwards
             
-            if (vec_to_ledgegrab.X * dir < 5.f && stc_stage->kind == GRKIND_BATTLE) {
-                curl = -0.3f;
-            
-            // force no curl if too low
-            } else if (vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT - 1.f) {
-                curl = 0.f;
-                
-            // force curl if too far
-            } else if (vec_to_ledgegrab.X * dir > UPB_STRAIGHT_DISTANCE) {
-                curl = Progress(vec_to_ledgegrab.X * dir, UPB_STRAIGHT_DISTANCE, UPB_CURLED_DISTANCE);
-                if (curl > 1.f) curl = 1.f;
-                
-            // otherwise, random
+            if (stc_stage->kind != GRKIND_BATTLE && past_ledgegrab) {
+                curl = -1.f;
+            } else if (vec_to_ledgegrab.X * dir < UPB_CURLED_DISTANCE && vec_to_ledgegrab.Y < UPB_CURLED_HEIGHT) {
+                curl = HSD_Randf() * 2.f - 1.f;
+            } else if (vec_to_ledgegrab.X * dir > UPB_CURLED_DISTANCE) {
+                curl = 1.f;
+            } else if (vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT) {
+                curl = -1.f;
             } else {
-                curl = HSD_Randf();
+                curl = Progress(vec_to_ledgegrab.X * dir, UPB_STRAIGHT_DISTANCE, UPB_CURLED_DISTANCE);
+                curl = fclamp(curl, -1.f, 1.f);
+                
+                // similar function to sqrt but easier to compute
+                curl = (-(curl*curl) + 2.f * fabs(curl)) * sign(curl);
             }
             
-            float ang = curl * PI / 4.f;
+            float ang = curl * PI / 2.f;
             cpu_data->cpu.lstickX = (127.f * sin(ang)) * dir;
             cpu_data->cpu.lstickY = 127.f * cos(ang);
         }
+        
+        else if (cpu_data->TM.state_frame == 5) {
+            cpu_data->cpu.lstickX = 127.f * dir;
+        }
+ 
     } else if (ASID_ATTACKAIRN <= state && state <= ASID_ATTACKAIRLW) {
         cpu_data->cpu.lstickX = 127 * sign(vec_to_ledgegrab.X);
         

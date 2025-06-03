@@ -20,7 +20,7 @@ typedef struct KBValues {
     float dmg_min, dmg_max;
 } KBValues;
 
-static const char *Values_HitStrength[] = {"Weak", "Normal", "Hard"};
+static const char *Values_HitStrength[] = {"Weak", "Normal", "Hard", "Shallow"};
 static KBValues HitStrength_KBRange[] = {
     {
          80.f, 100.f, // mag
@@ -36,6 +36,11 @@ static KBValues HitStrength_KBRange[] = {
         140.f, 200.f, // mag
          65.f,  70.f, // ang
          80.f, 110.f, // dmg
+    },
+    {
+        110.f, 130.f, // mag
+         20.f,  40.f, // ang
+         60.f,  80.f, // dmg
     },
 };
 
@@ -207,7 +212,6 @@ enum options_sheik {
     OPT_SHEIK_UPB_STAGE,
     OPT_SHEIK_UPB_HIGH,
     OPT_SHEIK_JUMP,
-    OPT_SHEIK_FASTFALL,
     OPT_SHEIK_FAIR,
     OPT_SHEIK_AMSAH_TECH,
     
@@ -243,13 +247,6 @@ static EventOption Options_Sheik[] = {
         .kind = OPTKIND_STRING,
         .name = "Double Jump",
         .desc = "Allow Sheik to double jump.",
-        .values = OffOn,
-        .value_num = 2,
-    },
-    {
-        .kind = OPTKIND_STRING,
-        .name = "Fast Fall",
-        .desc = "Allow Sheik to fast fall.",
         .values = OffOn,
         .value_num = 2,
     },
@@ -336,15 +333,49 @@ static EventMenu Menu_Falcon = {
 // Marth --------------------------------------
 
 enum options_marth {
+    OPT_MARTH_UPB_EARLY,
+    OPT_MARTH_SIDEB_RECOVER,
+    OPT_MARTH_SIDEB_DELAY,
     OPT_MARTH_JUMP,
+    OPT_MARTH_FAIR,
     OPT_MARTH_COUNT
 };
 
 static EventOption Options_Marth[] = {
     {
         .kind = OPTKIND_STRING,
+        .name = "Dolphin Slash Early",
+        .desc = "Allow Marth to Up B above the ledge.",
+        .values = OffOn,
+        .value_num = 2,
+        .val = 1,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Dancing Blade",
+        .desc = "Allow Marth to use SideB to recover.",
+        .values = OffOn,
+        .value_num = 2,
+        .val = 1,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Dancing Blade Delay",
+        .desc = "Allow Marth to use SideB to delay his recovery.",
+        .values = OffOn,
+        .value_num = 2,
+    },
+    {
+        .kind = OPTKIND_STRING,
         .name = "Double Jump",
         .desc = "Allow Marth to double jump.",
+        .values = OffOn,
+        .value_num = 2,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Fair",
+        .desc = "Allow Marth to fair the player.",
         .values = OffOn,
         .value_num = 2,
     },
