@@ -855,8 +855,8 @@ static EventOption LabOptions_Main[OPTLAB_COUNT] = {
         .menu = &LabMenu_CharacterRng,
         .disable = 1,
         //.disable is set in Event_Init depending on fighters
-        .name = "Character RNG Behavior",
-        .desc = "Change RNG behavior of Peach, Luigi, GnW and Icies.",
+        .name = "Character RNG",
+        .desc = "Change RNG behavior of Peach, Luigi, GnW, and Icies.",
     },
     {
         .kind = OPTKIND_MENU,
@@ -1287,6 +1287,8 @@ static EventMenu LabMenu_InfoDisplayCPU = {
 
 static const char *LabValues_CharacterRng_Turnip[] =
     { "Default", "Regular Turnip", "Winky Turnip", "Dot Eyes Turnip", "Stitch Face Turnip", "Mr. Saturn", "Bob-omb", "Beam Sword" };
+static const char *LabValues_CharacterRng_PeachFSmash[] =
+    { "Default", "Golf Club", "Frying Pan", "Tennis Racket" };
 static const char *LabValues_CharacterRng_Misfire[] =
     { "Default", "Always Misfire", "Never Misfire" };
 static const char *LabValues_CharacterRng_Hammer[] =
@@ -1294,82 +1296,74 @@ static const char *LabValues_CharacterRng_Hammer[] =
 static const char *LabValues_CharacterRng_NanaThrow[] =
     { "Default", "Forward Throw", "Backward Throw", "Up Throw", "Down Throw" };
     
-static EventOption LabOption_CharacterRngPeach = {
-    .kind = OPTKIND_STRING,
-    .name = "Peach Turnip",
-    .desc = "Choose the turnip or item Peach will pull.",
-    .value_num = countof(LabValues_CharacterRng_Turnip),
-    .values = LabValues_CharacterRng_Turnip,
-    .OnChange = Lab_ChangePeachCharacterRng,
+static EventOption LabOptions_CharacterRngPeach[] = {
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Peach Turnip",
+        .desc = "Choose the turnip or item Peach will pull.",
+        .value_num = countof(LabValues_CharacterRng_Turnip),
+        .values = LabValues_CharacterRng_Turnip,
+        .OnChange = Lab_ChangeCharacterRng_Turnip,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Peach Forward Smash",
+        .desc = "Choose what Peach will use in her Forward Smash.",
+        .value_num = countof(LabValues_CharacterRng_PeachFSmash),
+        .values = LabValues_CharacterRng_PeachFSmash,
+        .OnChange = Lab_ChangeCharacterRng_PeachFSmash,
+    },
 };
-static EventOption LabOption_CharacterRngLuigi = {
-    .kind = OPTKIND_STRING,
-    .name = "Luigi Misfire",
-    .desc = "Choose if Luigi's SideB will misfire.",
-    .value_num = countof(LabValues_CharacterRng_Misfire),
-    .values = LabValues_CharacterRng_Misfire,
-    .OnChange = Lab_ChangeLuigiCharacterRng,
+static EventOption LabOptions_CharacterRngLuigi[] = {
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Luigi Misfire",
+        .desc = "Choose if Luigi's SideB will misfire.",
+        .value_num = countof(LabValues_CharacterRng_Misfire),
+        .values = LabValues_CharacterRng_Misfire,
+        .OnChange = Lab_ChangeCharacterRng_Misfire,
+    },
 };
-static EventOption LabOption_CharacterRngGnW = {
-    .kind = OPTKIND_STRING,
-    .name = "GnW Hammer",
-    .desc = "Choose Game and Watch's SideB number.",
-    .value_num = countof(LabValues_CharacterRng_Hammer),
-    .values = LabValues_CharacterRng_Hammer,
-    .OnChange = Lab_ChangeGnwCharacterRng,
+static EventOption LabOptions_CharacterRngGnW[] = {
+    {
+        .kind = OPTKIND_STRING,
+        .name = "GnW Hammer",
+        .desc = "Choose Game and Watch's SideB number.",
+        .value_num = countof(LabValues_CharacterRng_Hammer),
+        .values = LabValues_CharacterRng_Hammer,
+        .OnChange = Lab_ChangeCharacterRng_Hammer,
+    },
 };
-static EventOption LabOption_CharacterRngIcies = {
-    .kind = OPTKIND_STRING,
-    .name = "Nana Throw",
-    .desc = "Choose Nana's throw direction.",
-    .value_num = countof(LabValues_CharacterRng_NanaThrow),
-    .values = LabValues_CharacterRng_NanaThrow,
-    .OnChange = Lab_ChangeNanaCharacterRng,
+static EventOption LabOptions_CharacterRngIcies[] = {
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Nana Throw",
+        .desc = "Choose Nana's throw direction.",
+        .value_num = countof(LabValues_CharacterRng_NanaThrow),
+        .values = LabValues_CharacterRng_NanaThrow,
+        .OnChange = Lab_ChangeCharacterRng_NanaThrow,
+    }
 };
 
 #define OPTCHARRNG_MAXCOUNT 8
 static EventMenu LabMenu_CharacterRng = {
-    .name = "Character RNG Behavior",
+    .name = "Character RNG",
     .options = (EventOption[OPTCHARRNG_MAXCOUNT]){},
     .shortcuts = &Lab_ShortcutList,
 };
 
 // CHARACTER RNG OPTIONS TABLE --------------------------------------------------------
 
-static const EventOption* character_rng_options[] = {
-    0,                              // FTKIND_MARIO
-    0,                              // FTKIND_FOX
-    0,                              // FTKIND_FALCON
-    0,                              // FTKIND_DK
-    0,                              // FTKIND_KIRBY
-    0,                              // FTKIND_BOWSER
-    0,                              // FTKIND_LINK
-    0,                              // FTKIND_SHEIK
-    0,                              // FTKIND_NESS
-    &LabOption_CharacterRngPeach,   // FTKIND_PEACH
-    &LabOption_CharacterRngIcies,   // FTKIND_POPO
-    &LabOption_CharacterRngIcies,   // FTKIND_NANA
-    0,                              // FTKIND_PIKACHU
-    0,                              // FTKIND_SAMUS
-    0,                              // FTKIND_YOSHI
-    0,                              // FTKIND_JIGGLYPUFF
-    0,                              // FTKIND_MEWTWO
-    &LabOption_CharacterRngLuigi,   // FTKIND_LUIGI
-    0,                              // FTKIND_MARTH
-    0,                              // FTKIND_ZELDA
-    0,                              // FTKIND_YOUNGLINK
-    0,                              // FTKIND_DRMARIO
-    0,                              // FTKIND_FALCO
-    0,                              // FTKIND_PICHU
-    &LabOption_CharacterRngGnW,     // FTKIND_GAW
-    0,                              // FTKIND_GANONDORF
-    0,                              // FTKIND_ROY
-    0,                              // FTKIND_MASTERHAND
-    0,                              // FTKIND_CRAZYHAND
-    0,                              // FTKIND_BOY
-    0,                              // FTKIND_GIRL
-    0,                              // FTKIND_GIGABOWSER
-    0,                              // FTKIND_SANDBAG
+typedef struct CharacterRngOptions {
+    int len;
+    EventOption *options;
+} CharacterRngOptions;
+
+static const CharacterRngOptions character_rng_options[FTKIND_SANDBAG] = {
+    [FTKIND_PEACH] = { countof(LabOptions_CharacterRngPeach), LabOptions_CharacterRngPeach },
+    [FTKIND_POPO] = { countof(LabOptions_CharacterRngIcies), LabOptions_CharacterRngIcies },
+    [FTKIND_GAW] = { countof(LabOptions_CharacterRngGnW), LabOptions_CharacterRngGnW },
+    [FTKIND_LUIGI] = { countof(LabOptions_CharacterRngLuigi), LabOptions_CharacterRngLuigi },
 };
 
 // STAGE MENUS -----------------------------------------------------------

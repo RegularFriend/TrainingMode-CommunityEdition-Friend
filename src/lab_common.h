@@ -227,9 +227,10 @@ typedef struct LabData
 } LabData;
 typedef struct LabPersistentData {
     u8 peach_item_rng;      // 0x0
-    u8 luigi_misfire_rng;   // 0x1
-    u8 gnw_hammer_rng;      // 0x2
-    u8 nana_throw_rng;      // 0x3
+    u8 peach_fsmash_rng;    // 0x1
+    u8 luigi_misfire_rng;   // 0x2
+    u8 gnw_hammer_rng;      // 0x3
+    u8 nana_throw_rng;      // 0x4
 } LabPersistentData;
 typedef struct InfoDisplayData
 {
@@ -399,10 +400,11 @@ void Lab_FreezeCPU(GOBJ *menu_gobj);
 void Lab_ChangeTauntEnabled(GOBJ *menu_gobj, int value);
 void Lab_ChangePlayerPercent(GOBJ *menu_gobj, int value);
 void Lab_ChangePlayerLockPercent(GOBJ *menu_gobj, int value);
-void Lab_ChangePeachCharacterRng(GOBJ *menu_gobj, int value);
-void Lab_ChangeLuigiCharacterRng(GOBJ *menu_gobj, int value);
-void Lab_ChangeGnwCharacterRng(GOBJ *menu_gobj, int value);
-void Lab_ChangeNanaCharacterRng(GOBJ *menu_gobj, int value);
+void Lab_ChangeCharacterRng_Turnip(GOBJ *menu_gobj, int value);
+void Lab_ChangeCharacterRng_PeachFSmash(GOBJ *menu_gobj, int value);
+void Lab_ChangeCharacterRng_Hammer(GOBJ *menu_gobj, int value);
+void Lab_ChangeCharacterRng_Misfire(GOBJ *menu_gobj, int value);
+void Lab_ChangeCharacterRng_NanaThrow(GOBJ *menu_gobj, int value);
 void Lab_ChangeFrameAdvance(GOBJ *menu_gobj, int value);
 void Lab_ChangeFrameAdvanceButton(GOBJ *menu_gobj, int value);
 void Lab_ChangeCPUPercent(GOBJ *menu_gobj, int value);
