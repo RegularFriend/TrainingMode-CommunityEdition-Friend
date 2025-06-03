@@ -419,6 +419,7 @@ typedef struct EventVars
     evMenu *menu_assets;                                                                     // menu assets
     GOBJ *event_gobj;                                                                        // event gobj
     GOBJ *menu_gobj;                                                                         // event menu gobj
+    void *persistent_data;                                                                   // persistent data to be accessed from both C and ASM
     int game_timer;                                                                          // amount of game frames passed
     u8 hide_menu;                                                                            // enable this to hide the base menu. used for custom menus.
     int (*Savestate_Save)(Savestate *savestate, int flags);                                  // function pointer to save state
@@ -466,7 +467,7 @@ static EventDesc *static_eventInfo;
 static EventVars stc_event_vars;
 static int *eventDataBackup;
 
-static EventVars **event_vars_ptr = 0x803d7054; //R13 + (-0x4730)
+static EventVars **event_vars_ptr = 0x803d7054;
 static EventVars *event_vars;
 
 // EventOption kind definitions

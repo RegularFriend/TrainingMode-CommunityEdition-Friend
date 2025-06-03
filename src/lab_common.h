@@ -225,6 +225,12 @@ typedef struct LabData
     u8 hmn_controller;
     u8 cpu_controller;
 } LabData;
+typedef struct LabPersistentData {
+    u8 peach_item_rng;      // 0x0
+    u8 luigi_misfire_rng;   // 0x1
+    u8 gnw_hammer_rng;      // 0x2
+    u8 nana_throw_rng;      // 0x3
+} LabPersistentData;
 typedef struct InfoDisplayData
 {
     JOBJ *menuModel;
@@ -393,6 +399,10 @@ void Lab_FreezeCPU(GOBJ *menu_gobj);
 void Lab_ChangeTauntEnabled(GOBJ *menu_gobj, int value);
 void Lab_ChangePlayerPercent(GOBJ *menu_gobj, int value);
 void Lab_ChangePlayerLockPercent(GOBJ *menu_gobj, int value);
+void Lab_ChangePeachCharacterRng(GOBJ *menu_gobj, int value);
+void Lab_ChangeLuigiCharacterRng(GOBJ *menu_gobj, int value);
+void Lab_ChangeGnwCharacterRng(GOBJ *menu_gobj, int value);
+void Lab_ChangeNanaCharacterRng(GOBJ *menu_gobj, int value);
 void Lab_ChangeFrameAdvance(GOBJ *menu_gobj, int value);
 void Lab_ChangeFrameAdvanceButton(GOBJ *menu_gobj, int value);
 void Lab_ChangeCPUPercent(GOBJ *menu_gobj, int value);

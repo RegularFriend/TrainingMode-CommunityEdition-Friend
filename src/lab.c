@@ -24,6 +24,7 @@ static DevText *stc_devtext;
 static u8 stc_hmn_controller;             // making this static so importing recording doesnt overwrite
 static u8 stc_cpu_controller;             // making this static so importing recording doesnt overwrite
 static u8 stc_null_controller;            // making this static so importing recording doesnt overwrite
+static LabPersistentData persistent_data;
 
 // Aitch: not really a better way to do this that I can think of.
 // Feel free to change if you find a way to implement playback takeover without a global.
@@ -284,6 +285,30 @@ void Lab_ChangePlayerLockPercent(GOBJ *menu_gobj, int value)
     if (value)
         hmn_locked_percent = fighter_data->dmg.percent;
 }
+
+// CHARACTER RNG CHANGE CALLBACKS --------------------------------------------------------
+
+void Lab_ChangePeachCharacterRng(GOBJ *menu_gobj, int value) {
+    LabPersistentData* persistent_data = event_vars->persistent_data;
+    persistent_data->peach_item_rng = value;
+}
+
+void Lab_ChangeLuigiCharacterRng(GOBJ *menu_gobj, int value) {
+    LabPersistentData* persistent_data = event_vars->persistent_data;
+    persistent_data->luigi_misfire_rng = value;
+}
+
+void Lab_ChangeGnwCharacterRng(GOBJ *menu_gobj, int value) {
+    LabPersistentData* persistent_data = event_vars->persistent_data;
+    persistent_data->gnw_hammer_rng = value;
+}
+
+void Lab_ChangeNanaCharacterRng(GOBJ *menu_gobj, int value) {
+    LabPersistentData* persistent_data = event_vars->persistent_data;
+    persistent_data->nana_throw_rng = value;
+}
+
+// --------------------------------------------------------
 
 void Lab_StartMoveCPU(GOBJ *menu_gobj) {
     LabOptions_CPU[OPTCPU_SET_POS] = LabOptions_CPU_FinishMoveCPU;
@@ -5955,6 +5980,26 @@ void Event_Init(GOBJ *gobj)
         LabOptions_OSDs[i].val = is_osd_enabled;
     }
 
+    // character rng options
+    {
+        EventOption* hmn_rng_data = character_rng_options[hmn_data->kind];
+        EventOption* cpu_rng_data = character_rng_options[cpu_data->kind];
+        if (hmn_rng_data != 0 || cpu_rng_data != 0) {
+            LabOptions_Main[OPTLAB_CHAR_RNG].disable = 0;
+            u8 current_option = 0;
+            if (hmn_rng_data != 0) {
+                LabMenu_CharacterRng.options[current_option] = *hmn_rng_data;
+                current_option++;
+            }
+            // only if cpu is different from hmn
+            if (cpu_rng_data != 0 && hmn_rng_data != cpu_rng_data) {
+                LabMenu_CharacterRng.options[current_option] = *cpu_rng_data;
+                current_option++;
+            }
+            LabMenu_CharacterRng.option_num = current_option;
+        }
+    }
+
     // stage options
     EventMenu *stage_menu = stage_menus[Stage_GetExternalID()];
     if (stage_menu != NULL) {
@@ -5972,6 +6017,7 @@ void Event_Init(GOBJ *gobj)
     // theres got to be a better way to do this...
     event_vars = *event_vars_ptr;
 
+    event_vars->persistent_data = &persistent_data;
     event_vars->savestate_saved_while_mirrored = false;
     event_vars->loaded_mirrored = false;
 
