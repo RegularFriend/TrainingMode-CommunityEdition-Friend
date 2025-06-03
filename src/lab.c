@@ -5988,13 +5988,17 @@ void Event_Init(GOBJ *gobj)
             LabOptions_Main[OPTLAB_CHAR_RNG].disable = 0;
             u8 current_option = 0;
             if (hmn_rng_data != 0) {
-                LabMenu_CharacterRng.options[current_option] = *hmn_rng_data;
-                current_option++;
+                if (current_option == OPTCHARRNG_MAXCOUNT)
+                    assert("too many character rng options");
+                    
+                LabMenu_CharacterRng.options[current_option++] = *hmn_rng_data;
             }
             // only if cpu is different from hmn
             if (cpu_rng_data != 0 && hmn_rng_data != cpu_rng_data) {
-                LabMenu_CharacterRng.options[current_option] = *cpu_rng_data;
-                current_option++;
+                if (current_option == OPTCHARRNG_MAXCOUNT)
+                    assert("too many character rng options");
+                    
+                LabMenu_CharacterRng.options[current_option++] = *cpu_rng_data;
             }
             LabMenu_CharacterRng.option_num = current_option;
         }

@@ -1285,57 +1285,52 @@ static EventMenu LabMenu_InfoDisplayCPU = {
 
 // CHARACTER RNG MENU --------------------------------------------------------
 
-enum character_rng_option
-{
-    OPTCHARRNG_HMN_BEHAVIOR,
-    OPTCHARRNG_CPU_BEHAVIOR,
-    OPTCHARRNG_COUNT,
-};
-
-typedef struct CharacterRngData
-{
-    char name_len;
-    char* name;
-    char values_len;
-    char** values;
-} CharacterRngData;
-
+static const char *LabValues_CharacterRng_Turnip[] =
+    { "Default", "Regular Turnip", "Winky Turnip", "Dot Eyes Turnip", "Stitch Face Turnip", "Mr. Saturn", "Bob-omb", "Beam Sword" };
+static const char *LabValues_CharacterRng_Misfire[] =
+    { "Default", "Always Misfire", "Never Misfire" };
+static const char *LabValues_CharacterRng_Hammer[] =
+    { "Default", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *LabValues_CharacterRng_NanaThrow[] =
+    { "Default", "Forward Throw", "Backward Throw", "Up Throw", "Down Throw" };
+    
 static EventOption LabOption_CharacterRngPeach = {
     .kind = OPTKIND_STRING,
-    .name = "Peach Pull",
-    .desc = "Change the Turnip/Item that peach pulls on DownB.",
-    .value_num = 8,
-    .values = (char*[]){ "Default", "Regular Turnip", "Winky Turnip", "Dot Eyes Turnip", "Stitch Face Turnip", "Mr. Saturn", "Bob-omb", "Beam Sword" },
+    .name = "Peach Turnip",
+    .desc = "Choose the turnip or item Peach will pull.",
+    .value_num = countof(LabValues_CharacterRng_Turnip),
+    .values = LabValues_CharacterRng_Turnip,
     .OnChange = Lab_ChangePeachCharacterRng,
 };
 static EventOption LabOption_CharacterRngLuigi = {
     .kind = OPTKIND_STRING,
     .name = "Luigi Misfire",
-    .desc = "Change the frequency of Luigi Misfires to always/never.",
-    .value_num = 3,
-    .values = (char*[]){ "Default", "Always misfire", "Never misfire" },
+    .desc = "Choose if Luigi's SideB will misfire.",
+    .value_num = countof(LabValues_CharacterRng_Misfire),
+    .values = LabValues_CharacterRng_Misfire,
     .OnChange = Lab_ChangeLuigiCharacterRng,
 };
 static EventOption LabOption_CharacterRngGnW = {
     .kind = OPTKIND_STRING,
     .name = "GnW Hammer",
-    .desc = "Change the number that Game and Watch pulls with SideB.",
-    .value_num = 10,
-    .values = (char*[]){ "Default", "1", "2", "3", "4", "5", "6", "7", "8", "9" },
+    .desc = "Choose Game and Watch's SideB number.",
+    .value_num = countof(LabValues_CharacterRng_Hammer),
+    .values = LabValues_CharacterRng_Hammer,
     .OnChange = Lab_ChangeGnwCharacterRng,
 };
 static EventOption LabOption_CharacterRngIcies = {
     .kind = OPTKIND_STRING,
     .name = "Nana Throw",
-    .desc = "Change the throw move of Nanas AI.",
-    .value_num = 5,
-    .values = (char*[]){ "Default", "Forward Throw", "Backward Throw", "Upthrow", "Downthrow" },
+    .desc = "Choose Nana's throw direction.",
+    .value_num = countof(LabValues_CharacterRng_NanaThrow),
+    .values = LabValues_CharacterRng_NanaThrow,
     .OnChange = Lab_ChangeNanaCharacterRng,
 };
 
+#define OPTCHARRNG_MAXCOUNT 8
 static EventMenu LabMenu_CharacterRng = {
     .name = "Character RNG Behavior",
-    .options = (EventOption[2]){},
+    .options = (EventOption[OPTCHARRNG_MAXCOUNT]){},
     .shortcuts = &Lab_ShortcutList,
 };
 
