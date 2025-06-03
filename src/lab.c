@@ -6519,6 +6519,19 @@ void Event_Think(GOBJ *event)
             }
         }
     }
+    
+    if (LabOptions_General[OPTGEN_POWERSHIELD].val) {
+        if (cpu_data->shield_bubble.bone) {
+            memcpy((u8*)&cpu_data->reflect_bubble, (u8*)&cpu_data->shield_bubble, sizeof(cpu_data->shield_bubble));
+            cpu_data->flags.reflect_enable = 1;
+            
+            cpu_data->reflect_hit = (struct reflect_hit) {
+                .max_dmg = 10000000,
+                .dmg_mult = 0.5f,
+                .is_break = 0,
+            };
+        }
+    }
 
     if (LabOptions_CPU[OPTCPU_SET_POS].OnSelect == Lab_FinishMoveCPU) {
         // set CPU position

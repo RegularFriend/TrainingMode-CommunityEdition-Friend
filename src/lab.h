@@ -919,6 +919,7 @@ enum gen_option
     OPTGEN_INPUT,
     OPTGEN_SPEED,
     OPTGEN_STALE,
+    OPTGEN_POWERSHIELD,
     OPTGEN_TAUNT,
     OPTGEN_CUSTOM_OSD,
     OPTGEN_OSDS,
@@ -1061,6 +1062,13 @@ static EventOption LabOptions_General[OPTGEN_COUNT] = {
         .val = 1,
         .name = "Move Staling",
         .desc = "Toggle the staling of moves. Attacks become \nweaker the more they are used.",
+        .values = LabOptions_OffOn,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .value_num = 2,
+        .name = "Powershield Projectiles",
+        .desc = "Projectiles will always be reflected when shielded.",
         .values = LabOptions_OffOn,
     },
     {
