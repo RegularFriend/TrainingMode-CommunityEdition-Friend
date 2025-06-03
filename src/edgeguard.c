@@ -301,13 +301,15 @@ static void Reset(void) {
     
     GOBJ *hmn_sub = Fighter_GetSubcharGObj(0, 1);
     GOBJ *cpu_sub = Fighter_GetSubcharGObj(1, 1);
-    if (hmn_sub) {
+    FighterData *hmn_data = hmn->userdata;
+    FighterData *cpu_data = cpu->userdata;
+    if (hmn_sub && hmn_data->flags.has_follower) {
         Reset_HMN(hmn_sub, side_idx, hmn_dmg);
         Reset_Subchar(hmn_sub, hmn);
     }
-    if (cpu_sub) {
+    if (cpu_sub && cpu_data->flags.has_follower) {
         Reset_CPU(cpu_sub, side_idx, cpu_dmg, kb_mag, kb_angle);
-        Reset_Subchar(hmn_sub, hmn);
+        Reset_Subchar(cpu_sub, hmn);
     }
 }
 
@@ -368,7 +370,11 @@ void Event_Think(GOBJ *menu) {
             || cpu_data->state_id == ASID_DOWNWAITU
             || cpu_data->state_id == ASID_DOWNWAITD
             || IsGroundActionable(cpu)
-            || (cpu_pos.Y > fabs(cpu_pos.X) && cpu_pos.Y > 100.f && IsAirActionable(cpu))
+            
+            // if the CPU is actionable high above the stage, just reset early.
+            || (cpu_pos.Y > 100.f 
+                && fabs(cpu_pos.X) < ledge_positions[1].X 
+                && IsAirActionable(cpu))
         )
     ) {
         reset_timer = RESET_DELAY;
