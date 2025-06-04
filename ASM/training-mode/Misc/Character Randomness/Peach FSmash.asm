@@ -3,7 +3,7 @@
 
 .include "Common.s"
 
-CharRng_FetchSetting r3, CharRng_Setting_Peach_FSmash, SetResult
+CharRng_FetchSetting r3, CharRng_Setting_Peach_FSmash, RandomFSmash
 
 cmpwi r3, 0 # 0 = default setting
 beq+ RandomFSmash
