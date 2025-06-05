@@ -972,8 +972,11 @@ static void Think_Falcon(void) {
     } else if (state == 0x162) {
         bool in_drift_back_zone = past_ledge
             || (
-                vec_to_ledgegrab.Y < 0.f && (
+                vec_to_ledgegrab.Y < 10.f && (
+                    // rising drift
                     (vel.Y > 1.f && -vec_to_ledgegrab.Y / 1.5f > fabs(vec_to_ledgegrab.X))
+                    
+                    // falling drift
                     || (vel.Y <= 1.f && -vec_to_ledgegrab.Y / 3.f > fabs(vec_to_ledgegrab.X))
                 )
             );

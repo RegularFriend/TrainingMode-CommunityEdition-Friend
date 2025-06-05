@@ -77,9 +77,9 @@ static KBValues HitStrength_KBRange[] = {
 
 enum options_initial {
     OPT_MAIN_RECOVERY,
+    OPT_MAIN_PERCENT,
     OPT_MAIN_HITSTRENGTH,
     OPT_MAIN_HITSTRENGTH_CUSTOMMENU,
-    OPT_MAIN_PERCENT,
     OPT_MAIN_EXIT,
     
     OPT_MAIN_COUNT
