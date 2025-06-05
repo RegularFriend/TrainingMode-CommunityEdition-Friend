@@ -79,24 +79,41 @@ static float Vec2_Length(Vec2 *a) {
     return sqrtf(x*x + y*y);
 }
 
-static Vec2 SimulatePhys(FighterData *data, int future) {
+static void PhysStep(FighterData *data, Vec2 *pos, Vec2 *vel) {
     float gravity = data->phys.air_state == 0 ? 0.f : data->attr.gravity;
-    
-    Vec2 out = { data->phys.pos.X, data->phys.pos.Y };
-    float y_vel = data->phys.self_vel.Y;
-    
     float min_y_vel = data->flags.is_fastfall ?
         -data->attr.fastfall_velocity
         : -data->attr.terminal_velocity;
-                
-    for (int i = 0; i < future; ++i) {
-        out.X += data->phys.self_vel.X;
-        out.Y += y_vel;
-        y_vel -= gravity;
-        y_vel = fmax(y_vel, min_y_vel);
-    }
+        
+    pos->X += vel->X;
+    pos->Y += vel->Y;
+    vel->Y -= gravity;
+    vel->Y = fmax(vel->Y, min_y_vel);
+}
+
+static Vec2 SimulatePhys(FighterData *data, int future) {
+    Vec2 pos = { data->phys.pos.X, data->phys.pos.Y };
+    Vec2 vel = { data->phys.self_vel.X, data->phys.self_vel.Y };
+    for (int i = 0; i < future; ++i)
+        PhysStep(data, &pos, &vel);
     
-    return out;
+    return pos;
+}
+
+static bool SimulatePhys_CanReachPoint(FighterData *data, Vec2 target) {
+    Vec2 pos = { data->phys.pos.X, data->phys.pos.Y };
+    Vec2 vel = { data->phys.self_vel.X, data->phys.self_vel.Y };
+    
+    float dir = sign(target.X - pos.X);
+    if (sign(vel.X) != dir)
+        return false;
+    
+    while (target.Y < pos.Y || vel.Y >= 0.f)
+        PhysStep(data, &pos, &vel);
+        
+        OSReport("%f %f\n", dir, sign(target.X - pos.X));
+    
+    return dir != sign(target.X - pos.X);
 }
 
 static float ProjectedDistance(FighterData *a, FighterData *b, int future) {
@@ -866,11 +883,14 @@ static void Think_Sheik(void) {
 #define SWEETSPOT_OFFSET_Y 8
 #define UPB_HEIGHT 48
 
-#define UPB_CHANCE 4
-#define UPB_DRIFT_CHANGE_CHANCE 40
+#define UPB_CHANCE_FAR 5
+#define UPB_CHANCE_CLOSE 1000
+#define UPB_DRIFT_CHANGE_CHANCE 20
+#define FALL_DRIFT_CHANGE_CHANCE 40
 #define DOWNB_CHANCE 3
-#define JUMP_CHANCE_BELOW_LEDGE 3
-#define JUMP_CHANCE_ABOVE_LEDGE 5 
+#define JUMP_CHANCE_BELOW_LEDGE 2
+#define JUMP_CHANCE_ABOVE_LEDGE 4 
+#define JUMP_HEIGHT 40
 #define FASTFALL_CHANCE 15
 
 int drift_back_timer = 0;
@@ -910,11 +930,43 @@ static void Think_Falcon(void) {
         dj_chance = JUMP_CHANCE_BELOW_LEDGE;
     }
     
+    bool in_drift_back_zone = past_ledge
+        || (
+            (
+                vel.X * dir > 0.f 
+                || vec_to_ledgegrab.Y < -25.f
+            ) && (
+                // rising drift
+                (vel.Y > 1.f && -vec_to_ledgegrab.Y / 1.5f > fabs(vec_to_ledgegrab.X))
+                
+                // falling drift
+                || (vel.Y <= 1.f && -vec_to_ledgegrab.Y / 3.f > fabs(vec_to_ledgegrab.X))
+            )
+        );
+    
     if (cpu_data->flags.hitlag) {
         // DI inwards
         cpu_data->cpu.lstickX = 90 * dir;
         cpu_data->cpu.lstickY = 90;
+        
+    // STOP DRIFT BACK
+    } else if (!in_drift_back_zone && drift_back_timer) {
+        drift_back_timer = 0;
+        cpu_data->cpu.lstickX = 0;
+    
+    // DRIFT BACK
+    } else if (drift_back_timer) {
+        drift_back_timer--;
+        if (drift_back_timer)
+            cpu_data->cpu.lstickX = -127 * dir;
+        else
+            // frame with no drift - this allows faster drift change
+            cpu_data->cpu.lstickX = 0;
+            
     } else if (IsAirActionable(cpu)) {
+        bool can_fall_to_ledge = SimulatePhys_CanReachPoint(cpu_data, target_ledge);
+        OSReport("%i\n", can_fall_to_ledge);
+            
         // JUMP
         if (
             Enabled(OPT_FALCON_JUMP)
@@ -928,7 +980,12 @@ static void Think_Falcon(void) {
             )
         ) {
             cpu_data->cpu.held |= PAD_BUTTON_Y;
-            cpu_data->cpu.lstickX = 127 * dir;
+            float jump_dir;
+            // if (vec_to_ledge.Y < JUMP_HEIGHT && vec_to_ledge.X < 50.f)
+                // jump_dir = HSD_Randf() * 2.f - 1.f;
+            // else
+                jump_dir = dir;
+            cpu_data->cpu.lstickX = 127 * jump_dir;
             
         // UPB
         } else if (
@@ -939,7 +996,10 @@ static void Think_Falcon(void) {
                     vel.Y <= 1.f
                     && !past_ledge
                     && vec_to_ledgegrab.Y < UPB_HEIGHT
-                    && HSD_Randi(UPB_CHANCE) == 0
+                    && (
+                        (can_fall_to_ledge && HSD_Randi(UPB_CHANCE_CLOSE) == 0)
+                        || (!can_fall_to_ledge && HSD_Randi(UPB_CHANCE_FAR) == 0)
+                    )
                 )
                 // force upb if at end of range
                 || (
@@ -963,48 +1023,34 @@ static void Think_Falcon(void) {
             cpu_data->cpu.lstickY = -127;
             cpu_data->cpu.held |= PAD_BUTTON_B;
             
-        // WAIT
+        // DRIFT BACK
+        } else if (
+            Enabled(OPT_FALCON_DRIFT_BACK)
+            && in_drift_back_zone
+            && vec_to_ledgegrab.Y < 0.f
+            && HSD_Randi(FALL_DRIFT_CHANGE_CHANCE) == 0
+        ) {
+            drift_back_timer = HSD_Randi(20) + 5;
+            // frame with no drift - this allows faster drift change
+            cpu_data->cpu.lstickX = 0;
         } else {
             cpu_data->cpu.lstickX = 127 * dir;
         }
         
     // UPB DRIFT
     } else if (state == 0x162) {
-        bool in_drift_back_zone = past_ledge
-            || (
-                vec_to_ledgegrab.Y < 10.f && (
-                    // rising drift
-                    (vel.Y > 1.f && -vec_to_ledgegrab.Y / 1.5f > fabs(vec_to_ledgegrab.X))
-                    
-                    // falling drift
-                    || (vel.Y <= 1.f && -vec_to_ledgegrab.Y / 3.f > fabs(vec_to_ledgegrab.X))
-                )
-            );
-            
-        if (!in_drift_back_zone)
-            drift_back_timer = 0;
-
-        if (drift_back_timer) {
-            drift_back_timer--;
-            if (drift_back_timer)
-                cpu_data->cpu.lstickX = -127 * dir;
-            else
-                // frame with no drift - this allows faster drift change
-                cpu_data->cpu.lstickX = 0;
+        if (
+            Enabled(OPT_FALCON_DRIFT_BACK)
+            && vec_to_ledgegrab.Y < 0.f
+            && cpu_data->TM.state_frame > 14
+            && in_drift_back_zone
+            && HSD_Randi(UPB_DRIFT_CHANGE_CHANCE) == 0
+        ) {
+            drift_back_timer = HSD_Randi(20) + 5;
+            // frame with no drift - this allows faster drift change
+            cpu_data->cpu.lstickX = 0;
         } else {
-            if (
-                Enabled(OPT_FALCON_DRIFT_BACK)
-                && vec_to_ledgegrab.Y < 0.f
-                && cpu_data->TM.state_frame > 14
-                && in_drift_back_zone
-                && HSD_Randi(UPB_DRIFT_CHANGE_CHANCE) == 0
-            ) {
-                drift_back_timer = HSD_Randi(20) + 5;
-                // frame with no drift - this allows faster drift change
-                cpu_data->cpu.lstickX = 0;
-            } else {
-                cpu_data->cpu.lstickX = 127 * dir;
-            }
+            cpu_data->cpu.lstickX = 127 * dir;
         }
     } else if (ASID_FALLSPECIAL <= state && state <= ASID_FALLSPECIALB) {
         // FASTFALL
