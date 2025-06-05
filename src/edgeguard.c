@@ -328,6 +328,58 @@ static void ChangePlayerPercent(GOBJ *menu_gobj, int dmg) {
     Fighter_SetHUDDamage(hmn_data->ply, dmg);
 }
 
+static void EnsureMaxMin(s16 *min, s16 *max) {
+    if (*min > *max) *max = *min;
+    if (*max < *min) *min = *max;
+}
+
+static void WriteCustomKBValues(void) {
+    HitStrength_KBRange[KBVALS_CUSTOM].mag_min = Options_CustomHitStrength[OPT_CUSTOMHIT_MAGMIN].val;
+    HitStrength_KBRange[KBVALS_CUSTOM].mag_max = Options_CustomHitStrength[OPT_CUSTOMHIT_MAGMAX].val;
+    HitStrength_KBRange[KBVALS_CUSTOM].ang_min = Options_CustomHitStrength[OPT_CUSTOMHIT_ANGMIN].val;
+    HitStrength_KBRange[KBVALS_CUSTOM].ang_max = Options_CustomHitStrength[OPT_CUSTOMHIT_ANGMAX].val;
+    HitStrength_KBRange[KBVALS_CUSTOM].dmg_min = Options_CustomHitStrength[OPT_CUSTOMHIT_DMGMIN].val;
+    HitStrength_KBRange[KBVALS_CUSTOM].dmg_max = Options_CustomHitStrength[OPT_CUSTOMHIT_DMGMAX].val;
+    Options_Main[OPT_MAIN_HITSTRENGTH].val = KBVALS_CUSTOM;
+}
+
+static void ChangeCustomKB_MagMin(GOBJ *menu_gobj, int value) {
+    s16 *min = &Options_CustomHitStrength[OPT_CUSTOMHIT_MAGMIN].val;
+    s16 *max = &Options_CustomHitStrength[OPT_CUSTOMHIT_MAGMAX].val;
+    if (*min > *max) *max = *min;
+    WriteCustomKBValues();
+}
+static void ChangeCustomKB_MagMax(GOBJ *menu_gobj, int value) {
+    s16 *min = &Options_CustomHitStrength[OPT_CUSTOMHIT_MAGMIN].val;
+    s16 *max = &Options_CustomHitStrength[OPT_CUSTOMHIT_MAGMAX].val;
+    if (*min > *max) *min = *max;
+    WriteCustomKBValues();
+}
+static void ChangeCustomKB_AngMin(GOBJ *menu_gobj, int value) {
+    s16 *min = &Options_CustomHitStrength[OPT_CUSTOMHIT_ANGMIN].val;
+    s16 *max = &Options_CustomHitStrength[OPT_CUSTOMHIT_ANGMAX].val;
+    if (*min > *max) *max = *min;
+    WriteCustomKBValues();
+}
+static void ChangeCustomKB_AngMax(GOBJ *menu_gobj, int value) {
+    s16 *min = &Options_CustomHitStrength[OPT_CUSTOMHIT_ANGMIN].val;
+    s16 *max = &Options_CustomHitStrength[OPT_CUSTOMHIT_ANGMAX].val;
+    if (*min > *max) *min = *max;
+    WriteCustomKBValues();
+}
+static void ChangeCustomKB_DmgMin(GOBJ *menu_gobj, int value) {
+    s16 *min = &Options_CustomHitStrength[OPT_CUSTOMHIT_DMGMIN].val;
+    s16 *max = &Options_CustomHitStrength[OPT_CUSTOMHIT_DMGMAX].val;
+    if (*min > *max) *max = *min;
+    WriteCustomKBValues();
+}
+static void ChangeCustomKB_DmgMax(GOBJ *menu_gobj, int value) {
+    s16 *min = &Options_CustomHitStrength[OPT_CUSTOMHIT_DMGMIN].val;
+    s16 *max = &Options_CustomHitStrength[OPT_CUSTOMHIT_DMGMAX].val;
+    if (*min > *max) *min = *max;
+    WriteCustomKBValues();
+}
+
 void Event_Init(GOBJ *gobj) {
     event_vars = *event_vars_ptr;
     
