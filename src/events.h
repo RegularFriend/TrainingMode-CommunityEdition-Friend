@@ -62,9 +62,6 @@ typedef struct EventMatchData //r8
     unsigned int isRunStockLogic : 1;
     unsigned int isDisableHit : 1;
     unsigned int useKOCounter : 1;
-    s8 playerKind;                    // -1 = use selected fighter
-    s8 cpuKind;                       // -1 = no CPU
-    s16 stage;                        // -1 = use selected stage
     unsigned int timerSeconds : 32;   // 0xFFFFFFFF
 } EventMatchData;
 enum CSSID {
@@ -127,16 +124,17 @@ typedef struct EventDesc
     char *eventFile;
     int jumpTableIndex;
     char *eventCSSFile;
-    u8 isSelectStage : 1;
     u8 use_savestates : 1;  // enables dpad left and right savestates
     u8 disable_hazards : 1; // removes stage hazards
     u8 force_sopo : 1;
     u8 CSSType;
     AllowedCharacters allowed_characters;
+    s8 playerKind;                    // -1 = use selected fighter
+    s8 cpuKind;                       // -1 = no CPU
+    s16 stage;                        // -1 = use selected stage
     u8 scoreType;
     u8 callbackPriority;
     EventMatchData *matchData;
-    int defaultOSD;
 } EventDesc;
 typedef struct EventPage
 {

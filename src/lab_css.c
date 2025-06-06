@@ -56,8 +56,7 @@ void OnCSSLoad(HSD_Archive *archive)
     // HUGE HACK ALERT -- manually gets function offset of TM_GetEventDesc
     EventDesc *(*GetEventDesc)(int page, int event) = RTOC_PTR(TM_FUNC + (1 * 4));
     event_desc = GetEventDesc(1, 0);
-    event_desc->isSelectStage = 1;
-    event_desc->matchData->stage = -1;
+    event_desc->stage = -1;
     *onload_fileno = -1;
 
     Cam_Button_Create();
@@ -1107,8 +1106,7 @@ void Menu_Confirm_Think(GOBJ *menu_gobj)
             *stc_css_exitkind = 1;
 
             // HUGE HACK ALERT
-            event_desc->isSelectStage = 0;
-            event_desc->matchData->stage = stage_kind;
+            event_desc->stage = stage_kind;
             *onload_fileno = import_data.file_info[this_file_index].file_no;
             *onload_slot = import_data.memcard_slot;
             
