@@ -53,27 +53,16 @@ typedef struct EventMatchData //r8
 {
     unsigned int timer : 2;
     unsigned int matchType : 3;
-    unsigned int isDisableMusic : 1;
     unsigned int hideGo : 1;
     unsigned int hideReady : 1;
-    unsigned int isCreateHUD : 1;
-    unsigned int isDisablePause : 1;
-    unsigned int timerRunOnPause : 1;    // 0x01
-    unsigned int isHidePauseHUD : 1;     // 0x02
-    unsigned int isShowLRAStart : 1;     // 0x04
-    unsigned int isCheckForLRAStart : 1; // 0x08
-    unsigned int isShowZRetry : 1;       // 0x10
-    unsigned int isCheckForZRetry : 1;   // 0x20
-    unsigned int isShowAnalogStick : 1;  // 0x40
-    unsigned int isShowScore : 1;        // 0x80
-    unsigned int isRunStockLogic : 1;    // 0x20
-    unsigned int isDisableHit : 1;       // 0x20
+    unsigned int isCreateHUD : 1;       // Display Stocks/Percents/Timer
+    unsigned int timerRunOnPause : 1;
+    unsigned int isCheckForZRetry : 1;
+    unsigned int isShowScore : 1;
+    unsigned int isRunStockLogic : 1;
+    unsigned int isDisableHit : 1;
     unsigned int useKOCounter : 1;
-    s8 playerKind;                    // -1 = use selected fighter
-    s8 cpuKind;                       // -1 = no CPU
-    s16 stage;                        // -1 = use selected stage
     unsigned int timerSeconds : 32;   // 0xFFFFFFFF
-    unsigned int timerSubSeconds : 8; // 0xFF
 } EventMatchData;
 enum CSSID {
     CSSID_DOCTOR_MARIO   = 1 << 0,
@@ -135,16 +124,17 @@ typedef struct EventDesc
     char *eventFile;
     int jumpTableIndex;
     char *eventCSSFile;
-    u8 isSelectStage : 1;
     u8 use_savestates : 1;  // enables dpad left and right savestates
     u8 disable_hazards : 1; // removes stage hazards
     u8 force_sopo : 1;
     u8 CSSType;
     AllowedCharacters allowed_characters;
+    s8 playerKind;                    // -1 = use selected fighter
+    s8 cpuKind;                       // -1 = no CPU
+    s16 stage;                        // -1 = use selected stage
     u8 scoreType;
     u8 callbackPriority;
     EventMatchData *matchData;
-    int defaultOSD;
 } EventDesc;
 typedef struct EventPage
 {
