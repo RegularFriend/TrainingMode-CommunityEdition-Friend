@@ -2610,6 +2610,7 @@ enum rec_option
    OPTREC_LOOP,
    OPTREC_AUTORESTORE,
    OPTREC_STARTPAUSED,
+   OPTREC_TAKEOVER,
    OPTREC_RESAVE,
    OPTREC_PRUNE,
    OPTREC_DELETE,
@@ -2637,6 +2638,13 @@ enum rec_mirror
     OPTMIRROR_RANDOM,
 };
 
+enum rec_takeover_target
+{
+    TAKEOVER_HMN,
+    TAKEOVER_CPU,
+    TAKEOVER_NONE,
+};
+
 // Aitch: Please be aware that the order of these options is important.
 // The option idx will be serialized when exported, so loading older replays could load the wrong option if we reorder/remove options.
 static char *LabValues_RecordSlot[] = {"Random", "Slot 1", "Slot 2", "Slot 3", "Slot 4", "Slot 5", "Slot 6"};
@@ -2659,6 +2667,8 @@ static const EventOption Record_Load = {
     .desc = "Load the saved fighter positions and \nstart the sequence from the beginning.",
     .OnSelect = Record_RestoreState,
 };
+
+static const char *LabOptions_TakeoverTarget[] = {"HMN", "CPU", "None"};
 
 static EventOption LabOptions_Record[OPTREC_COUNT] = {
     // swapped between Record_Save and Record_Load
@@ -2734,6 +2744,13 @@ static EventOption LabOptions_Record[OPTREC_COUNT] = {
         .name = "Start Paused",
         .desc = "Pause the replay until your first input.",
         .values = LabOptions_OffOn,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .value_num = sizeof(LabOptions_TakeoverTarget) / 4,
+        .name = "Playback Takeover",
+        .desc = "Which character to takeover when\ninputting during playback.",
+        .values = LabOptions_TakeoverTarget,
     },
     {
         .kind = OPTKIND_FUNC,

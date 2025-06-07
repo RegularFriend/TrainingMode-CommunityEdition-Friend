@@ -6249,6 +6249,18 @@ void Event_Think_LabState_Normal(GOBJ *event) {
     int cpu_mode = LabOptions_Record[OPTREC_CPUMODE].val;
 
     int cpu_control = false;
+    
+    HSD_Pad *hmn_pad = PadGet(stc_hmn_controller, PADGET_MASTER);
+    int sticks = fabs(hmn_pad->fstickX) >= STICK_DEADZONE
+        || fabs(hmn_pad->fstickY) >= STICK_DEADZONE
+        || fabs(hmn_pad->fsubstickX) >= STICK_DEADZONE
+        || fabs(hmn_pad->fsubstickY) >= STICK_DEADZONE;
+    int triggers = hmn_pad->ftriggerLeft >= TRIGGER_DEADZONE
+        || hmn_pad->ftriggerRight >= TRIGGER_DEADZONE;
+    int buttons = hmn_pad->held & (HSD_BUTTON_A | HSD_BUTTON_B | HSD_BUTTON_X | HSD_BUTTON_Y | 
+            HSD_BUTTON_DPAD_UP | HSD_TRIGGER_L | HSD_TRIGGER_R | HSD_TRIGGER_Z);
+    bool takeover_input = (buttons | triggers | sticks) != 0;
+    int takeover_target = LabOptions_Record[OPTREC_TAKEOVER].val;
 
     switch (cpu_mode)
     {
@@ -6262,42 +6274,51 @@ void Event_Think_LabState_Normal(GOBJ *event) {
     }
     case (RECMODE_CPU_PLAYBACK):
     {
-        switch (LabOptions_Record[OPTREC_PLAYBACK_COUNTER].val) {
-        case PLAYBACKCOUNTER_OFF:
-            break;
-        case PLAYBACKCOUNTER_ENDS:
-            stc_playback_cancelled_cpu |= Record_PastLastInput(1);
-            break;
-        case PLAYBACKCOUNTER_ON_HIT_CPU:
-            if (!stc_playback_cancelled_cpu) {
-                if (IsHitlagVictim(cpu) && eventData->cpu_lasthit != cpu_data->dmg.atk_instance_hurtby) {
-                    eventData->cpu_countertimer = 0;
-                    eventData->cpu_hitnum++;
-                    eventData->cpu_lasthit = cpu_data->dmg.atk_instance_hurtby;
-                    eventData->cpu_hitkind = HITKIND_DAMAGE;
+        if (takeover_input && takeover_target == TAKEOVER_CPU)
+            stc_playback_cancelled_cpu = true;
+        
+        if (takeover_target != TAKEOVER_CPU) {
+            switch (LabOptions_Record[OPTREC_PLAYBACK_COUNTER].val) {
+            case PLAYBACKCOUNTER_OFF:
+                break;
+            case PLAYBACKCOUNTER_ENDS:
+                stc_playback_cancelled_cpu |= Record_PastLastInput(1);
+                break;
+            case PLAYBACKCOUNTER_ON_HIT_CPU:
+                if (!stc_playback_cancelled_cpu) {
+                    if (IsHitlagVictim(cpu) && eventData->cpu_lasthit != cpu_data->dmg.atk_instance_hurtby) {
+                        eventData->cpu_countertimer = 0;
+                        eventData->cpu_hitnum++;
+                        eventData->cpu_lasthit = cpu_data->dmg.atk_instance_hurtby;
+                        eventData->cpu_hitkind = HITKIND_DAMAGE;
+                    }
+                    
+                    CounterInfo info = GetCounterInfo();
+                    if (!info.disable) {
+                        stc_playback_cancelled_cpu = true;
+                        eventData->cpu_state = CPUSTATE_COUNTER;
+                    } else if (!InHitstunAnim(cpu) || HitstunEnded(cpu)) {
+                        eventData->cpu_countertimer++;
+                    }
                 }
-                
-                CounterInfo info = GetCounterInfo();
-                if (!info.disable) {
-                    stc_playback_cancelled_cpu = true;
-                    eventData->cpu_state = CPUSTATE_COUNTER;
-                } else if (!InHitstunAnim(cpu) || HitstunEnded(cpu)) {
-                    eventData->cpu_countertimer++;
-                }
+    
+                break;
+            case PLAYBACKCOUNTER_ON_HIT_HMN:
+                stc_playback_cancelled_cpu |= IsHitlagVictim(hmn);
+                break;
+            case PLAYBACKCOUNTER_ON_HIT_EITHER:
+                stc_playback_cancelled_cpu |= IsHitlagVictim(cpu) || IsHitlagVictim(hmn);
+                break;
             }
-
-            break;
-        case PLAYBACKCOUNTER_ON_HIT_HMN:
-            stc_playback_cancelled_cpu |= IsHitlagVictim(hmn);
-            break;
-        case PLAYBACKCOUNTER_ON_HIT_EITHER:
-            stc_playback_cancelled_cpu |= IsHitlagVictim(cpu) || IsHitlagVictim(hmn);
-            break;
         }
 
         if (!stc_playback_cancelled_cpu) {
             Fighter_SetSlotType(cpu_data->ply, 0);
             cpu_data->pad_index = stc_cpu_controller;
+        } else if (takeover_target == TAKEOVER_CPU) {
+            Fighter_SetSlotType(cpu_data->ply, 0);
+            cpu_data->pad_index = stc_hmn_controller;
+            cpu_control = true;
         } else {
             Fighter_SetSlotType(cpu_data->ply, 1);
             cpu_data->pad_index = stc_cpu_controller;
@@ -6319,18 +6340,11 @@ void Event_Think_LabState_Normal(GOBJ *event) {
     }
 
     if (!cpu_control) {
-        HSD_Pad *hmn_pad = PadGet(stc_hmn_controller, PADGET_MASTER);
-
-        int sticks = fabs(hmn_pad->fstickX) >= STICK_DEADZONE
-            || fabs(hmn_pad->fstickY) >= STICK_DEADZONE
-            || fabs(hmn_pad->fsubstickX) >= STICK_DEADZONE
-            || fabs(hmn_pad->fsubstickY) >= STICK_DEADZONE;
-        int triggers = hmn_pad->ftriggerLeft >= TRIGGER_DEADZONE
-            || hmn_pad->ftriggerRight >= TRIGGER_DEADZONE;
-        int buttons = hmn_pad->held & (HSD_BUTTON_A | HSD_BUTTON_B | HSD_BUTTON_X | HSD_BUTTON_Y | 
-                HSD_BUTTON_DPAD_UP | HSD_TRIGGER_L | HSD_TRIGGER_R | HSD_TRIGGER_Z);
-
-        if (hmn_mode == RECMODE_HMN_PLAYBACK && (buttons | triggers | sticks)) {
+        if (
+            hmn_mode == RECMODE_HMN_PLAYBACK
+            && (buttons | triggers | sticks)
+            && LabOptions_Record[OPTREC_TAKEOVER].val == TAKEOVER_HMN
+        ) {
             stc_playback_cancelled_hmn = true;
         }
 
