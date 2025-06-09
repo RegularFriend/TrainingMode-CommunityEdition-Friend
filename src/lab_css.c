@@ -1072,28 +1072,15 @@ void Menu_Confirm_Think(GOBJ *menu_gobj)
             u8 cpu_costume = header->metadata.cpu_costume;
             u16 stage_kind = header->metadata.stage_external;
 
-            // determine which player index for hmn and cpu
-            u8 hmn_index, cpu_index;
-            if (*stc_css_hmnport > 0)
-            {
-                cpu_index = 0;
-                hmn_index = 1;
-            }
-            else
-            {
-                hmn_index = 0;
-                cpu_index = 1;
-            }
-
             // set fighters
-            css_minorscene->vs_data.match_init.playerData[hmn_index].c_kind = hmn_kind;
-            css_minorscene->vs_data.match_init.playerData[hmn_index].costume = hmn_costume; // header->metadata.hmn_costume;
-            preload->queued.fighters[hmn_index].kind = hmn_kind;
-            preload->queued.fighters[hmn_index].costume = hmn_costume;
-            css_minorscene->vs_data.match_init.playerData[cpu_index].c_kind = cpu_kind;
-            css_minorscene->vs_data.match_init.playerData[cpu_index].costume = cpu_costume; // header->metadata.cpu_costume;
-            preload->queued.fighters[cpu_index].kind = cpu_kind;
-            preload->queued.fighters[cpu_index].costume = cpu_costume;
+            css_minorscene->vs_data.match_init.playerData[0].c_kind = hmn_kind;
+            css_minorscene->vs_data.match_init.playerData[0].costume = hmn_costume;
+            preload->queued.fighters[0].kind = hmn_kind;
+            preload->queued.fighters[0].costume = hmn_costume;
+            css_minorscene->vs_data.match_init.playerData[1].c_kind = cpu_kind;
+            css_minorscene->vs_data.match_init.playerData[1].costume = cpu_costume;
+            preload->queued.fighters[1].kind = cpu_kind;
+            preload->queued.fighters[1].costume = cpu_costume;
 
             // set stage
             css_minorscene->vs_data.match_init.stage = stage_kind;
