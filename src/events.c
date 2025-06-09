@@ -558,7 +558,7 @@ static EventDesc *Minigames_Events[] = {
 };
 static EventPage Minigames_Page = {
     .name = "Minigames",
-    .eventNum = (sizeof(Minigames_Events) / 4) - 1,
+    .eventNum = countof(Minigames_Events),
     .events = Minigames_Events,
 };
 
@@ -582,8 +582,8 @@ static EventDesc *General_Events[] = {
 };
 static EventPage General_Page = {
     .name = "General Tech",
-    (sizeof(General_Events) / 4) - 1,
-    General_Events,
+    .eventNum = countof(General_Events),
+    .events = General_Events,
 };
 
 // Page 3 Events
@@ -595,36 +595,15 @@ static EventDesc *Spacie_Events[] = {
 };
 static EventPage Spacie_Page = {
     .name = "Character-specific Tech",
-    (sizeof(Spacie_Events) / 4) - 1,
-    Spacie_Events,
+    .eventNum = countof(Spacie_Events),
+    .events = Spacie_Events,
 };
 
-//////////////////
-/// Page Order ///
-//////////////////
-
-static EventPage **EventPages[] = {
+static EventPage *EventPages[] = {
     &Minigames_Page,
     &General_Page,
     &Spacie_Page,
 };
-int GetPageEventOffset(int pageID) {
-    int eventIndex = 0;
-    // Add the number of events for each previous page
-    for(int i = 0; i < pageID; i++) {
-        EventPage *thisPage = EventPages[i];
-        eventIndex += thisPage->eventNum + 1;
-    }
-    return eventIndex;
-}
-int GetJumpTableOffset(int pageID, int eventID) {
-    EventDesc *thisEvent = GetEventDesc(pageID, eventID);
-    return thisEvent->jumpTableIndex;
-}
-AllowedCharacters *GetEventCharList(int eventID,int pageID) {
-    EventDesc *thisEvent = GetEventDesc(pageID, eventID);
-    return &thisEvent->allowed_characters;
-}
 
 ////////////////////////
 /// Static Variables ///
@@ -1071,25 +1050,25 @@ int Savestate_Save(Savestate *savestate, int flags)
                         memcpy(&ft_data->cb, &fighter_data->cb, sizeof(fighter_data->cb)); // copy hitbox
 
                         // convert hitbox pointers
-                        for (int k = 0; k < (sizeof(fighter_data->hitbox) / sizeof(ftHit)); k++)
+                        for (int k = 0; k < countof(fighter_data->hitbox); k++)
                         {
                             ft_data->hitbox[k].bone = BoneToID(fighter_data, ft_data->hitbox[k].bone);
-                            for (int l = 0; l < (sizeof(fighter_data->hitbox->victims) / sizeof(HitVictim)); l++) // pointers to hitbox victims
+                            for (int l = 0; l < countof(fighter_data->hitbox->victims); l++) // pointers to hitbox victims
                             {
                                 ft_data->hitbox[k].victims[l].data = FtDataToID(ft_data->hitbox[k].victims[l].data);
                             }
                         }
-                        for (int k = 0; k < (sizeof(fighter_data->throw_hitbox) / sizeof(ftHit)); k++)
+                        for (int k = 0; k < countof(fighter_data->throw_hitbox); k++)
                         {
                             ft_data->throw_hitbox[k].bone = BoneToID(fighter_data, ft_data->throw_hitbox[k].bone);
-                            for (int l = 0; l < (sizeof(fighter_data->throw_hitbox->victims) / sizeof(HitVictim)); l++) // pointers to hitbox victims
+                            for (int l = 0; l < countof(fighter_data->throw_hitbox->victims); l++) // pointers to hitbox victims
                             {
                                 ft_data->throw_hitbox[k].victims[l].data = FtDataToID(ft_data->throw_hitbox[k].victims[l].data);
                             }
                         }
 
                         ft_data->thrown_hitbox.bone = BoneToID(fighter_data, ft_data->thrown_hitbox.bone);
-                        for (int k = 0; k < (sizeof(fighter_data->thrown_hitbox.victims) / sizeof(HitVictim)); k++) // pointers to hitbox victims
+                        for (int k = 0; k < countof(fighter_data->thrown_hitbox.victims); k++) // pointers to hitbox victims
                         {
 
                             ft_data->thrown_hitbox.victims[k].data = FtDataToID(ft_data->thrown_hitbox.victims[k].data);
@@ -1267,7 +1246,7 @@ int Savestate_Load(Savestate *savestate, int flags)
                             {GRKIND_OLDPU, 0, 1},
                             {GRKIND_BATTLE, 2, 4},
                         };
-                        for (int i = 0; i < sizeof(platform_ground_indices) / sizeof(platform_ground_indices[0]); i++)
+                        for (int i = 0; i < countof(platform_ground_indices); i++)
                         {
                             if (platform_ground_indices[i].stage_internal_id == stage_internal_id)
                             {
@@ -1293,24 +1272,24 @@ int Savestate_Load(Savestate *savestate, int flags)
 
                     // convert pointers
 
-                    for (int k = 0; k < (sizeof(fighter_data->hitbox) / sizeof(ftHit)); k++)
+                    for (int k = 0; k < countof(fighter_data->hitbox); k++)
                     {
                         fighter_data->hitbox[k].bone = IDToBone(fighter_data, ft_data->hitbox[k].bone);
-                        for (int l = 0; l < (sizeof(fighter_data->hitbox->victims) / sizeof(HitVictim)); l++) // pointers to hitbox victims
+                        for (int l = 0; l < countof(fighter_data->hitbox->victims); l++) // pointers to hitbox victims
                         {
                             fighter_data->hitbox[k].victims[l].data = IDToFtData(ft_data->hitbox[k].victims[l].data);
                         }
                     }
-                    for (int k = 0; k < (sizeof(fighter_data->throw_hitbox) / sizeof(ftHit)); k++)
+                    for (int k = 0; k < countof(fighter_data->throw_hitbox); k++)
                     {
                         fighter_data->throw_hitbox[k].bone = IDToBone(fighter_data, ft_data->throw_hitbox[k].bone);
-                        for (int l = 0; l < (sizeof(fighter_data->throw_hitbox->victims) / sizeof(HitVictim)); l++) // pointers to hitbox victims
+                        for (int l = 0; l < countof(fighter_data->throw_hitbox->victims); l++) // pointers to hitbox victims
                         {
                             fighter_data->throw_hitbox[k].victims[l].data = IDToFtData(ft_data->throw_hitbox[k].victims[l].data);
                         }
                     }
                     fighter_data->thrown_hitbox.bone = IDToBone(fighter_data, ft_data->thrown_hitbox.bone);
-                    for (int k = 0; k < (sizeof(fighter_data->thrown_hitbox.victims) / sizeof(HitVictim)); k++) // pointers to hitbox victims
+                    for (int k = 0; k < countof(fighter_data->thrown_hitbox.victims); k++) // pointers to hitbox victims
                     {
                         fighter_data->thrown_hitbox.victims[k].data = IDToFtData(ft_data->thrown_hitbox.victims[k].data);
                     }
@@ -3807,84 +3786,95 @@ void EventMenu_DestroyPopup(GOBJ *gobj)
 
 EventDesc *GetEventDesc(int page, int event)
 {
-    EventPage *thisPage = EventPages[page];
-    EventDesc *thisEvent = thisPage->events[event];
-    return (thisEvent);
+    return EventPages[page]->events[event];
 }
 char *GetEventName(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->eventName);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->eventName;
 }
 char *GetEventDescription(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->eventDescription);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->eventDescription;
 }
 char *GetPageName(int page)
 {
-    EventPage *thisPage = EventPages[page];
-    return (thisPage->name);
+    return EventPages[page]->name;
 }
 char *GetEventFile(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->eventFile);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->eventFile;
 }
 char *GetCSSFile(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->eventCSSFile);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->eventCSSFile;
 }
 int GetPageEventNum(int page)
 {
-    EventPage *thisPage = EventPages[page];
-    return (thisPage->eventNum);
+    return EventPages[page]->eventNum - 1;
 }
 char *GetTMVersShort()
 {
-    return (TM_VersShort);
+    return TM_VersShort;
 }
 char *GetTMVersLong()
 {
-    return (TM_VersLong);
+    return TM_VersLong;
 }
 char *GetTMCompile()
 {
-    return (TM_Compile);
+    return TM_Compile;
 }
 int GetPageNum()
 {
-    int pageNum = (sizeof(EventPages)/sizeof(EventPages[0])) - 1;
-    return (pageNum);
+    return countof(EventPages) - 1;
 }
 u8 GetCSSType(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->CSSType);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->CSSType;
 }
 u8 GetIsSelectStage(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->stage == -1);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->stage == -1;
 }
 s8 GetFighter(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->playerKind);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->playerKind;
 }
 s8 GetCPUFighter(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->cpuKind);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->cpuKind;
 }
 s16 GetStage(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->stage);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->stage;
 }
 u8 GetScoreType(int page, int event)
 {
-    EventDesc *thisEvent = GetEventDesc(page, event);
-    return (thisEvent->scoreType);
+    EventDesc *desc = GetEventDesc(page, event);
+    return desc->scoreType;
+}
+int GetPageEventOffset(int pageID) {
+    int eventIndex = 0;
+    // Add the number of events for each previous page
+    for(int i = 0; i < pageID; i++) {
+        eventIndex += EventPages[i]->eventNum;
+    }
+    return eventIndex;
+}
+int GetJumpTableOffset(int pageID, int eventID) {
+    EventDesc *desc = GetEventDesc(pageID, eventID);
+    return desc->jumpTableIndex;
+}
+AllowedCharacters *GetEventCharList(int eventID,int pageID) {
+    EventDesc *desc = GetEventDesc(pageID, eventID);
+    return &desc->allowed_characters;
 }
