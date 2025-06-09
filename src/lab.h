@@ -2861,7 +2861,7 @@ static EventOption LabOptions_SlotManagement[OPTSLOT_COUNT] = {
     {
         .kind = OPTKIND_FUNC,
         .name = "Copy Slot",
-        .desc = "Copy the inputs from \"Source Input\"\nto \"Target Input\".",
+        .desc = "Copy the inputs from \"Slot\"\nto \"Copy Slot To\".",
         .OnSelect = Record_CopySlot,
     },
 };
