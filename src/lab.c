@@ -3548,6 +3548,12 @@ void Record_DeleteSlot(GOBJ *menu_gobj) {
     data[delete_slot]->num = 0;
 }
 
+void InitInputSlot(RecInputData **data) {
+    *data = calloc(sizeof(RecInputData));
+    (*data)->start_frame = -1;
+    (*data)->num = 0;
+}
+
 // Recording Functions
 GOBJ *Record_Init()
 {
@@ -3625,14 +3631,11 @@ GOBJ *Record_Init()
     // allocate input arrays
     for (int i = 0; i < REC_SLOTS; i++)
     {
-        rec_data.hmn_inputs[i] = calloc(sizeof(RecInputData));
-        rec_data.hmn_inputs[i]->start_frame = -1;
-        rec_data.hmn_inputs[i]->num = 0;
-
-        rec_data.cpu_inputs[i] = calloc(sizeof(RecInputData));
-        rec_data.cpu_inputs[i]->start_frame = -1;
-        rec_data.cpu_inputs[i]->num = 0;
+        InitInputSlot(&rec_data.hmn_inputs[i]);
+        InitInputSlot(&rec_data.cpu_inputs[i]);
     }
+    InitInputSlot(&rec_data.hmn_rerecord_inputs);
+    InitInputSlot(&rec_data.cpu_rerecord_inputs);
 
     // init memcard stuff
     Memcard_InitWorkArea();
@@ -3690,7 +3693,7 @@ void Record_GX(GOBJ *gobj, int pass)
         int hmn_mode = LabOptions_Record[OPTREC_HMNMODE].val;
         
         // hide seek bar during recording
-        if (hmn_mode == RECMODE_HMN_RECORD || cpu_mode == RECMODE_CPU_RECORD)
+        if (cpu_mode == RECMODE_CPU_RECORD || hmn_mode == RECMODE_HMN_RECORD)
         {
             JOBJ_SetFlags(seek, JOBJ_HIDDEN);
 
@@ -3781,7 +3784,7 @@ void Record_Think(GOBJ *rec_gobj)
     RecInputData *cpu_inputs = rec_data.cpu_inputs[cpu_slot];
     int hmn_mode = LabOptions_Record[OPTREC_HMNMODE].val;
     int cpu_mode = LabOptions_Record[OPTREC_CPUMODE].val;
-
+    
     // get longest recording
     int input_num = hmn_inputs->num;
     if (cpu_inputs->num > hmn_inputs->num)
@@ -3796,13 +3799,15 @@ void Record_Think(GOBJ *rec_gobj)
     int adjusted_hmn_mode = hmn_mode;
     if (adjusted_hmn_mode > 0) // adjust hmn_mode to match cpu_mode
         adjusted_hmn_mode++;
-    Record_Update(0, hmn_inputs, adjusted_hmn_mode);
-    Record_Update(1, cpu_inputs, cpu_mode);
+    Record_Update(0, hmn_inputs, rec_data.hmn_rerecord_inputs, adjusted_hmn_mode);
+    Record_Update(1, cpu_inputs, rec_data.cpu_rerecord_inputs, cpu_mode);
 
     // loop inputs check ------------------------------
 
     int loop_mode = LabOptions_Record[OPTREC_LOOP].val;
-    int modes_allow_loop = hmn_mode != RECMODE_HMN_RECORD && cpu_mode != RECMODE_CPU_CONTROL && cpu_mode != RECMODE_CPU_RECORD;
+    int modes_allow_loop = !Record_HMN_IsRecording()
+        && !Record_CPU_IsRecording()
+        && cpu_mode != RECMODE_CPU_CONTROL;
     int has_inputs = input_num != 0;
     int past_last_input = Record_GetCurrFrame() >= input_num;
     if (loop_mode & modes_allow_loop & has_inputs & past_last_input)
@@ -3893,7 +3898,7 @@ void Record_SetInputs(GOBJ *fighter, RecInputs *inputs, bool mirror) {
 }
 
 // assumes rec_mode_cpu
-void Record_Update(int ply, RecInputData *input_data, int rec_mode)
+void Record_Update(int ply, RecInputData *input_data, RecInputData *rerecord_input_data, int rec_mode)
 {
     GOBJ *fighter = Fighter_GetGObj(ply);
     FighterData *fighter_data = fighter->userdata;
@@ -3916,6 +3921,10 @@ void Record_Update(int ply, RecInputData *input_data, int rec_mode)
     // Get HSD Pad
     HSD_Pad *pad = PadGet(fighter_data->pad_index, PADGET_ENGINE);
 
+    // ensure we haven't taken over playback or set the cpu to counter
+    bool cancelled = (ply == 0 && stc_playback_cancelled_hmn)
+        || (ply == 1 && stc_playback_cancelled_cpu);
+        
     // if the current frame before the recording ends
     if ((curr_frame) < (rec_start + REC_LENGTH))
     {
@@ -3925,6 +3934,7 @@ void Record_Update(int ply, RecInputData *input_data, int rec_mode)
         case (RECMODE_CPU_CONTROL):
             break;
         case (RECMODE_CPU_RECORD):
+        RECMODE_RECORD:
         {
             // recording has started BUT the player has jumped back behind it, move the start frame back
             if ((input_data->start_frame == -1) || (curr_frame < rec_start))
@@ -3959,19 +3969,13 @@ void Record_Update(int ply, RecInputData *input_data, int rec_mode)
             // update input_num
             input_data->num = (curr_frame - rec_start);
 
-            // clear inputs henceforth
-            //memset(&input_data->inputs[curr_frame + 1], 0, (REC_LENGTH - curr_frame) * sizeof(RecInputs));
-
             break;
         }
         case (RECMODE_CPU_PLAYBACK):
+        RECMODE_PLAYBACK:
         {
-            // ensure we haven't taken over playback or set the cpu to counter
-            if (stc_playback_cancelled_hmn && ply == 0)
+            if (cancelled)
                 return;
-            if (stc_playback_cancelled_cpu && ply == 1)
-                return;
-
             // ensure we have an input for this frame
             if (curr_frame < rec_start || (curr_frame - rec_start) > (input_data->num))
                 return;
@@ -3980,9 +3984,46 @@ void Record_Update(int ply, RecInputData *input_data, int rec_mode)
             Record_SetInputs(fighter, inputs, event_vars->loaded_mirrored);
             break;
         }
+        case (RECMODE_CPU_RERECORD):
+            // use rerecord inputs instead
+            rerecord_input_data->inputs[curr_frame - 1] = input_data->inputs[curr_frame - 1];
+            input_data = rerecord_input_data;
+            
+            if (cancelled)
+                goto RECMODE_RECORD;
+            else
+                goto RECMODE_PLAYBACK;
         }
     }
 }
+
+bool Record_HMN_IsRecording(void)
+{
+    int mode = LabOptions_Record[OPTREC_HMNMODE].val;
+    return mode == RECMODE_HMN_RECORD || mode == RECMODE_HMN_RERECORD;
+}
+bool Record_CPU_IsRecording(void)
+{
+    int mode = LabOptions_Record[OPTREC_CPUMODE].val;
+    return mode == RECMODE_CPU_RECORD || mode == RECMODE_CPU_RERECORD;
+}
+bool Record_HMN_IsPlayback(void)
+{
+    return LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_PLAYBACK;
+}
+bool Record_CPU_IsPlayback(void)
+{
+    return LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_PLAYBACK;
+}
+bool Record_HMN_IsRandomSlot(void)
+{
+    return LabOptions_Record[OPTREC_HMNSLOT].val == 0;
+}
+bool Record_CPU_IsRandomSlot(void)
+{
+    return LabOptions_Record[OPTREC_HMNSLOT].val == 0;
+}
+
 void Record_InitState(GOBJ *menu_gobj)
 {
     stc_playback_cancelled_hmn = false;
@@ -4084,10 +4125,18 @@ void Record_ChangeHMNSlot(GOBJ *menu_gobj, int value)
     // upon changing to random
     if (value == 0)
     {
-        if (LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_RECORD)
+        if (Record_HMN_IsRecording())
             LabOptions_Record[OPTREC_HMNSLOT].val = 1;
         else
             rec_data.hmn_rndm_slot = Record_GetRandomSlot(&rec_data.hmn_inputs, LabOptions_SlotChancesHMN);
+    }
+    
+    // copy back rerecorded slot
+    if (LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_RERECORD)
+    {
+        int prev_slot = LabOptions_Record[OPTREC_HMNSLOT].val_prev;
+        if (prev_slot != 0)
+            memcpy(rec_data.hmn_inputs[prev_slot - 1], rec_data.hmn_rerecord_inputs, sizeof(RecInputData));
     }
 
     // reload save
@@ -4098,95 +4147,77 @@ void Record_ChangeCPUSlot(GOBJ *menu_gobj, int value)
     // upon changing to random
     if (value == 0)
     {
-        if (LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_RECORD)
+        if (Record_CPU_IsRecording())
             LabOptions_Record[OPTREC_CPUSLOT].val = 1;
         else
             rec_data.cpu_rndm_slot = Record_GetRandomSlot(&rec_data.cpu_inputs, LabOptions_SlotChancesCPU);
+    }
+    
+    // copy back rerecorded slot
+    if (LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_RERECORD)
+    {
+        int prev_slot = LabOptions_Record[OPTREC_CPUSLOT].val_prev;
+        if (prev_slot != 0)
+            memcpy(rec_data.cpu_inputs[prev_slot - 1], rec_data.cpu_rerecord_inputs, sizeof(RecInputData));
     }
 
     // reload save
     Record_LoadSavestate(rec_state);
 }
-void Record_ChangeHMNMode(GOBJ *menu_gobj, int value)
+
+void Record_ChangeMode_Common(void)
 {
-    if (value == RECMODE_HMN_RECORD)
-    {
-        // if set to random
-        if (LabOptions_Record[OPTREC_HMNSLOT].val == 0)
-        {
-            LabOptions_Record[OPTREC_HMNSLOT].val = 1;
-        }
-    }
+    bool hmn_recording = Record_HMN_IsRecording();
+    bool cpu_recording = Record_CPU_IsRecording();
 
-    if (value == RECMODE_HMN_PLAYBACK)
-        Record_LoadSavestate(rec_state);
+    // ensure not recording to random slot
+    if (hmn_recording && Record_HMN_IsRandomSlot())
+        LabOptions_Record[OPTREC_HMNSLOT].val = 1;
+    if (cpu_recording && Record_CPU_IsRandomSlot())
+        LabOptions_Record[OPTREC_CPUSLOT].val = 1;
 
-    // disable some options if recording is in use
-    if (LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_RECORD ||
-        LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_RECORD)
-    {
+    // disable some options if recording
+    if (hmn_recording || cpu_recording) {
         LabOptions_Record[OPTREC_LOOP].val = 0;
         LabOptions_Record[OPTREC_LOOP].disable = 1;
         LabOptions_Record[OPTREC_AUTORESTORE].val = AUTORESTORE_NONE;
         LabOptions_Record[OPTREC_AUTORESTORE].disable = 1;
-    }
-    else
-    {
+    } else {
         LabOptions_Record[OPTREC_LOOP].disable = 0;
         LabOptions_Record[OPTREC_AUTORESTORE].disable = 0;
     }
 
-    // Mirrored Playback is only available in playing back and not in recording
-    if ((value == RECMODE_HMN_PLAYBACK || LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_PLAYBACK) &&
-        (value != RECMODE_HMN_RECORD && LabOptions_Record[OPTREC_CPUMODE].val != RECMODE_CPU_RECORD))
-    {
-        LabOptions_Record[OPTREC_MIRRORED_PLAYBACK].disable = 0;
-    }
-    else
-    {
-        LabOptions_Record[OPTREC_MIRRORED_PLAYBACK].disable = 1;
-    }
+    // Mirrored Playback is only available in playback and not in recording
+    bool can_mirror = (Record_CPU_IsPlayback() || Record_CPU_IsPlayback()) && !(hmn_recording || cpu_recording);
+    LabOptions_Record[OPTREC_MIRRORED_PLAYBACK].disable = !can_mirror;
+}
+void Record_ChangeHMNMode(GOBJ *menu_gobj, int value)
+{
+    // copy rerecorded slot
+    if (LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_RERECORD)
+        memcpy(rec_data.hmn_rerecord_inputs, rec_data.hmn_inputs[Record_GetSlot(0)], sizeof(RecInputData));
+    
+    // copy back rerecorded slot
+    if (LabOptions_Record[OPTREC_HMNMODE].val_prev == RECMODE_HMN_RERECORD)
+        memcpy(rec_data.hmn_inputs[Record_GetSlot(0)], rec_data.hmn_rerecord_inputs, sizeof(RecInputData));
+    
+    if (value == RECMODE_HMN_PLAYBACK || value == RECMODE_HMN_RERECORD)
+        Record_LoadSavestate(rec_state);
+    Record_ChangeMode_Common();
 }
 void Record_ChangeCPUMode(GOBJ *menu_gobj, int value)
 {
-    if (value == RECMODE_CPU_RECORD)
-    {
-        // if set to random
-        if (LabOptions_Record[OPTREC_CPUSLOT].val == 0)
-        {
-            // change to slot 1
-            LabOptions_Record[OPTREC_CPUSLOT].val = 1;
-        }
-    }
-
-    if (value == RECMODE_CPU_PLAYBACK)
+    // copy rerecorded slot
+    if (LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_RERECORD)
+        memcpy(rec_data.cpu_rerecord_inputs, rec_data.cpu_inputs[Record_GetSlot(1)], sizeof(RecInputData));
+    
+    // copy back rerecorded slot
+    if (LabOptions_Record[OPTREC_CPUMODE].val_prev == RECMODE_CPU_RERECORD)
+        memcpy(rec_data.cpu_inputs[Record_GetSlot(1)], rec_data.cpu_rerecord_inputs, sizeof(RecInputData));
+    
+    if (value == RECMODE_CPU_PLAYBACK || value == RECMODE_CPU_RERECORD)
         Record_LoadSavestate(rec_state);
-
-    // disable some options if recording is in use
-    if (LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_RECORD ||
-        LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_RECORD)
-    {
-        LabOptions_Record[OPTREC_LOOP].val = 0;
-        LabOptions_Record[OPTREC_LOOP].disable = 1;
-        LabOptions_Record[OPTREC_AUTORESTORE].val = AUTORESTORE_NONE;
-        LabOptions_Record[OPTREC_AUTORESTORE].disable = 1;
-    }
-    else
-    {
-        LabOptions_Record[OPTREC_LOOP].disable = 0;
-        LabOptions_Record[OPTREC_AUTORESTORE].disable = 0;
-    }
-
-    // Mirrored Playback is only available in playing back and not in recording
-    if ((value == RECMODE_CPU_PLAYBACK || LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_PLAYBACK) &&
-        (value != RECMODE_CPU_RECORD && LabOptions_Record[OPTREC_HMNMODE].val != RECMODE_HMN_RECORD))
-    {
-        LabOptions_Record[OPTREC_MIRRORED_PLAYBACK].disable = 0;
-    }
-    else
-    {
-        LabOptions_Record[OPTREC_MIRRORED_PLAYBACK].disable = 1;
-    }
+    Record_ChangeMode_Common();
 }
 void Record_ChangeMirroredPlayback(GOBJ *menu_gobj, int value)
 {
@@ -4514,14 +4545,12 @@ void Record_LoadSavestate(Savestate *savestate) {
         mirror = mirror != event_vars->savestate_saved_while_mirrored;
     event_vars->loaded_mirrored = mirror;
 
-    if (LabOptions_Record[OPTREC_HMNMODE].val == RECMODE_HMN_PLAYBACK
-            && LabOptions_Record[OPTREC_HMNSLOT].val == 0)
+    if (Record_HMN_IsPlayback() && Record_HMN_IsRandomSlot())
         rec_data.hmn_rndm_slot = Record_GetRandomSlot(&rec_data.hmn_inputs, LabOptions_SlotChancesHMN);
 
-    if (LabOptions_Record[OPTREC_CPUMODE].val == RECMODE_CPU_PLAYBACK
-            && LabOptions_Record[OPTREC_CPUSLOT].val == 0)
+    if (Record_CPU_IsPlayback() && Record_CPU_IsRandomSlot())
         rec_data.cpu_rndm_slot = Record_GetRandomSlot(&rec_data.cpu_inputs, LabOptions_SlotChancesCPU);
-
+    
     event_vars->game_timer = rec_state->frame;
     rec_data.restore_timer = 0;
 
@@ -6260,7 +6289,14 @@ void Event_Think_LabState_Normal(GOBJ *event) {
     int buttons = hmn_pad->held & (HSD_BUTTON_A | HSD_BUTTON_B | HSD_BUTTON_X | HSD_BUTTON_Y | 
             HSD_BUTTON_DPAD_UP | HSD_TRIGGER_L | HSD_TRIGGER_R | HSD_TRIGGER_Z);
     bool takeover_input = (buttons | triggers | sticks) != 0;
-    int takeover_target = LabOptions_Record[OPTREC_TAKEOVER].val;
+    
+    int takeover_target;
+    if (hmn_mode == RECMODE_HMN_RERECORD)
+        takeover_target = TAKEOVER_HMN;
+    else if (cpu_mode == RECMODE_CPU_RERECORD)
+        takeover_target = TAKEOVER_CPU;
+    else
+        takeover_target = LabOptions_Record[OPTREC_TAKEOVER].val;
 
     switch (cpu_mode)
     {
@@ -6337,13 +6373,25 @@ void Event_Think_LabState_Normal(GOBJ *event) {
 
         break;
     }
+    case (RECMODE_CPU_RERECORD):
+    {
+        cpu_control = true;
+        
+        Fighter_SetSlotType(cpu_data->ply, 0);
+        cpu_data->pad_index = stc_hmn_controller;
+
+        if (takeover_input && takeover_target == TAKEOVER_CPU)
+            stc_playback_cancelled_cpu = true;
+        
+        break;
+    }
     }
 
     if (!cpu_control) {
         if (
-            hmn_mode == RECMODE_HMN_PLAYBACK
-            && (buttons | triggers | sticks)
-            && LabOptions_Record[OPTREC_TAKEOVER].val == TAKEOVER_HMN
+            (hmn_mode == RECMODE_HMN_PLAYBACK || hmn_mode == RECMODE_HMN_RERECORD)
+            && takeover_input
+            && takeover_target == TAKEOVER_HMN
         ) {
             stc_playback_cancelled_hmn = true;
         }

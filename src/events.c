@@ -2591,6 +2591,7 @@ void EventMenu_Update(GOBJ *gobj)
                     {
                         if (shortcut->option != 0) {
                             EventOption *option = shortcut->option;
+                            option->val_prev = option->val;
                             option->val = (option->val + 1) % option->value_num;
                             if (option->OnChange)
                                 option->OnChange(stc_event_vars.menu_gobj, option->val);
@@ -2768,7 +2769,6 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu) {
     {
         if ((currOption->kind == OPTKIND_STRING) || (currOption->kind == OPTKIND_INT) || (currOption->kind == OPTKIND_FLOAT))
         {
-
             val -= 1;
             if (val >= value_min)
             {
@@ -2778,6 +2778,7 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu) {
                 SFX_PlayCommon(2);
 
                 // update val
+                currOption->val_prev = currOption->val;
                 currOption->val = val;
 
                 // run on change function if it exists
@@ -2801,6 +2802,7 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu) {
                 SFX_PlayCommon(2);
 
                 // update val
+                currOption->val_prev = currOption->val;
                 currOption->val = val;
 
                 // run on change function if it exists
@@ -3057,6 +3059,7 @@ void EventMenu_PopupThink(GOBJ *gobj, EventMenu *currMenu)
     {
 
         // update val
+        currOption->val_prev = currOption->val;
         currOption->val = cursor + scroll;
 
         // run on change function if it exists

@@ -149,6 +149,7 @@ typedef struct EventOption
     s16 value_min;                                  // minimum value
     u16 value_num;                                  // number of values
     s16 val;                                        // value of this option
+    s16 val_prev;                                   // previous value of this option
     EventMenu *menu;                                // pointer to the menu that pressing A opens
     char *name;                                     // pointer to the name of this option
     char *desc;                                     // pointer to the description string for this option

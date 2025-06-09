@@ -2584,6 +2584,7 @@ enum rec_mode_hmn
     RECMODE_HMN_OFF,
     RECMODE_HMN_RECORD,
     RECMODE_HMN_PLAYBACK,
+    RECMODE_HMN_RERECORD,
 
     RECMODE_COUNT
 };
@@ -2594,6 +2595,7 @@ enum rec_mode_cpu
     RECMODE_CPU_CONTROL,
     RECMODE_CPU_RECORD,
     RECMODE_CPU_PLAYBACK,
+    RECMODE_CPU_RERECORD,
 
     RECMODE_CPU_COUNT
 };
@@ -2648,8 +2650,8 @@ enum rec_takeover_target
 // Aitch: Please be aware that the order of these options is important.
 // The option idx will be serialized when exported, so loading older replays could load the wrong option if we reorder/remove options.
 static char *LabValues_RecordSlot[] = {"Random", "Slot 1", "Slot 2", "Slot 3", "Slot 4", "Slot 5", "Slot 6"};
-static char *LabValues_HMNRecordMode[] = {"Off", "Record", "Playback"};
-static char *LabValues_CPURecordMode[] = {"Off", "Control", "Record", "Playback"};
+static char *LabValues_HMNRecordMode[] = {"Off", "Record", "Playback", "Re-Record"};
+static char *LabValues_CPURecordMode[] = {"Off", "Control", "Record", "Playback", "Re-Record"};
 static char *LabValues_AutoRestore[] = {"Off", "Playback Ends", "CPU Counters"};
 static char *LabValues_PlaybackCounterActions[] = {"Off", "After Playback Ends", "On CPU Hit", "On HMN Hit", "On Any Hit"};
 static char *LabOptions_ChangeMirroredPlayback[] = {"Off", "On", "Random"};
