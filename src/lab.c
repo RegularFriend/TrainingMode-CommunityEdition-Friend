@@ -4801,6 +4801,15 @@ void Export_Init(GOBJ *menu_gobj)
     menu_settings->hmn_slot = LabOptions_Record[OPTREC_HMNSLOT].val;
     menu_settings->cpu_mode = LabOptions_Record[OPTREC_CPUMODE].val;
     menu_settings->cpu_slot = LabOptions_Record[OPTREC_CPUSLOT].val;
+    
+    // Recording replay versions are forwards and backwards compatible.
+    // Since we added the Re-Record option, we cannot export it because then it would crash with an invalid
+    // menu setting when importing on a version without the Re-Record setting.
+    if (menu_settings->hmn_mode > RECMODE_HMN_PLAYBACK)
+        menu_settings->hmn_mode = RECMODE_HMN_PLAYBACK;
+    if (menu_settings->cpu_mode > RECMODE_CPU_PLAYBACK)
+        menu_settings->cpu_mode = RECMODE_CPU_PLAYBACK;
+        
     menu_settings->loop_inputs = LabOptions_Record[OPTREC_LOOP].val;
     menu_settings->auto_restore = LabOptions_Record[OPTREC_AUTORESTORE].val;
     // recording data
