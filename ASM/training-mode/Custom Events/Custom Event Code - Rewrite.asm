@@ -2234,8 +2234,10 @@ ReversalDecideSmashAttack:
     cmpwi r3, 0xA
     beq ReversalUTilt
     cmpwi r3, 0xB
-    beq ReversalGetupAttackStomach
+    beq ReversalDashAttack
     cmpwi r3, 0xC
+    beq ReversalGetupAttackStomach
+    cmpwi r3, 0xD
     beq ReversalGetupAttackBack
 
 ReversalRandomSmashAttack:
@@ -2341,6 +2343,41 @@ ReversalDTilt:
     li r3, 0x100
     stw r3, 0x1A88(r29)
     # Set Attack as ended
+    li r3, 0x1
+    stb r3, AerialThinkStruct(r31)
+    b ReversalCheckToReset
+
+ReversalDashAttack:
+    addi r3, r31, AerialThinkStruct
+    lbz r4, 0x1(r3)
+    cmpwi r4, 4
+    beq ReversalDashAttack_HitA
+    b ReversalDashAttack_Dash
+
+ReversalDashAttack_Dash:
+    # increment dash counter
+    addi r4, r4, 1
+    stb r4, 0x1(r3)
+    li r3, -45
+    stb r3, 0x1A8D(r29)
+    
+    # dash in facing direction
+    li r3, 127
+    lfs f1, 0x2C(r29)                                   # Facing Direction
+    fctiwz f1, f1
+    stfd f1, 0xF0(sp)
+    lwz r4, 0xF4(sp)
+    mullw r3, r3, r4                                    # Forward * facing direction
+    stb r3, 0x1A8C(r29)
+    
+    # mark as not done
+    li r3, 0x0
+    stb r3, AerialThinkStruct(r31)
+    b ReversalCheckToReset
+    
+ReversalDashAttack_HitA:
+    li r3, 0x100
+    stw r3, 0x1A88(r29)
     li r3, 0x1
     stb r3, AerialThinkStruct(r31)
     b ReversalCheckToReset
@@ -2517,9 +2554,9 @@ ReversalLoadState:
 
 Reversal_CheckEnterDownWait:
     lbz r3, CPUAttack(MenuData)
-    cmpwi r3, 0xB
-    beq Reversal_EnterDownBoundD
     cmpwi r3, 0xC
+    beq Reversal_EnterDownBoundD
+    cmpwi r3, 0xD
     beq Reversal_EnterDownBoundU
     b ReversalThinkExit
 
@@ -2641,7 +2678,7 @@ ReversalWindowInfo:
     blrl
 # amount of options, amount of options in each window
 
-    .long 0x030C0101                                    # 3 window, Smash Attack has 13 options, Facing Direction Has 2
+    .long 0x030D0101                                    # 3 window, Smash Attack has 13 options, Facing Direction Has 2
     .long 0x01000000                                    # Position has 2
 
 ####################################################
@@ -2710,11 +2747,14 @@ ReversalWindowText:
     # Option 11 = UTilt
     .long 0x5554696c
     .long 0x74000000
+    
+    # Option 12 - Dash Attack
+    .string "Dash Attack"
 
-    # Option 12 - Getup Attack (Stomach)
+    # Option 13 - Getup Attack (Stomach)
     .string "Getup Attack (Stomach)"
 
-    # Option 13 - Getup Attack (Back)
+    # Option 14 - Getup Attack (Back)
     .string "Getup Attack (Back)"
 
 #########$$$#############
