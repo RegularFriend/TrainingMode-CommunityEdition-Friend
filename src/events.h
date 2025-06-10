@@ -1,8 +1,8 @@
 #include "../MexTK/mex.h"
 #include <stdint.h>
 
-#define TM_VERSSHORT "TM-CE v1.2 d8"
-#define TM_VERSLONG "TM Community Edition v1.2 d8"
+#define TM_VERSSHORT "TM-CE v1.2 d9"
+#define TM_VERSLONG "TM Community Edition v1.2 d9"
 #define TM_DEBUG 0 // 0 = release (no logging), 1 = OSReport logs, 2 = onscreen logs
 #define EVENT_DATASIZE 512
 #define TM_FUNC -(50 * 4)
