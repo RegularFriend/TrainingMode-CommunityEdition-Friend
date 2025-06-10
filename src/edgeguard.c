@@ -101,6 +101,8 @@ static Vec2 SimulatePhys(FighterData *data, int future) {
 }
 
 static bool SimulatePhys_CanReachPoint(FighterData *data, Vec2 target) {
+    if (data->phys.air_state == 0) return false; 
+
     Vec2 pos = { data->phys.pos.X, data->phys.pos.Y };
     Vec2 vel = { data->phys.self_vel.X, data->phys.self_vel.Y };
     
@@ -111,8 +113,6 @@ static bool SimulatePhys_CanReachPoint(FighterData *data, Vec2 target) {
     while (target.Y < pos.Y || vel.Y >= 0.f)
         PhysStep(data, &pos, &vel);
         
-        OSReport("%f %f\n", dir, sign(target.X - pos.X));
-    
     return dir != sign(target.X - pos.X);
 }
 
@@ -884,12 +884,16 @@ static void Think_Sheik(void) {
 #define UPB_HEIGHT 48
 
 #define UPB_CHANCE_FAR 5
-#define UPB_CHANCE_CLOSE 1000
+#define UPB_CHANCE_WITH_JUMP 50
+#define UPB_CHANCE_CLOSE 100
 #define UPB_DRIFT_CHANGE_CHANCE 20
 #define FALL_DRIFT_CHANGE_CHANCE 40
+#define DRIFT_DURATION_LENGTH_CONST 5
+#define DRIFT_DURATION_LENGTH_RNG 30
 #define DOWNB_CHANCE 3
-#define JUMP_CHANCE_BELOW_LEDGE 2
-#define JUMP_CHANCE_ABOVE_LEDGE 4 
+#define JUMP_CHANCE_BELOW_LEDGE 20
+#define JUMP_CHANCE_ABOVE_LEDGE 40 
+#define JUMP_CHANCE_TO_LEDGE 8 
 #define JUMP_HEIGHT 40
 #define FASTFALL_CHANCE 15
 
@@ -924,18 +928,28 @@ static void Think_Falcon(void) {
     bool can_jump = cpu_data->jump.jumps_used < 2 && Enabled(OPT_FALCON_JUMP);
     
     int dj_chance;
-    if (cpu_data->phys.pos.Y > target_ledge.Y - 10.f) {
+    if (Within(vec_to_ledge.Y, JUMP_HEIGHT - 5.f, 10.f) && vec_to_ledge.X * dir < 50.f) {
+        dj_chance = JUMP_CHANCE_TO_LEDGE;
+    } else if (cpu_data->phys.pos.Y > target_ledge.Y - 10.f) {
         dj_chance = JUMP_CHANCE_ABOVE_LEDGE;
     } else {
         dj_chance = JUMP_CHANCE_BELOW_LEDGE;
     }
     
+    bool can_fall_to_ledge = SimulatePhys_CanReachPoint(cpu_data, target_ledgegrab);
+    int upb_chance;
+    if (can_fall_to_ledge) {
+        upb_chance = UPB_CHANCE_CLOSE;
+    } else if (can_jump) {
+        upb_chance = UPB_CHANCE_WITH_JUMP;
+    } else {
+        upb_chance = UPB_CHANCE_FAR;
+    }
+    
     bool in_drift_back_zone = past_ledge
         || (
-            (
-                vel.X * dir > 0.f 
-                || vec_to_ledgegrab.Y < -25.f
-            ) && (
+            vec_to_ledgegrab.Y < -30.f
+            && (
                 // rising drift
                 (vel.Y > 1.f && -vec_to_ledgegrab.Y / 1.5f > fabs(vec_to_ledgegrab.X))
                 
@@ -964,9 +978,6 @@ static void Think_Falcon(void) {
             cpu_data->cpu.lstickX = 0;
             
     } else if (IsAirActionable(cpu)) {
-        bool can_fall_to_ledge = SimulatePhys_CanReachPoint(cpu_data, target_ledge);
-        OSReport("%i\n", can_fall_to_ledge);
-            
         // JUMP
         if (
             Enabled(OPT_FALCON_JUMP)
@@ -981,10 +992,10 @@ static void Think_Falcon(void) {
         ) {
             cpu_data->cpu.held |= PAD_BUTTON_Y;
             float jump_dir;
-            // if (vec_to_ledge.Y < JUMP_HEIGHT && vec_to_ledge.X < 50.f)
-                // jump_dir = HSD_Randf() * 2.f - 1.f;
-            // else
-                jump_dir = dir;
+            if (Within(vec_to_ledge.Y, JUMP_HEIGHT - 5.f, 10.f) && vec_to_ledge.X < 50.f)
+                jump_dir = sign(vec_to_ledgegrab.X);
+            else
+                jump_dir = HSD_Randf() * 2.f - 1.f;
             cpu_data->cpu.lstickX = 127 * jump_dir;
             
         // UPB
@@ -996,14 +1007,12 @@ static void Think_Falcon(void) {
                     vel.Y <= 1.f
                     && !past_ledge
                     && vec_to_ledgegrab.Y < UPB_HEIGHT
-                    && (
-                        (can_fall_to_ledge && HSD_Randi(UPB_CHANCE_CLOSE) == 0)
-                        || (!can_fall_to_ledge && HSD_Randi(UPB_CHANCE_FAR) == 0)
-                    )
+                    && HSD_Randi(upb_chance) == 0
                 )
                 // force upb if at end of range
                 || (
                     vel.Y <= 0.f
+                    && !can_jump
                     && vec_to_ledgegrab.Y > UPB_HEIGHT
                 )
             )
@@ -1030,7 +1039,7 @@ static void Think_Falcon(void) {
             && vec_to_ledgegrab.Y < 0.f
             && HSD_Randi(FALL_DRIFT_CHANGE_CHANCE) == 0
         ) {
-            drift_back_timer = HSD_Randi(20) + 5;
+            drift_back_timer = HSD_Randi(DRIFT_DURATION_LENGTH_RNG) + DRIFT_DURATION_LENGTH_CONST;
             // frame with no drift - this allows faster drift change
             cpu_data->cpu.lstickX = 0;
         } else {
