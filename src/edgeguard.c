@@ -882,20 +882,21 @@ static void Think_Sheik(void) {
 #define SWEETSPOT_OFFSET_X 13
 #define SWEETSPOT_OFFSET_Y 8
 #define UPB_HEIGHT 48
+#define JUMP_HEIGHT 40
 
 #define UPB_CHANCE_FAR 5
 #define UPB_CHANCE_WITH_JUMP 50
 #define UPB_CHANCE_CLOSE 100
 #define UPB_DRIFT_CHANGE_CHANCE 20
 #define FALL_DRIFT_CHANGE_CHANCE 40
-#define DRIFT_DURATION_LENGTH_CONST 5
-#define DRIFT_DURATION_LENGTH_RNG 30
 #define DOWNB_CHANCE 3
 #define JUMP_CHANCE_BELOW_LEDGE 20
 #define JUMP_CHANCE_ABOVE_LEDGE 40 
 #define JUMP_CHANCE_TO_LEDGE 8 
-#define JUMP_HEIGHT 40
 #define FASTFALL_CHANCE 15
+
+#define DRIFT_DURATION_LENGTH_CONST 5
+#define DRIFT_DURATION_LENGTH_RNG 30
 
 int drift_back_timer = 0;
 
@@ -992,7 +993,7 @@ static void Think_Falcon(void) {
         ) {
             cpu_data->cpu.held |= PAD_BUTTON_Y;
             float jump_dir;
-            if (Within(vec_to_ledge.Y, JUMP_HEIGHT - 5.f, 10.f) && vec_to_ledge.X < 50.f)
+            if (Within(vec_to_ledge.Y, JUMP_HEIGHT - 5.f, 10.f) && vec_to_ledge.X * dir < 50.f)
                 jump_dir = sign(vec_to_ledgegrab.X);
             else
                 jump_dir = HSD_Randf() * 2.f - 1.f;
@@ -1092,7 +1093,7 @@ static void Think_Falcon(void) {
 #define FAIR_SIZE 25
 
 #define JUMP_CHANCE 5
-#define UPB_EARLY_CHANCE 40
+#define UPB_EARLY_CHANCE 30
 #define SIDEB_DELAY_CHANCE 10
 #define FAIR_CHANCE 3
 
@@ -1132,8 +1133,8 @@ static void Think_Marth(void) {
     } else if (IsAirActionable(cpu)) {
         // SIDE B FAR
         if (
-            Enabled(OPT_MARTH_SIDEB_RECOVER)
-            && fabs(vec_to_ledgegrab.X) > 70.f
+            Enabled(OPT_MARTH_SIDEB)
+            && fabs(vec_to_ledgegrab.X) > 60.f
             && !past_ledgegrab
             && vel.Y < -0.5f
             && fabs(vel.X) > 0.8f
@@ -1143,7 +1144,7 @@ static void Think_Marth(void) {
             
         // SIDE B WAIT
         } else if (
-            Enabled(OPT_MARTH_SIDEB_DELAY)
+            Enabled(OPT_MARTH_SIDEB)
             && vel.Y < 0.0f
             && vec_to_ledgegrab.Y > 10.f 
             && vec_to_ledgegrab.Y < 35.f 
@@ -1176,7 +1177,11 @@ static void Think_Marth(void) {
             )
         ) {
             cpu_data->cpu.held |= PAD_BUTTON_Y;
-            if (!past_ledgegrab)
+            if (past_ledgegrab)
+                cpu_data->cpu.lstickX = -127 * dir;
+            else if (vec_to_ledgegrab.X * dir < UPB_CURLED_DISTANCE)
+                cpu_data->cpu.lstickX = 0;
+            else
                 cpu_data->cpu.lstickX = 127 * dir;
         
         // FAIR
@@ -1197,9 +1202,11 @@ static void Think_Marth(void) {
             // random chance
             (
                 Enabled(OPT_MARTH_UPB_EARLY)
-                && vec_to_ledgegrab.Y > 40.f
+                && vec_to_ledgegrab.Y > 35.f
                 && vec_to_ledgegrab.Y < UPB_STRAIGHT_HEIGHT
                 && can_upb
+                && !can_jump
+                && vel.Y < 1.f
                 && HSD_Randi(UPB_EARLY_CHANCE) == 0
             )
         
@@ -1208,7 +1215,7 @@ static void Think_Marth(void) {
                 (
                     vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT
                     || (
-                        vec_to_ledgegrab.X < UPB_CURLED_DISTANCE
+                        vec_to_ledgegrab.X * dir < UPB_CURLED_DISTANCE
                         && vec_to_ledgegrab.Y > UPB_CURLED_HEIGHT
                     )
                 )
@@ -1221,7 +1228,10 @@ static void Think_Marth(void) {
             
         // WAIT
         } else {
-            cpu_data->cpu.lstickX = 127 * sign(vec_to_ledgegrab.X);
+            if (pos.X * dir + 10.f < target_ledgegrab.X * dir)
+                cpu_data->cpu.lstickX = 127 * dir;
+            else
+                cpu_data->cpu.lstickX = -127 * dir;
         }
     
     // DOLPHIN SLASH
@@ -1230,10 +1240,10 @@ static void Think_Marth(void) {
         if (cpu_data->TM.state_frame == 3) {
             float curl; // -1 = full curl backwards, 1 = full curl forwards
             
-            if (stc_stage->kind != GRKIND_BATTLE && past_ledgegrab) {
+            if (stc_stage->kind != GRKIND_BATTLE && vec_to_ledgegrab.X * dir < 10.f) {
                 curl = -1.f;
             } else if (vec_to_ledgegrab.X * dir < UPB_CURLED_DISTANCE && vec_to_ledgegrab.Y < UPB_CURLED_HEIGHT) {
-                curl = HSD_Randf() * 2.f - 1.f;
+                curl = HSD_Randf() * 0.5f + 0.5f;
             } else if (vec_to_ledgegrab.X * dir > UPB_CURLED_DISTANCE) {
                 curl = 1.f;
             } else if (vec_to_ledgegrab.Y > UPB_STRAIGHT_HEIGHT) {
@@ -1244,6 +1254,10 @@ static void Think_Marth(void) {
                 
                 // similar function to sqrt but easier to compute
                 curl = (-(curl*curl) + 2.f * fabs(curl)) * sign(curl);
+                
+                // curl starts from the opposite diagonal notch
+                if (curl < 0.f)
+                    curl /= 2.f;
             }
             
             float ang = curl * PI / 2.f;

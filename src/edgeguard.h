@@ -450,9 +450,8 @@ static EventMenu Menu_Falcon = {
 
 enum options_marth {
     OPT_MARTH_UPB_EARLY,
-    OPT_MARTH_SIDEB_RECOVER,
-    OPT_MARTH_SIDEB_DELAY,
     OPT_MARTH_JUMP,
+    OPT_MARTH_SIDEB,
     OPT_MARTH_FAIR,
     OPT_MARTH_COUNT
 };
@@ -468,23 +467,16 @@ static EventOption Options_Marth[] = {
     },
     {
         .kind = OPTKIND_STRING,
-        .name = "Dancing Blade",
-        .desc = "Allow Marth to use SideB to recover.",
+        .name = "Double Jump",
+        .desc = "Allow Marth to double jump.",
         .values = OffOn,
         .value_num = 2,
         .val = 1,
     },
     {
         .kind = OPTKIND_STRING,
-        .name = "Dancing Blade Delay",
-        .desc = "Allow Marth to use SideB to delay his recovery.",
-        .values = OffOn,
-        .value_num = 2,
-    },
-    {
-        .kind = OPTKIND_STRING,
-        .name = "Double Jump",
-        .desc = "Allow Marth to double jump.",
+        .name = "Dancing Blade",
+        .desc = "Allow Marth to use SideB to recover and\ndelay his timing.",
         .values = OffOn,
         .value_num = 2,
     },
