@@ -6322,7 +6322,7 @@ void Event_Think_LabState_Normal(GOBJ *event) {
         if (takeover_input && takeover_target == TAKEOVER_CPU)
             stc_playback_cancelled_cpu = true;
         
-        if (takeover_target != TAKEOVER_CPU) {
+        if (takeover_target != TAKEOVER_CPU && !stc_playback_cancelled_cpu) {
             switch (LabOptions_Record[OPTREC_PLAYBACK_COUNTER].val) {
             case PLAYBACKCOUNTER_OFF:
                 break;
@@ -6330,14 +6330,14 @@ void Event_Think_LabState_Normal(GOBJ *event) {
                 stc_playback_cancelled_cpu |= Record_PastLastInput(1);
                 break;
             case PLAYBACKCOUNTER_ON_HIT_CPU:
-                if (!stc_playback_cancelled_cpu) {
-                    if (IsHitlagVictim(cpu) && eventData->cpu_lasthit != cpu_data->dmg.atk_instance_hurtby) {
-                        eventData->cpu_countertimer = 0;
-                        eventData->cpu_hitnum++;
-                        eventData->cpu_lasthit = cpu_data->dmg.atk_instance_hurtby;
-                        eventData->cpu_hitkind = HITKIND_DAMAGE;
-                    }
-                    
+                if (IsHitlagVictim(cpu) && eventData->cpu_lasthit != cpu_data->dmg.atk_instance_hurtby) {
+                    eventData->cpu_countertimer = 0;
+                    eventData->cpu_hitnum++;
+                    eventData->cpu_lasthit = cpu_data->dmg.atk_instance_hurtby;
+                    eventData->cpu_hitkind = HITKIND_DAMAGE;
+                }
+                
+                if (eventData->cpu_hitnum != 0) {
                     CounterInfo info = GetCounterInfo();
                     if (!info.disable) {
                         stc_playback_cancelled_cpu = true;
@@ -6346,7 +6346,7 @@ void Event_Think_LabState_Normal(GOBJ *event) {
                         eventData->cpu_countertimer++;
                     }
                 }
-    
+                
                 break;
             case PLAYBACKCOUNTER_ON_HIT_HMN:
                 stc_playback_cancelled_cpu |= IsHitlagVictim(hmn);
