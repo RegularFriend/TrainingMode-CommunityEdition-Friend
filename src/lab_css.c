@@ -458,6 +458,7 @@ void Menu_SelCard_Think(GOBJ *menu_gobj)
         int hmnFighterId = GetSelectedFighterIdOnCssForHmn();
         if (hmnFighterId != -1) {
             Text_SetText(import_data.desc_text, 1, "(!) Filtered to selected character on CSS.");
+            Text_SetColor(import_data.desc_text, 1, &text_gold);
         }
     }
 
@@ -559,10 +560,11 @@ void Menu_SelFile_Init(GOBJ *menu_gobj)
     Text_SetText(import_data.title_text, 0, "Select Recording");
 
     // edit description
-    Text_SetText(import_data.desc_text, 0, "A = Select   B = Return   X = Delete   Left/Right = Prev/Next Page");
+    Text_SetText(import_data.desc_text, 0, "A = Select   B = Return   X = Delete   Y = Swap Sheik/Zelda");
     if (import_data.hidden_file_num > 0)
     {
         Text_SetText(import_data.desc_text, 1, "(!) Filtered to selected character on CSS, %d hidden.", import_data.hidden_file_num);
+        Text_SetColor(import_data.desc_text, 1, &text_gold);
     }
 
     // init scroll bar according to import_data.file_num
@@ -699,6 +701,17 @@ void Menu_SelFile_Think(GOBJ *menu_gobj)
     else if (down & HSD_BUTTON_X)
     {
         Menu_Confirm_Init(menu_gobj, CFRM_DEL);
+        SFX_PlayCommon(1);
+    }
+    
+    else if (down & HSD_BUTTON_Y)
+    {
+        // Rwing exports only swap the hmn. 
+        if (header->metadata.hmn == CKIND_ZELDA)
+            header->metadata.hmn = CKIND_SHEIK; 
+        else if (header->metadata.hmn == CKIND_SHEIK)
+            header->metadata.hmn = CKIND_ZELDA;
+             
         SFX_PlayCommon(1);
     }
 
