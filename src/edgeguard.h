@@ -302,7 +302,7 @@ static EventOption Options_Falco[] = {
     },
     {
         .kind = OPTKIND_STRING,
-        .name = "Illusion",
+        .name = "Phantasm",
         .desc = "Allow Falco to side special.",
         .values = OffOn,
         .value_num = 2,
