@@ -400,9 +400,15 @@ static void ChangeCustomKB_DmgMax(GOBJ *menu_gobj, int value) {
 void Event_Init(GOBJ *gobj) {
     event_vars = *event_vars_ptr;
     
+    GOBJ *hmn = Fighter_GetGObj(0);
     GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *hmn_data = hmn->userdata;
     FighterData *cpu_data = cpu->userdata;
     
+    // change team - homing missiles don't move towards characters on same team
+    hmn_data->team = 0;
+    cpu_data->team = 1;
+
     info = &InfoLookup[cpu_data->kind];
     if (info->recovery_menu == 0)
         assert("unimplemented character in edgeguard training");
