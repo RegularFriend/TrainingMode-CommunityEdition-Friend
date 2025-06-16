@@ -222,7 +222,7 @@ static void Reset_HMN(GOBJ *hmn, int side_idx, int dmg) {
     hmn_data->phys.self_vel.X = 0.f;
     hmn_data->phys.self_vel.Y = 0.f;
     hmn_data->phys.pos.X = ledge_x;
-    hmn_data->phys.pos.Y = 0.f;
+    hmn_data->phys.pos.Y = 5.f;
     UpdatePosition(hmn);
     
     hmn_data->jump.jumps_used = 1;
@@ -233,6 +233,11 @@ static void Reset_HMN(GOBJ *hmn, int side_idx, int dmg) {
     hmn_data->state.frame = 7;
     hmn_data->script.script_event_timer = 0;
     Fighter_SubactionFastForward(hmn);
+
+    // ensure the player L-cancels the initial bair.
+    hmn_data->flags.is_fastfall = 1;
+    hmn_data->input.timer_trigger_any_ignore_hitlag = 0;
+    
     Fighter_UpdateStateFrameInfo(hmn);
     Fighter_HitboxDisableAll(hmn);
     hmn_data->script.script_current = 0;
@@ -437,9 +442,6 @@ void Event_Think(GOBJ *menu) {
         reset_timer = -1;
         Reset();
     }
-    
-    // ensure the player L-cancels the initial bair.
-    hmn_data->input.timer_trigger_any_ignore_hitlag = 0;
     
     Vec2 cpu_pos = { cpu_data->phys.pos.X, cpu_data->phys.pos.Y };
     
