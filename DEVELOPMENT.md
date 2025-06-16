@@ -15,12 +15,10 @@ Now any developer can easily compile an iso from source with a simple script or 
 
 ### Windows
 1. [Install DevKitPro](https://github.com/devkitPro/installer/releases/latest). Install the Gamecube (aka PPC or PowerPC) package.
-2. Drag your legally obtained SSBM v1.02 ISO on to the 'build_windows.bat' file. If all goes well, 'TM-CE.iso' will be created.
-3. If you run into `could not create temporary file whilst copying ...` issues, use powershell instead of cmd.
+2. Double click to run the 'windows_setup.bat' file.
+3. Run the command `make iso=path-to-melee.iso iso`. If all goes well, 'TM-CE.iso' will be created.
 
 ### Linux / MacOS / WSL / MSYS2
-This method is much faster to build than `build_windows.bat`, so this should be preferred if you can set it up.
-
 1. [Install DevKitPro](https://devkitpro.org/wiki/Getting_Started#Unix-like_platforms). Install the Gamecube (gamecube-dev) package.
     - Ensure that `/opt/devkitpro/devkitPPC/bin/` is added to the PATH.
 2. [Install Mono](https://www.mono-project.com/download/stable). Prefer installation through your package manager.
