@@ -15,8 +15,8 @@ Now any developer can easily compile an iso from source with a simple script or 
 
 ### Windows
 1. [Install DevKitPro](https://github.com/devkitPro/installer/releases/latest). Install the Gamecube (aka PPC or PowerPC) package.
-2. Double click to run the 'windows_setup.bat' file.
-3. Run the command `make iso=path-to-melee.iso iso`. If all goes well, 'TM-CE.iso' will be created.
+2. Double click to run the 'windows_setup.bat' file. If DevKitPro is installed, a console will show up.
+3. Run the command `make iso=path-to-melee.iso iso` in the console. If all goes well, 'TM-CE.iso' will be created.
 
 ### Linux / MacOS / WSL / MSYS2
 1. [Install DevKitPro](https://devkitpro.org/wiki/Getting_Started#Unix-like_platforms). Install the Gamecube (gamecube-dev) package.
