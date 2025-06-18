@@ -2333,15 +2333,15 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
             eventData->cpu_groundstate = cpu_data->phys.air_state; // remember initial ground state
         }
 
-        if (eventData->cpu_countering_no_interrupt == 0)
-        {
-            // if started in the air, didnt finish action, but now grounded, perform ground action
-            if (eventData->cpu_groundstate == 1 && cpu_data->phys.air_state == 0)
-                eventData->cpu_groundstate = 0;
-
-            // if started on the ground, didnt finish action, but now airborne, perform air action
-            if (eventData->cpu_groundstate == 0 && cpu_data->phys.air_state == 1)
-                eventData->cpu_groundstate = 1;
+        // If started in the air, didnt finish action, but now grounded, perform ground action.
+        // We don't do this for the ground->air transition because some grounded counter actions
+        // put the CPU in the air. E.x. wavedash, aerial.
+        if (
+            eventData->cpu_countering_no_interrupt == 0
+            && eventData->cpu_groundstate == 1
+            && cpu_data->phys.air_state == 0
+        ) {
+            eventData->cpu_groundstate = 0;
         }
         
         if (
