@@ -1,6 +1,16 @@
 #include "wavedash.h"
 static char nullString[] = " ";
 
+enum options {
+    OPT_TARGET,
+    OPT_HUD,
+    OPT_TIPS,
+    OPT_HELP,
+    OPT_EXIT,
+    
+    OPT_COUNT
+};
+
 // Main Menu
 static char **WdOptions_Target[] = {"Off", "On"};
 static char **WdOptions_HUD[] = {"On", "Off"};
@@ -422,12 +432,9 @@ void Wavedash_Think(WavedashData *event_data, FighterData *hmn_data)
 }
 void Wavedash_HUDCamThink(GOBJ *gobj)
 {
-
     // if HUD enabled and not paused
-    if ((WdOptions_Main[1].val == 0) && (Pause_CheckStatus(1) != 2))
-    {
+    if (!WdOptions_Main[OPT_HUD].val && Pause_CheckStatus(1) != 2)
         CObjThink_Common(gobj);
-    }
 }
 float Bezier(float time, float start, float end)
 {
@@ -477,21 +484,8 @@ void Target_Manager(WavedashData *event_data, FighterData *hmn_data)
 {
     GOBJ *target_gobj = event_data->target.gobj;
 
-    switch (WdOptions_Main[0].val)
-    {
-    case (0): // off
-    {
-        // if spawned, remove
-        if (target_gobj != 0)
-        {
-            Target_ChangeState(target_gobj, TRGSTATE_DESPAWN);
-            event_data->target.gobj = 0;
-        }
-
-        break;
-    }
-    case (1): // on
-    {
+    if (WdOptions_Main[OPT_TARGET].val)
+    { // on
         // if not spawned, spawn
         if (target_gobj == 0)
         {
@@ -506,12 +500,7 @@ void Target_Manager(WavedashData *event_data, FighterData *hmn_data)
         // update target logic
         if (target_gobj != 0)
         {
-
             TargetData *target_data = target_gobj->userdata;
-
-            // update fighter backed up position
-
-            // restore position if not a wavedash
 
             // check current target state
             if (target_data->state == TRGSTATE_DESPAWN)
@@ -521,9 +510,15 @@ void Target_Manager(WavedashData *event_data, FighterData *hmn_data)
                 event_data->target.gobj = target_gobj;
             }
         }
-
-        break;
     }
+    else
+    { // off
+        // if spawned, remove
+        if (target_gobj != 0)
+        {
+            Target_ChangeState(target_gobj, TRGSTATE_DESPAWN);
+            event_data->target.gobj = 0;
+        }
     }
 }
 GOBJ *Target_Spawn(WavedashData *event_data, FighterData *hmn_data)
@@ -779,9 +774,8 @@ Tips_Think(WavedashData *event_data, FighterData *hmn_data)
 {
 
     // only if enabled
-    if (WdOptions_Main[2].val == 0)
+    if (!WdOptions_Main[OPT_TIPS].val)
     {
-
         // shield after wavedash
         // look successful wavedash
         if (event_data->since_wavedash <= 10)
