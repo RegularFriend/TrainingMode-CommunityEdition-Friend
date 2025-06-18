@@ -20,10 +20,6 @@
     
     # RESTORE CPU ----------------------------------
     
-    # Get Backup Location
-    lwz r9, MemcardData(r13)
-    addi r9, r9, 3344
-    
     # load allowed cpu characters
     lwz r4, MemcardData(r13)
     lbz r3, 0x0535(r4)
@@ -80,9 +76,17 @@ CSSIDToExternalIDMapEnd:
     lbz r4, 0x0(r4)
 
     li r6, 0 # set first costume
+    
+    # Get Backup Location
+    lwz r9, MemcardData(r13)
+    addi r9, r9, 3344
     b WriteCPU
     
 RestoreCPU:
+    # Get Backup Location
+    lwz r9, MemcardData(r13)
+    addi r9, r9, 3344
+    
     lbz r4, 140(r9)         # Character Backup
     lbz r6, 143(r9)         # Costume Backup
 
