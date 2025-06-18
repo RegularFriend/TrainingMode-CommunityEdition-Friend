@@ -256,11 +256,8 @@ void Wavedash_Think(WavedashData *event_data, FighterData *hmn_data)
                 event_data->wd_succeeded++;
 
                 // check for perfect
-                //if (WdOptions_Main[0].val == 0)
-                {
-                    if (event_data->airdodge_frame == ((int)hmn_data->attr.jump_startup_time + 1))
-                        SFX_Play(303);
-                }
+                if (event_data->airdodge_frame == ((int)hmn_data->attr.jump_startup_time + 1))
+                    SFX_Play(303);
             }
 
             // look for failed WD
@@ -388,9 +385,6 @@ void Wavedash_Think(WavedashData *event_data, FighterData *hmn_data)
                 int successful = event_data->wd_succeeded;
                 float succession = ((float)event_data->wd_succeeded / (float)event_data->wd_attempted) * 100.0;
                 Text_SetText(event_data->hud.text_succession, 0, "%d (%.2f%)", successful, succession);
-
-                // hide tip so bar is unobscured
-                //event_vars->Tip_Destroy();
 
                 // apply HUD animation
                 JOBJ_RemoveAnimAll(hud_jobj);
