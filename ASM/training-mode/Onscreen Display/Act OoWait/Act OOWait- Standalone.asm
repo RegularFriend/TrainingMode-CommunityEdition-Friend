@@ -88,36 +88,35 @@ FrameCountLoopFinish:
 
     # Only Coming from Throws, Aerial Landing, and Teching/Getups
     # Aerial Landing
-    cmpwi ASBeforeWait, 0x46
-    blt NotThrow
-    cmpwi ASBeforeWait, 0x4A
-    bgt NotThrow
-    b ComingFromWhitelist
-
-NotThrow:
-    # Throws
-    cmpwi ASBeforeWait, 0xDB
+    cmpwi ASBeforeWait, ASID_LandingAirN
     blt NotAerialLanding
-    cmpwi ASBeforeWait, 0xDE
+    cmpwi ASBeforeWait, ASID_LandingAirLw
     bgt NotAerialLanding
     b ComingFromWhitelist
-
 NotAerialLanding:
+
+    # Throws
+    cmpwi ASBeforeWait, ASID_ThrowF
+    blt NotThrow
+    cmpwi ASBeforeWait, ASID_ThrowLw
+    bgt NotThrow
+    b ComingFromWhitelist
+NotThrow:
+
     # Teching/Getups
-    # Aerial Landing
-    cmpwi ASBeforeWait, 0xB7
+    cmpwi ASBeforeWait, ASID_DownBoundU
     blt NotTeching
-    cmpwi ASBeforeWait, 0xC9
+    cmpwi ASBeforeWait, ASID_PassiveStandB
     bgt NotTeching
     b ComingFromWhitelist
-
 NotTeching:
+
     # Wavedash
     cmpwi ASBeforeWait, ASID_LandingFallSpecial
     bne NotWavedash
     b ComingFromWhitelist
-
 NotWavedash:
+
     cmpwi ASBeforeWait, ASID_AttackAirN
     blt NotAerial
     cmpwi ASBeforeWait, ASID_AttackAirLe
