@@ -27,10 +27,13 @@ WaitSearchLoop:
     mulli r3, r5, 0x2
     add r3, r3, r4
     lhzx r3, r3, playerdata
+    
     cmpwi r3, ASID_Wait
     beq WaitSearchExit_Wait
+    
     cmpwi r3, ASID_Landing
     beq WaitSearchExit_Landing
+    
     addi r5, r5, 1
     cmpwi r5, 6
     bge Exit
@@ -41,7 +44,7 @@ WaitSearchExit_Landing:
     b WaitSearchExit
     
 WaitSearchExit_Wait:
-    li FramesSince, 0
+    li FramesSince, 1
 
 WaitSearchExit:
     # Get AS Before Wait
@@ -50,22 +53,35 @@ WaitSearchExit:
     add r3, r3, r4
     lhzx ASBeforeWait, r3, playerdata
     # Get Frames In Wait
+    
     li r4, TM_FramesInPrevASStart               # Frame Count Start
-
 FrameCountLoop:
     cmpwi r5, 0
-    beq FrameCountLoopFinish
+    blt FrameCountLoopFinish
     mulli r3, r5, 0x2
     add r3, r3, r4
+    
+    subi r6, r3, 12
+    lhzx r6, r6, playerdata
+    
+    # Subtract 1 unavoidable frame if in Turn
+    cmpwi r6, ASID_Turn
+    bne TurnFinish
+    subi FramesSince, FramesSince, 1
+TurnFinish:
+
+    # Remove psuedo Wait frame
+    cmpwi r6, ASID_Wait
+    bne WaitFinish
+    subi FramesSince, FramesSince, 1
+WaitFinish:
+
     lhzx r3, r3, playerdata
     add FramesSince, r3, FramesSince
     subi r5, r5, 1
     b FrameCountLoop
 
 FrameCountLoopFinish:
-    lhz r3, TM_FramesInPrevASStart(playerdata)  # Frames spent in Wait
-    add FramesSince, r3, FramesSince            # Get Total Frames Since
-
     # Check If Under 13 Frames
     cmpwi FramesSince, 13
     bgt Exit

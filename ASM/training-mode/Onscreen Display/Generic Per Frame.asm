@@ -74,7 +74,6 @@ ActOoWait_FoundWait:
     beq ActOoWait_End
 
     # Display OSD if enabled
-    SetBreakpoint
     mr r3, player
     branchl r12, 0x8000551c
 ActOoWait_End:
