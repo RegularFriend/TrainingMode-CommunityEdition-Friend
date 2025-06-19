@@ -574,7 +574,7 @@ void Menu_SelFile_Init(GOBJ *menu_gobj)
     else
         import_data.scroll_bot->trans.Y = -16.2 / page_total;
 
-    // load in first page recordsings
+    // load in first page recordings
     int page_result = Menu_SelFile_LoadPage(menu_gobj, 0);
     if (page_result == -1)
     {
@@ -1177,15 +1177,29 @@ void Menu_Confirm_Think(GOBJ *menu_gobj)
             SFX_PlayCommon(1);
 
             // delete selected recording
-            int this_file_index = (import_data.page * IMPORT_FILESPERPAGE) + import_data.cursor;
-            Menu_SelFile_DeleteFile(menu_gobj, this_file_index);
+            int file_idx = (import_data.page * IMPORT_FILESPERPAGE) + import_data.cursor;
+            Menu_SelFile_DeleteFile(menu_gobj, file_idx);
 
             // close dialog
             Menu_Confirm_Exit(menu_gobj);
 
-            // reload selfile
-            Menu_SelFile_Exit(menu_gobj); // close select file
-            Menu_SelFile_Init(menu_gobj); // open select file
+            // reload selfile menu
+            Menu_SelFile_Exit(menu_gobj);
+            Menu_SelFile_Init(menu_gobj);
+
+            // reset cursor/page back to location of deleted file
+            if (file_idx == import_data.file_num && file_idx > 0)
+                file_idx--;
+            import_data.page = file_idx / IMPORT_FILESPERPAGE;
+            import_data.cursor = file_idx % IMPORT_FILESPERPAGE;
+
+            int page_result = Menu_SelFile_LoadPage(menu_gobj, import_data.page);
+            if (page_result == -1)
+            {
+                // create dialog
+                Menu_Confirm_Init(menu_gobj, CFRM_ERR);
+                SFX_PlayCommon(3);
+            }
         }
         break;
     }
