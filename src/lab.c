@@ -4031,43 +4031,28 @@ void Record_InitState(GOBJ *menu_gobj)
     if (event_vars->Savestate_Save(rec_state, 0))
         Record_OnSuccessfulSave(1);
 }
-void Record_ResaveState(GOBJ *menu_gobj)
-{
-    int prev_savestate_frame = rec_state->frame;
-    Record_PruneState(menu_gobj);
-    int new_savestate_frame = rec_state->frame;
-    int savestate_diff = new_savestate_frame - prev_savestate_frame;
 
-    // change start frame
-    for (int ply = 0; ply < 2; ++ply) {
-        for (int slot = 0; slot < REC_SLOTS; ++slot) {
-            RecInputData *input_data;
-            if (ply == 0)
-                input_data = rec_data.hmn_inputs[slot];
-            else
-                input_data = rec_data.cpu_inputs[slot];
-
-            if (input_data->start_frame != -1)
-                input_data->start_frame += savestate_diff;
-        }
-    }
-}
-void Record_PruneState(GOBJ *menu_gobj)
+// returns time_diff
+int Record_RemakeState(void)
 {
     stc_playback_cancelled_hmn = false;
     stc_playback_cancelled_cpu = false;
+    int prev_frame = rec_state->frame;
     if (event_vars->Savestate_Save(rec_state, 0))
         Record_OnSuccessfulSave(0);
-
+    int new_frame = rec_state->frame;
+    int time_diff = new_frame - prev_frame;
+    
     // If we re-save during mirroring, then we NEED to show the new savestate as unmirrored.
     // That's just how savestates work. So to use old, unmirrored inputs, we need to reverse them in place.
     if (event_vars->loaded_mirrored) {
         // need to disable mirroring, as the new savestate is inherently unmirrored.
         event_vars->loaded_mirrored = false;
+        
         LabOptions_Record[OPTREC_MIRRORED_PLAYBACK].val = OPTMIRROR_OFF;
         LabOptions_Record[OPTREC_HMNMODE].disable = 0;
         LabOptions_Record[OPTREC_CPUMODE].disable = 0;
-
+        
         for (int ply = 0; ply < 2; ++ply) {
             for (int slot = 0; slot < REC_SLOTS; ++slot) {
                 RecInputData *input_data;
@@ -4081,6 +4066,57 @@ void Record_PruneState(GOBJ *menu_gobj)
                     RecInputs *inputs = &input_data->inputs[input];
                     inputs->stickX *= -1;
                     inputs->substickX *= -1;
+                }
+            }
+        }
+    }
+    
+    return time_diff;
+}
+
+void Record_ResaveState(GOBJ *menu_gobj)
+{
+    int time_diff = Record_RemakeState();
+    
+    // change start frame
+    for (int ply = 0; ply < 2; ++ply) {
+        for (int slot = 0; slot < REC_SLOTS; ++slot) {
+            RecInputData *input_data;
+            if (ply == 0)
+                input_data = rec_data.hmn_inputs[slot];
+            else
+                input_data = rec_data.cpu_inputs[slot];
+
+            if (input_data->start_frame != -1)
+                input_data->start_frame += time_diff;
+        }
+    }
+}
+
+void Record_PruneState(GOBJ *menu_gobj)
+{
+    int time_diff = Record_RemakeState();
+    
+    // change start frame
+    for (int ply = 0; ply < 2; ++ply) {
+        for (int slot = 0; slot < REC_SLOTS; ++slot) {
+            RecInputData *input_data;
+            if (ply == 0)
+                input_data = rec_data.hmn_inputs[slot];
+            else
+                input_data = rec_data.cpu_inputs[slot];
+
+            if (input_data->start_frame != -1) {
+                if (input_data->num > time_diff) {
+                    input_data->num -= time_diff;
+                    memmove(
+                        &input_data->inputs[0],
+                        &input_data->inputs[time_diff],
+                        input_data->num * sizeof(RecInputs)
+                    );
+                    input_data->start_frame += time_diff;
+                } else {
+                    input_data->num = 0;
                 }
             }
         }
