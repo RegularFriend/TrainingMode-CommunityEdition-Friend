@@ -1289,9 +1289,8 @@ int CSS_ID(int ext_id) {
 int GetSelectedFighterIdOnCssForHmn() {
     // Get selected fighter for hmn in CSS
     VSMinorData *css_minorscene = *stc_css_minorscene;
-    u8 hmn_index = (*stc_css_hmnport > 0 ? 1 : 0);
-    int hmnFighterId = css_minorscene->vs_data.match_init.playerData[hmn_index].c_kind;
+    int hmnFighterId = css_minorscene->vs_data.match_init.playerData[*stc_css_hmnport].c_kind;
 
     // When any fighters are not selected, this ID seems to be unplayable fighter's ID (26=Masterhand or 33=None basically?). 0-25 are playable fighter's ID.
-    return (hmnFighterId && hmnFighterId < 26) ? hmnFighterId : -1;
+    return hmnFighterId < 26 ? hmnFighterId : -1;
 }
