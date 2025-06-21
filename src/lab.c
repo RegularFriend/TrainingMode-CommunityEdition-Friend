@@ -1104,7 +1104,8 @@ static int CheckOverlay(GOBJ *character, OverlayGroup overlay)
             if (ASID_GUARD <= state && state <= ASID_GUARDREFLECT) return true;
             if (ASID_JUMPF <= state && state <= ASID_FALLAERIALB) return true;
 
-            return state == ASID_PASS
+            return state == ASID_TURN
+                || state == ASID_PASS
                 || state == ASID_CATCHWAIT
                 || state == ASID_SQUATWAIT
                 || state == ASID_OTTOTTOWAIT;
