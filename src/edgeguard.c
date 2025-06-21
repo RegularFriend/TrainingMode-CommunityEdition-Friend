@@ -742,9 +742,8 @@ static void Think_Sheik(void) {
         && cpu_data->dmg.hitlag_frames == 1.f
         && HSD_Randi(AMSAH_TECH_CHANCE) == 0
     ) {
-        float hit_angle = Fighter_GetKnockbackAngle(cpu_data);
         cpu_data->cpu.held |= PAD_TRIGGER_R;
-        cpu_data->cpu.lstickX = pos.X < hmn_data->phys.pos.X ? -80 : 80;
+        cpu_data->cpu.lstickX = 80 * -(int)cpu_data->dmg.hit_log.direction;
         cpu_data->cpu.lstickY = -80;
         cpu_data->cpu.cstickY = -127;
         amsah_teching = true;
