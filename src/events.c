@@ -1205,6 +1205,13 @@ int Savestate_Load(Savestate *savestate, int flags)
 
                     // restore inputs
                     memcpy(&fighter_data->input, &ft_data->input, sizeof(fighter_data->input)); // copy inputs
+                    if (flags & Savestate_Mirror)
+                    {
+                        fighter_data->input.lstick.X *= -1;
+                        fighter_data->input.lstick_prev.X *= -1;
+                        fighter_data->input.cstick.X *= -1;
+                        fighter_data->input.cstick_prev.X *= -1;
+                    }
 
                     // restore coll data
                     CollData *thiscoll = &fighter_data->coll_data;
@@ -1240,11 +1247,19 @@ int Savestate_Load(Savestate *savestate, int flags)
                             int left_index;
                             int right_index;
                         } platform_ground_indices[] = {
-                            {GRKIND_STORY, 1, 5},
-                            {GRKIND_IZUMI, 0, 1},
-                            {GRKIND_PSTAD, 35, 36},
-                            {GRKIND_OLDPU, 0, 1},
-                            {GRKIND_BATTLE, 2, 4},
+                            {GRKIND_STORY, 1, 5}, // platforms
+                            {GRKIND_STORY, 2, 6}, // slants
+                            {GRKIND_IZUMI, 0, 1}, // platforms
+                            {GRKIND_IZUMI, 3, 7}, // edges
+                            {GRKIND_IZUMI, 4, 6}, // transition
+                            {GRKIND_PSTAD, 35, 36}, // platforms
+                            {GRKIND_PSTAD, 51, 54}, // edges
+                            {GRKIND_PSTAD, 52, 53}, // transition
+                            {GRKIND_OLDPU, 0, 1}, // platforms
+                            {GRKIND_OLDPU, 3, 5}, // edges
+                            {GRKIND_BATTLE, 2, 4}, // platforms
+                            {GRKIND_BATTLE, 0, 5}, // edges
+                            {GRKIND_FD, 0, 2}, // edges
                         };
                         for (int i = 0; i < countof(platform_ground_indices); i++)
                         {
@@ -1254,8 +1269,6 @@ int Savestate_Load(Savestate *savestate, int flags)
                                     thiscoll->ground_index = platform_ground_indices[i].right_index;
                                 else if (thiscoll->ground_index == platform_ground_indices[i].right_index)
                                     thiscoll->ground_index = platform_ground_indices[i].left_index;
-
-                                break;
                             }
                         }
                     }
