@@ -661,7 +661,7 @@ static void Think_Spacies(void) {
 
 // Sheik ------------------------------------------------
 
-#define UPB_POOF_BELOW_LEDGE_CHANCE 10
+#define UPB_POOF_BELOW_LEDGE_CHANCE 8
 #define UPB_JUMP_HEIGHT 48.f
 #define UPB_JUMP_MAX_X 50.f
 #define UPB_POOF_DISTANCE 40.f
