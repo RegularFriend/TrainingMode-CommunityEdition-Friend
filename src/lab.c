@@ -6397,11 +6397,8 @@ void Event_Think_LabState_Normal(GOBJ *event) {
     }
 
     if (!cpu_control) {
-        if (
-            (hmn_mode == RECMODE_HMN_PLAYBACK || hmn_mode == RECMODE_HMN_RERECORD)
-            && takeover_input
-            && takeover_target == TAKEOVER_HMN
-        ) {
+        if ((hmn_mode == RECMODE_HMN_PLAYBACK || hmn_mode == RECMODE_HMN_RERECORD)
+            && (Record_PastLastInput(0) || (takeover_input && takeover_target == TAKEOVER_HMN))) {
             stc_playback_cancelled_hmn = true;
         }
 
