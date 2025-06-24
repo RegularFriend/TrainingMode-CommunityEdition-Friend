@@ -269,18 +269,41 @@ struct HSD_Archive
     u32 flags;                                    /* 0x3C */
     void *top_ptr;                                /* 0x40 */
 };
-struct HSD_PollData // unofficial name, not sure what its actually called
-{
-    u8 pad_status_num;             // array size of pad_status
-    u8 x1;                         //
-    u8 index;                      // 0x2 index of next pad_status buffer to write to
-    u8 x3;                         //
-    u8 x4;                         //
-    u8 x5;                         //
-    u8 x6;                         //
-    u8 x7;                         //
-    PADStatus (*pad_status)[5][4]; // 0x8, circular buffer of recent pad statuses. array of 5
-};
+
+typedef struct HSD_PadData {
+	PADStatus stat[4];
+} HSD_PadData;
+
+typedef struct PadLibData {
+	u8 qnum;
+	u8 qread;
+	u8 qwrite;
+	u8 qcount;
+	u8 qtype;
+	HSD_PadData *queue;
+	s32 repeat_start;
+	s32 repeat_interval;
+	u8 adc_type;
+	s8 adc_th;
+	f32 adc_angle;
+	u8 clamp_stickType;
+	u8 clamp_stickShift;
+	s8 clamp_stickMax;
+	s8 clamp_stickMin;
+	u8 clamp_analogLRShift;
+	u8 clamp_analogLRMax;
+	u8 clamp_analogLRMin;
+	u8 clamp_analogABShift;
+	u8 clamp_analogABMax;
+	u8 clamp_analogABMin;
+	s8 scale_stick;
+	u8 scale_analogLR;
+	u8 scale_analogAB;
+	u8 cross_dir;
+	u8 reset_switch_status;
+	u8 reset_switch;
+	void *rumble_info;
+} PadLibData;
 
 /*** Static Variables ***/
 static HSD_IDTable *stc_hsd_default_table = 0x804C23EC;
@@ -289,7 +312,7 @@ static HSD_Update *stc_hsd_update = 0x80479d58;
 static int **stc_rng_seed = 0x804D5F94;
 static HSD_Pad *stc_engine_pads = (HSD_Pad *)0x804c21cc;
 static u64 *stc_pause_plink_whitelists = 0x803da888; // array of u64 bitfields defining which gobj p_links should run for the corresponding PauseKind
-static HSD_PollData *stc_hsd_polldata = 0x804c1f78;
+static PadLibData *stc_hsd_padlibdata = 0x804c1f78;
 static GXPixelFmt *stc_hsd_pixelfmt = 0x804d76c8;
 
 /*** Functions ***/

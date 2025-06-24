@@ -743,7 +743,7 @@ void EventInit(int page, int eventID, MatchInit *matchData)
     }
 };
 
-void EventLoad()
+void EventLoad(void)
 {
     // get this event
     Memcard *memcard = R13_PTR(MEMCARD);
@@ -809,7 +809,7 @@ void EventLoad()
     }
 };
 
-void EventUpdate()
+void EventUpdate(void)
 {
 
     // get event info
@@ -859,7 +859,7 @@ void TM_ConsoleThink(GOBJ *gobj)
         }
     }
 }
-void TM_CreateConsole()
+void TM_CreateConsole(void)
 {
     // init dev text
     DevText *text = DevelopText_CreateDataTable(13, 0, 0, 32, 32, HSD_MemAlloc(0x1000));
@@ -886,7 +886,7 @@ void OnFileLoad(HSD_Archive *archive) // this function is run right after TmDt i
     event_vars = *event_vars_ptr;
 }
 
-void OnSceneChange()
+void OnSceneChange(void)
 {
     // Hook exists at 801a4c94
     TM_CreateWatermark();
@@ -896,14 +896,13 @@ void OnSceneChange()
 #endif
 };
 
-void OnBoot()
+void OnBoot(void)
 {
     // OSReport("hi this is boot\n");
 };
 
-void OnStartMelee()
+void OnStartMelee(void)
 {
-
     Message_Init();
     Tip_Init();
 }
@@ -1562,7 +1561,7 @@ int Savestate_Load(Savestate *savestate, int flags)
 
     return isLoaded;
 }
-void Update_Savestates()
+void Update_Savestates(void)
 {
 
     // not when pause menu is showing
@@ -1700,7 +1699,7 @@ void Event_IncTimer(GOBJ *gobj)
 {
     stc_event_vars.game_timer++;
 }
-void TM_CreateWatermark()
+void TM_CreateWatermark(void)
 {
     // create text canvas
     int canvas = Text_CreateCanvas(10, 0, 9, 13, 0, 14, 0, 19);
@@ -1732,7 +1731,7 @@ void TM_CreateWatermark()
 
     Text_AddSubtext(text, 0, 0, TM_VersShort);
 }
-void Hazards_Disable()
+void Hazards_Disable(void)
 {
     // get stage id
     int stage_internal = Stage_ExternalToInternal(Stage_GetExternalID());
@@ -1806,7 +1805,7 @@ void Hazards_Disable()
 }
 
 // Message Functions
-void Message_Init()
+void Message_Init(void)
 {
 
     // create cobj
@@ -2239,7 +2238,7 @@ float BezierBlend(float t)
 }
 
 // Tips Functions
-void Tip_Init()
+void Tip_Init(void)
 {
     // init static struct
     memset(&stc_tipmgr, 0, sizeof(TipMgr));
@@ -2438,7 +2437,7 @@ int Tip_Display(int lifetime, char *fmt, ...)
 
     return 1; // tip created
 }
-void Tip_Destroy()
+void Tip_Destroy(void)
 {
     // check if tip exists and isnt in exit state, enter exit
     if ((stc_tipmgr.gobj != 0) && (stc_tipmgr.state != 2))
@@ -3832,19 +3831,19 @@ int GetPageEventNum(int page)
 {
     return EventPages[page]->eventNum - 1;
 }
-char *GetTMVersShort()
+char *GetTMVersShort(void)
 {
     return TM_VersShort;
 }
-char *GetTMVersLong()
+char *GetTMVersLong(void)
 {
     return TM_VersLong;
 }
-char *GetTMCompile()
+char *GetTMCompile(void)
 {
     return TM_Compile;
 }
-int GetPageNum()
+int GetPageNum(void)
 {
     return countof(EventPages) - 1;
 }

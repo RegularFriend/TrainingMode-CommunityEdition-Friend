@@ -399,7 +399,7 @@ typedef struct Savestate
 typedef struct evFunction
 {
     void (*Event_Init)(GOBJ *event);
-    void (*Event_Update)();
+    void (*Event_Update)(void);
     void (*Event_Think)(GOBJ *event);
     EventMenu **menu_start;
 } evFunction;
@@ -417,7 +417,7 @@ typedef struct EventVars
     int (*Savestate_Load)(Savestate *savestate, int flags);                                  // function pointer to load state
     GOBJ *(*Message_Display)(int msg_kind, int queue_num, int msg_color, char *format, ...); // function pointer to display message
     int *(*Tip_Display)(int lifetime, char *fmt, ...);
-    void (*Tip_Destroy)();      // function pointer to destroy tip
+    void (*Tip_Destroy)(void);      // function pointer to destroy tip
     Savestate *savestate;       // points to the events main savestate
 
     // To allow minor savestates during mirrored playback, 
@@ -434,7 +434,7 @@ typedef struct EventVars
 // Function prototypes
 EventDesc *GetEventDesc(int page, int event);
 void EventInit(int page, int eventID, MatchInit *matchData);
-void EventLoad();
+void EventLoad(void);
 GOBJ *EventMenu_Init(EventDesc *event_desc, EventMenu *start_menu);
 void EventMenu_Think(GOBJ *eventMenu, int pass);
 void EventMenu_COBJThink(GOBJ *gobj);
@@ -443,17 +443,17 @@ int Text_AddSubtextManual(Text *text, char *string, int posx, int posy, int scal
 EventMenu *EventMenu_GetCurrentMenu(GOBJ *gobj);
 int Savestate_Save(Savestate *savestate, int flags);
 int Savestate_Load(Savestate *savestate, int flags);
-void Update_Savestates();
+void Update_Savestates(void);
 int GOBJToID(GOBJ *gobj);
 int FtDataToID(FighterData *fighter_data);
 int BoneToID(FighterData *fighter_data, JOBJ *bone);
 GOBJ *IDToGOBJ(int id);
 FighterData *IDToFtData(int id);
 JOBJ *IDToBone(FighterData *fighter_data, int id);
-void EventUpdate();
+void EventUpdate(void);
 void Event_IncTimer(GOBJ *gobj);
 void Test_Think(GOBJ *gobj);
-void Hazards_Disable();
+void Hazards_Disable(void);
 static EventDesc *static_eventInfo;
 static EventVars stc_event_vars;
 static int *eventDataBackup;
@@ -592,7 +592,7 @@ enum event_menu_state {
     }
 
 // Message
-void Message_Init();
+void Message_Init(void);
 GOBJ *Message_Display(int msg_kind, int queue_num, int msg_color, char *format, ...);
 void Message_Manager(GOBJ *mngr_gobj);
 void Message_Destroy(GOBJ **msg_queue, int msg_num);
@@ -723,7 +723,7 @@ typedef struct TipMgr
 } TipMgr;
 
 int Tip_Display(int lifetime, char *fmt, ...);
-void Tip_Destroy(); // 0 = immediately destroy, 1 = force exit
+void Tip_Destroy(void); // 0 = immediately destroy, 1 = force exit
 void Tip_Think(GOBJ *gobj);
 
 #define TIP_TXTJOINT 2

@@ -3770,6 +3770,7 @@ void Record_GX(GOBJ *gobj, int pass)
 
     GXLink_Common(gobj, pass);
 }
+
 void Record_Think(GOBJ *rec_gobj)
 {
     if (rec_state->is_exist != 1) return;
@@ -3895,6 +3896,26 @@ void Record_SetInputs(GOBJ *fighter, RecInputs *inputs, bool mirror) {
     // trigger float
     pad->ftriggerRight = ((float)inputs->trigger / 140);
     pad->ftriggerLeft = 0;
+    
+    // Aitch: Set the raw pad inputs as well.
+    // Some UCF corrections (e.g. SDI) are based on the raw pad data.
+    // Since we overwrite the pad inputs, we also need to overwrite the raw inputs.
+    // Otherwise, the UCF corrections will not be triggered.
+    // It would be nice to simply overwrite the raw inputs with recording inputs,
+    // and let the game copy it over to the pads we wrote above and internal UCF pads,
+    // but alas TM has too much cruft for this to be feasible.
+    int qidx = stc_hsd_padlibdata->qread - 1;
+    if (qidx < 0) qidx += 5;
+    HSD_PadData *pads = &stc_hsd_padlibdata->queue[qidx];
+    PADStatus *stat = &pads->stat[fighter_data->pad_index];
+    stat->stickX = pad->fstickX * 127.f;
+    stat->stickY = pad->fstickY * 127.f;
+    stat->substickX = pad->fsubstickX * 127.f;
+    stat->substickY = pad->fsubstickY * 127.f;
+    stat->triggerRight = pad->ftriggerRight * 255.f;
+    stat->triggerLeft = 0;
+    stat->analogA = 0;
+    stat->analogB = 0;
 }
 
 // assumes rec_mode_cpu
