@@ -3908,11 +3908,12 @@ void Record_SetInputs(GOBJ *fighter, RecInputs *inputs, bool mirror) {
     if (qidx < 0) qidx += 5;
     HSD_PadData *pads = &stc_hsd_padlibdata->queue[qidx];
     PADStatus *stat = &pads->stat[fighter_data->pad_index];
-    stat->stickX = pad->fstickX * 127.f;
-    stat->stickY = pad->fstickY * 127.f;
-    stat->substickX = pad->fsubstickX * 127.f;
-    stat->substickY = pad->fsubstickY * 127.f;
-    stat->triggerRight = pad->ftriggerRight * 255.f;
+    stat->button = pad->held;
+    stat->stickX = pad->stickX;
+    stat->stickY = pad->stickY;
+    stat->substickX = pad->substickX;
+    stat->substickY = pad->substickY;
+    stat->triggerRight = pad->triggerRight;
     stat->triggerLeft = 0;
     stat->analogA = 0;
     stat->analogB = 0;
