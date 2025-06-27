@@ -625,8 +625,6 @@ static EventVars stc_event_vars = {
     .savestate = 0,
 };
 static Savestate *stc_savestate;
-static EventDesc *static_eventInfo;
-static int *eventDataBackup;
 static TipMgr stc_tipmgr;
 
 ///////////////////////
@@ -782,7 +780,6 @@ void EventLoad(void)
 
     // init savestate struct
     stc_savestate = calloc(sizeof(Savestate));
-    eventDataBackup = calloc(EVENT_DATASIZE);
     stc_savestate->is_exist = 0;
     stc_event_vars.savestate = stc_savestate;
 
