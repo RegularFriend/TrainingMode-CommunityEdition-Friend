@@ -13,9 +13,6 @@ static int reset_timer = -1;
 static Vec2 ledge_positions[2];
 static EdgeguardInfo *info;
 
-static inline float fmax(float a, float b) { return a < b ? b : a; }
-static inline float fmin(float a, float b) { return a < b ? a : b; }
-static inline float fclamp(float n, float min, float max) { return fmin(max, fmax(min, n)); }
 static inline float Progress(float n, float a, float b) { return (n - a) / (b - a); }
 static inline bool Within(float a, float b, float tolerance) { return fabs(b - a) < tolerance; }
 

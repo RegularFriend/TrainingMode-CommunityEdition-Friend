@@ -554,15 +554,19 @@ static float Math_Vec3Distance(Vec3 *a, Vec3 *b)
     return sqrtf(pow((a->X - b->X), 2) + pow((a->Y - b->Y), 2) + pow((a->Z - b->Z), 2));
 }
 
-// float fmin(float a, float b)
-// {
-//     return (((a) < (b)) ? (a) : (b));
-// }
+static inline float fmin(float a, float b)
+{
+    return (((a) < (b)) ? (a) : (b));
+}
 
-// float fmax(float a, float b)
-// {
-//     return (((a) > (b)) ? (a) : (b));
-// }
+static inline float fmax(float a, float b)
+{
+    return (((a) > (b)) ? (a) : (b));
+}
+
+static inline float fclamp(float n, float min, float max) {
+    return fmin(max, fmax(min, n));
+}
 
 /*---------------------------------------------*
  * GXVertex functions                          *
