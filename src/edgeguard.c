@@ -26,7 +26,7 @@ static void UpdatePosition(GOBJ *fighter) {
     data->coll_data.topN_CurrCorrect = pos;
     data->coll_data.topN_Prev = pos;
     data->coll_data.topN_Proj = pos;
-    data->coll_data.coll_test = R13_INT(COLL_TEST);
+    data->coll_data.coll_test = stc_colltest;
 }
 
 static void GetLedgePositions(Vec2 coords_out[2]) {
@@ -184,8 +184,7 @@ static bool IsGroundActionable(GOBJ *fighter) {
 }
 
 static void Exit(int value) {
-    Match *match = MATCH;
-    match->state = 3;
+    stc_match->state = 3;
     Match_EndVS();
 }
 

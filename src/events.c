@@ -687,8 +687,7 @@ void EventInit(int page, int eventID, MatchInit *matchData)
         }
 
         // Update the player's nametag ID and rumble
-        Memcard *memcard = R13_PTR(MEMCARD);
-        u8 nametag = memcard->EventBackup.nametag;
+        u8 nametag = stc_memcard->EventBackup.nametag;
         matchData->playerData[0].nametag = nametag;
         matchData->playerData[0].isRumble = CSS_GetNametagRumble(0, nametag);
 
@@ -744,9 +743,8 @@ void EventInit(int page, int eventID, MatchInit *matchData)
 void EventLoad(void)
 {
     // get this event
-    Memcard *memcard = R13_PTR(MEMCARD);
-    int page = memcard->TM_EventPage;
-    int eventID = memcard->EventBackup.event;
+    int page = stc_memcard->TM_EventPage;
+    int eventID = stc_memcard->EventBackup.event;
     EventDesc *event_desc = GetEventDesc(page, eventID);
     evFunction *evFunction = &stc_event_vars.evFunction;
 
@@ -2023,8 +2021,7 @@ void Message_Manager(GOBJ *mngr_gobj)
                 Text *this_msg_text = this_msg_data->text;
                 JOBJ *this_msg_jobj = this_msg_gobj->hsd_object;
 
-                Memcard *memcard = R13_PTR(MEMCARD);
-                int osd_pos_type = memcard->TM_OSDPosition;
+                int osd_pos_type = stc_memcard->TM_OSDPosition;
                 if (osd_pos_type > 3)
                     osd_pos_type = 0;
 

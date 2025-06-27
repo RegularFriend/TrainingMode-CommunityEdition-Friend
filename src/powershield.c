@@ -203,8 +203,7 @@ void Event_Think(GOBJ *menu) {
 }
 
 void Exit(int value) {
-    Match *match = MATCH;
-    match->state = 3;
+    stc_match->state = 3;
     Match_EndVS();
 }
 

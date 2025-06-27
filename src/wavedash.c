@@ -93,10 +93,8 @@ void Event_Think(GOBJ *event)
 }
 void Event_Exit()
 {
-    Match *match = MATCH;
-
     // end game
-    match->state = 3;
+    stc_match->state = 3;
 
     // cleanup
     Match_EndVS();

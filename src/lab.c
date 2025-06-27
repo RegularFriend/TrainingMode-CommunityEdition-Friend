@@ -221,17 +221,15 @@ void Lab_ChangeStadiumTransformation(GOBJ *menu_gobj, int value) {
 }
 
 void Lab_ChangeInputDisplay(GOBJ *menu_gobj, int value) {
-    Memcard *memcard = R13_PTR(MEMCARD);
-    memcard->TM_LabCPUInputDisplay = value;
+    stc_memcard->TM_LabCPUInputDisplay = value;
 }
 
 void Lab_ChangeTauntEnabled(GOBJ *menu_gobj, int value) {
-    Memcard *memcard = R13_PTR(MEMCARD);
-    memcard->TM_LabTauntEnabled = value;
+    stc_memcard->TM_LabTauntEnabled = value;
 }
 
 void Lab_ChangeOverlays(GOBJ *menu_gobj, int value) {
-    Memcard *memcard = R13_PTR(MEMCARD);
+    Memcard *memcard = stc_memcard;
 
     memset(&memcard->TM_LabSavedOverlays_HMN, 0, sizeof(memcard->TM_LabSavedOverlays_HMN));
     memset(&memcard->TM_LabSavedOverlays_CPU, 0, sizeof(memcard->TM_LabSavedOverlays_CPU));
@@ -256,14 +254,13 @@ void Lab_ChangeOverlays(GOBJ *menu_gobj, int value) {
 }
 
 void Lab_ChangeOSDs(GOBJ *menu_gobj, int value) {
-    Memcard *memcard = R13_PTR(MEMCARD);
     int new_osds_value = 0;
 
     for (int i = 0; i < LabMenu_OSDs.option_num; i++) {
         new_osds_value |= LabOptions_OSDs[i].val << osd_memory_bit_position[i];
     }
 
-    memcard->TM_OSDEnabled = new_osds_value;
+    stc_memcard->TM_OSDEnabled = new_osds_value;
 }
 
 void Lab_ChangePlayerPercent(GOBJ *menu_gobj, int value)
@@ -354,8 +351,7 @@ void Lab_ChangeFrameAdvance(GOBJ *menu_gobj, int value)
 }
 
 void Lab_ChangeFrameAdvanceButton(GOBJ *menu_gobj, int value) {
-    Memcard *memcard = R13_PTR(MEMCARD);
-    memcard->TM_LabFrameAdvanceButton = (u8)value;
+    stc_memcard->TM_LabFrameAdvanceButton = (u8)value;
 }
 
 void Lab_ChangeRandom(GOBJ *menu_gobj, int value)
@@ -543,8 +539,6 @@ void Lab_ChangeItemGrabDisplay(GOBJ *menu_gobj, int value)
 }
 void Lab_ChangeCamMode(GOBJ *menu_gobj, int value)
 {
-    MatchCamera *cam = MATCH_CAM;
-
     // normal cam
     if (value == 0)
     {
@@ -554,8 +548,8 @@ void Lab_ChangeCamMode(GOBJ *menu_gobj, int value)
     else if (value == 1)
     {
         Match_SetFreeCamera(0, 3);
-        cam->freecam_fov.X = 140;
-        cam->freecam_rotate.Y = 10;
+        stc_matchcam->freecam_fov.X = 140;
+        stc_matchcam->freecam_rotate.Y = 10;
     }
     // fixed
     else if (value == 2)
@@ -600,10 +594,8 @@ void Lab_ChangeHUD(GOBJ *menu_gobj, int value)
 
 void Lab_Exit(int value)
 {
-    Match *match = MATCH;
-
     // end game
-    match->state = 3;
+    stc_match->state = 3;
 
     // cleanup
     Match_EndVS();
@@ -997,13 +989,13 @@ void InfoDisplay_Update(GOBJ *menu_gobj, EventOption menu[], GOBJ *fighter, GOBJ
                 }
                 case (INFDISP_BLASTLR):
                 {
-                    Stage *stage = STAGE;
+                    Stage *stage = stc_stage;
                     Text_SetText(text, i, "Blastzone L/R: (%+.3f,%+.3f)", stage->blastzoneLeft, stage->blastzoneRight);
                     break;
                 }
                 case (INFDISP_BLASTUD):
                 {
-                    Stage *stage = STAGE;
+                    Stage *stage = stc_stage;
                     Text_SetText(text, i, "Blastzone U/D: (%.2f,%.2f)", stage->blastzoneTop, stage->blastzoneBottom);
                     break;
                 }
@@ -2634,12 +2626,12 @@ void DIDraw_Update()
                 Vec3 asdi_orig;
                 Vec3 asdi = {0, 0, 0};
                 // get fighter constants
-                ftCommonData *ftCmDt = R13_PTR(PLCO_FTCOMMON);
+                ftCommonData *ft_common = *stc_ftcommon;
 
                 if (fighter_data->flags.hitlag) {
                     // Calculate ASDI
-                    float asdi_mag = pow(ftCmDt->asdi_mag, 2);
-                    float asdi_units = ftCmDt->asdi_units;
+                    float asdi_mag = pow(ft_common->asdi_mag, 2);
+                    float asdi_units = ft_common->asdi_units;
                     // CStick has priority, check if mag > 0.7
                     if (pow(cstickX, 2) + (pow(cstickY, 2)) >= asdi_mag)
                     {
@@ -2665,7 +2657,7 @@ void DIDraw_Update()
 
                             // get values
                             float tdi_input = pow((-1 * kb.X * lstickY) + (lstickX * kb.Y), 2) / kb_mult;
-                            float max_angle = ftCmDt->tdi_maxAngle * M_1DEGREE;
+                            float max_angle = ft_common->tdi_maxAngle * M_1DEGREE;
                             float kb_mag = sqrtf(kb_mult);
 
                             // check to negate
@@ -2690,8 +2682,7 @@ void DIDraw_Update()
                 int air_state = fighter_data->phys.air_state;
                 float y_vel = fighter_data->phys.self_vel.Y;
                 Vec3 pos = fighter_data->phys.pos;
-                ftCommonData *ftCommon = R13_PTR(-0x514C);
-                float decay = ftCommon->kb_frameDecay;
+                float decay = ft_common->kb_frameDecay;
                 int hitstun_frames = AS_FLOAT(fighter_data->state_var.state_var1);
                 int vertices_num = 0;    // used to track how many vertices will be needed
                 int override_frames = 0; // used as an alternate countdown
@@ -2804,10 +2795,10 @@ void DIDraw_Update()
                                 air_state = 0;
 
                                 // check if over max horizontal velocity
-                                if (kb.X > ftCmDt->kb_maxVelX)
-                                    kb.X = ftCmDt->kb_maxVelX;
-                                if (kb.X < -ftCmDt->kb_maxVelX)
-                                    kb.X = -ftCmDt->kb_maxVelX;
+                                if (kb.X > ft_common->kb_maxVelX)
+                                    kb.X = ft_common->kb_maxVelX;
+                                if (kb.X < -ft_common->kb_maxVelX)
+                                    kb.X = -ft_common->kb_maxVelX;
 
                                 // adjust KB direction from slope
                                 kb.X *= ecb.ground_slope.Y;
@@ -2834,8 +2825,8 @@ void DIDraw_Update()
                                 VECMultAndAdd(&vel_temp, &ecb.ceil_slope);
 
                                 // decay kb
-                                kb.X = vel_temp.X * ftCmDt->kb_bounceDecay;
-                                kb.Y = vel_temp.Y * ftCmDt->kb_bounceDecay;
+                                kb.X = vel_temp.X * ft_common->kb_bounceDecay;
+                                kb.Y = vel_temp.Y * ft_common->kb_bounceDecay;
                             }
                         }
                         else if ((ecb.envFlags & (ECB_WALLLEFT | ECB_WALLRIGHT)) != 0)
@@ -2864,8 +2855,8 @@ void DIDraw_Update()
                                 VECMultAndAdd(&vel_temp, slope);
 
                                 // decay kb
-                                kb.X = vel_temp.X * ftCmDt->kb_bounceDecay;
-                                kb.Y = vel_temp.Y * ftCmDt->kb_bounceDecay;
+                                kb.X = vel_temp.X * ft_common->kb_bounceDecay;
+                                kb.Y = vel_temp.Y * ft_common->kb_bounceDecay;
 
                                 // zero y_vel
                                 y_vel = 0;
@@ -3049,7 +3040,7 @@ void Update_Camera()
                 // adjust rotate
                 else if ((held & HSD_BUTTON_B) != 0)
                 {
-                    MatchCamera *matchCam = MATCH_CAM;
+                    MatchCamera *matchCam = stc_matchcam;
                     DevCam_AdjustRotate(cobj, &matchCam->devcam_rot, &matchCam->devcam_pos, stickX, stickY);
                 }
             }
@@ -6023,7 +6014,7 @@ void Event_Init(GOBJ *gobj)
     LabOptions_InfoDisplayCPU[OPTINF_PRESET].OnChange = Lab_ChangeInfoPresetCPU;
 
     // saved options
-    Memcard *memcard = R13_PTR(MEMCARD);
+    Memcard *memcard = stc_memcard;
 
     // load input display option, resetting if invalid
     if (memcard->TM_LabFrameAdvanceButton < LabOptions_General[OPTGEN_FRAMEBTN].value_num)

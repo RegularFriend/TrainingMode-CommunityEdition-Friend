@@ -273,10 +273,8 @@ void Event_Think(GOBJ *event)
 }
 void Event_Exit()
 {
-    Match *match = MATCH;
-
     // end game
-    match->state = 3;
+    stc_match->state = 3;
 
     // cleanup
     Match_EndVS();
@@ -789,7 +787,7 @@ void Ledgedash_FtInit(LedgedashData *event_data)
 
 void Ledgedash_ChangeCamMode(GOBJ *menu_gobj, int value)
 {
-    MatchCamera *cam = MATCH_CAM;
+    MatchCamera *cam = stc_matchcam;
 
     // normal cam
     if (value == 0)
@@ -867,7 +865,7 @@ void Update_Camera()
                 // adjust rotate
                 else if ((held & HSD_BUTTON_B) != 0)
                 {
-                    MatchCamera *matchCam = MATCH_CAM;
+                    MatchCamera *matchCam = stc_matchcam;
                     DevCam_AdjustRotate(cobj, &matchCam->devcam_rot, &matchCam->devcam_pos, stickX, stickY);
                 }
             }
@@ -1432,7 +1430,7 @@ int Update_CheckAdvance(void)
 
     // get their advance input
     static int stc_advance_btns[] = {HSD_TRIGGER_L, HSD_TRIGGER_Z, HSD_BUTTON_X, HSD_BUTTON_Y, HSD_TRIGGER_R};
-    Memcard *memcard = R13_PTR(MEMCARD);
+    Memcard *memcard = stc_memcard;
     int btn_idx = memcard->TM_LabFrameAdvanceButton;
     if (btn_idx >= countof(stc_advance_btns))
         btn_idx = 0;

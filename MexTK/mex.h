@@ -23,7 +23,6 @@
 #include "include/memcard.h"
 #include "include/mex.h"
 #include "include/obj.h"
-#include "include/offsets.h"
 #include "include/preload.h"
 #include "include/scene.h"
 #include "include/stage.h"

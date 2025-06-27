@@ -288,7 +288,7 @@ int GrColl_GetLineInfo(int line_index, Vec3 *r4, void *r5, int *flags, Vec3 *ret
 void GrColl_GetLineSlope(int line_index, Vec3 *return_slope);
 int GrColl_CheckIfLineEnabled(int line_index);
 
-static int *stc_colltest = R13 + (COLL_TEST);
+static int *stc_colltest = R13 + (-0x51F4);
 static CollGroup **stc_firstcollgroup = R13 + (-0x51DC);
 static CollGroup **stc_collgroup = R13 + (-0x51E0);
 static CollLine **stc_collline = R13 + (-0x51E4);
