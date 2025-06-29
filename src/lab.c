@@ -4715,7 +4715,8 @@ void Savestates_Update()
 // Export functions
 static char *keyboard_rows[2][4] = {
     {"1234567890", "qwertyuiop", "asdfghjkl-", "zxcvbnm,./"},
-    {"!@#$%^&*()", "QWERTYUIOP", "ASDFGHJKL: ", "ZXCVBNM<>?"}};
+    {"!   %^  ()", "QWERTYUIOP", "ASDFGHJKL:", "ZXCVBNM<>?"}
+};
 int RowPixelToBlockPixel(int pixel_x, int pixel_y, int width, int height)
 {
 
