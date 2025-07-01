@@ -1187,18 +1187,21 @@ void Menu_Confirm_Think(GOBJ *menu_gobj)
             Menu_SelFile_Exit(menu_gobj);
             Menu_SelFile_Init(menu_gobj);
 
-            // reset cursor/page back to location of deleted file
-            if (file_idx == import_data.file_num && file_idx > 0)
-                file_idx--;
-            import_data.page = file_idx / IMPORT_FILESPERPAGE;
-            import_data.cursor = file_idx % IMPORT_FILESPERPAGE;
+            // if there's no errors and we're still selecting files
+            // reset the cursor to the location of the prev deleted file
+            if (import_data.menu_state == IMP_SELFILE) {
+                if (file_idx == import_data.file_num && file_idx > 0)
+                    file_idx--;
+                import_data.page = file_idx / IMPORT_FILESPERPAGE;
+                import_data.cursor = file_idx % IMPORT_FILESPERPAGE;
 
-            int page_result = Menu_SelFile_LoadPage(menu_gobj, import_data.page);
-            if (page_result == -1)
-            {
-                // create dialog
-                Menu_Confirm_Init(menu_gobj, CFRM_ERR);
-                SFX_PlayCommon(3);
+                int page_result = Menu_SelFile_LoadPage(menu_gobj, import_data.page);
+                if (page_result == -1)
+                {
+                    // create dialog
+                    Menu_Confirm_Init(menu_gobj, CFRM_ERR);
+                    SFX_PlayCommon(3);
+                }
             }
         }
         break;
