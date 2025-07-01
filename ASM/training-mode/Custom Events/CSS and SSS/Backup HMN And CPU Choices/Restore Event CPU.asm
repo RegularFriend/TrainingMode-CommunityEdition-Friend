@@ -27,8 +27,8 @@
     rtocbl r12, TM_GetEventCharList
     lwz r6, 0x4(r3)
         
-    cmpwi r6, 0
-    blt RestoreCPU
+    cmpwi r6, -1
+    beq RestoreCPU
     
     # CPU is not allowed, find first allowed CPU
     
@@ -87,8 +87,13 @@ RestoreCPU:
     lwz r9, MemcardData(r13)
     addi r9, r9, 3344
     
-    lbz r4, 140(r9)         # Character Backup
     lbz r6, 143(r9)         # Costume Backup
+    lbz r4, 140(r9)         # Character Backup
+
+    # Swap sheik to zelda
+    cmpwi r4, Sheik.Ext
+    bne WriteCPU
+    li r4, Zelda.Ext
 
 WriteCPU:
     load r3, 0x80497758     # CSS Match Info
