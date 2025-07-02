@@ -1055,6 +1055,10 @@ static int InHitstunAnim(int state) {
     return ASID_DAMAGEHI1 <= state && state <= ASID_DAMAGEFLYROLL;
 }
 
+static int InShieldStun(int state) {
+    return state == ASID_GUARDSETOFF;
+} 
+
 static int HitstunEnded(GOBJ *character) {
     FighterData *data = character->userdata;
     float hitstun = *((float*)&data->state_var.state_var1);
@@ -1201,6 +1205,9 @@ static int CheckOverlay(GOBJ *character, OverlayGroup overlay)
 
         case (OVERLAY_IASA):
             return CheckIASA(data);
+
+        case (OVERLAY_SHIELD_STUN):
+            return InShieldStun(state);
     }
 
     char * err = HSD_MemAlloc(64);
