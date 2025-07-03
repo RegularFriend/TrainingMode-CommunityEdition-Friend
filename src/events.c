@@ -1455,7 +1455,6 @@ int Savestate_Load(Savestate *savestate, int flags)
                 FighterData *subchar_fighter_data = queue[1].fighter_data;
 
                 for (int j = 0; j < countof(subchar_fighter_data->cpu.leader_log); j++){
-
                     CPULeaderLog *log = &subchar_fighter_data->cpu.leader_log[j];
                     //clear out log entry
                     subchar_fighter_data->cpu.leader_log[j] = (struct CPULeaderLog){0};
