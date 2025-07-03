@@ -2,74 +2,64 @@
 static char nullString[] = " ";
 
 // Main Menu
+enum lcancel_option
+{
+    OPTLC_BARREL,
+    OPTLC_HUD,
+    OPTLC_TIPS,
+    OPTLC_HELP,
+    OPTLC_EXIT,
+
+    OPTLC_COUNT
+};
 static char **LcOptions_Barrel[] = {"Off", "Stationary", "Move"};
-static char **LcOptions_HUD[] = {"On", "Off"};
-static EventOption LcOptions_Main[] = {
+static char **LcOptions_OffOn[] = {"Off", "On"};
+static EventOption LcOptions_Main[OPTLC_COUNT] = {
     // Target
     {
-        .kind = OPTKIND_STRING,                                            // the type of option this is; menu, string list, integers list, etc
-        .value_num = sizeof(LcOptions_Barrel) / 4,                                // number of values for this option
-        .val = 0,                                                          // value of this option
-        .menu = 0,                                                                // pointer to the menu that pressing A opens
-        .name = "Target",                                                  // pointer to a string
-        .desc = "Enable a target to attack. Use DPad down to\nmanually move it.", // string describing what this option does
-        .values = LcOptions_Barrel,                                        // pointer to an array of strings
-        .OnChange = 0,
+        .kind = OPTKIND_STRING,
+        .value_num = sizeof(LcOptions_Barrel) / 4,
+        .name = "Target",
+        .desc = "Enable a target to attack. Use DPad down to\nmanually move it.",
+        .values = LcOptions_Barrel,
     },
     // HUD
     {
-        .kind = OPTKIND_STRING,           // the type of option this is; menu, string list, integers list, etc
-        .value_num = sizeof(LcOptions_HUD) / 4,  // number of values for this option
-        .val = 0,                         // value of this option
-        .menu = 0,                               // pointer to the menu that pressing A opens
-        .name = "HUD",                    // pointer to a string
-        .desc = "Toggle visibility of the HUD.", // string describing what this option does
-        .values = LcOptions_HUD,          // pointer to an array of strings
-        .OnChange = 0,
+        .kind = OPTKIND_STRING,
+        .value_num = sizeof(LcOptions_OffOn) / 4,
+        .val = 1,
+        .name = "HUD",
+        .desc = "Toggle visibility of the HUD.",
+        .values = LcOptions_OffOn,
     },
     // Tips
     {
-        .kind = OPTKIND_STRING,                  // the type of option this is; menu, string list, integers list, etc
-        .value_num = sizeof(LcOptions_HUD) / 4,         // number of values for this option
-        .val = 0,                                // value of this option
-        .menu = 0,                                      // pointer to the menu that pressing A opens
-        .name = "Tips",                          // pointer to a string
-        .desc = "Toggle the onscreen display of tips.", // string describing what this option does
-        .values = LcOptions_HUD,                 // pointer to an array of strings
+        .kind = OPTKIND_STRING,
+        .value_num = sizeof(LcOptions_OffOn) / 4,
+        .val = 1,
+        .name = "Tips",
+        .desc = "Toggle the onscreen display of tips.",
+        .values = LcOptions_OffOn,
         .OnChange = Tips_Toggle,
     },
     // Help
     {
         .kind = OPTKIND_FUNC,                                                                                                                                                                                       // the type of option this is; menu, string list, integers list, etc
-        .value_num = 0,                                                                                                                                                                                                    // number of values for this option
-        .val = 0,                                                                                                                                                                                                   // value of this option
-        .menu = 0,                                                                                                                                                                                                         // pointer to the menu that pressing A opens
         .name = "Help",                                                                                                                                                                                             // pointer to a string
         .desc = "L-canceling is performed by pressing L, R, or Z up to \n7 frames before landing from a non-special aerial\nattack. This will cut the landing lag in half, allowing \nyou to act sooner after attacking.", // string describing what this option does
-        .values = 0,                                                                                                                                                                                                // pointer to an array of strings
-        .OnChange = 0,
     },
     // Exit
     {
-        .kind = OPTKIND_FUNC,                     // the type of option this is; menu, string list, integers list, etc
-        .value_num = 0,                                  // number of values for this option
-        .val = 0,                                 // value of this option
-        .menu = 0,                                       // pointer to the menu that pressing A opens
-        .name = "Exit",                           // pointer to a string
-        .desc = "Return to the Event Selection Screen.", // string describing what this option does
-        .values = 0,                              // pointer to an array of strings
-        .OnChange = 0,
+        .kind = OPTKIND_FUNC,
+        .name = "Exit",
+        .desc = "Return to the Event Selection Screen.",
         .OnSelect = Event_Exit,
     },
 };
 static EventMenu LabMenu_Main = {
-    .name = "L-Cancel Training",                                // the name of this menu
-    .option_num = sizeof(LcOptions_Main) / sizeof(EventOption), // number of options this menu contains
-    .scroll = 0,                                                // runtime variable used for how far down in the menu to start
-    .state = 0,                                                 // bool used to know if this menu is focused, used at runtime
-    .cursor = 0,                                                // index of the option currently selected, used at runtime
-    .options = &LcOptions_Main,                                 // pointer to all of this menu's options
-    .prev = 0,                                                  // pointer to previous menu, used at runtime
+    .name = "L-Cancel Training",
+    .option_num = sizeof(LcOptions_Main) / sizeof(EventOption),
+    .options = &LcOptions_Main,
 };
 
 // Init Function
@@ -183,14 +173,13 @@ void LCancel_Init(LCancelData *event_data)
     event_data->is_current_aerial_counted = false;
     arrow_jobj->trans.X = 0;
     JOBJ_SetFlags(arrow_jobj, JOBJ_HIDDEN);
-
-    return 0;
 }
 void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
 {
 
     // run tip logic
-    Tips_Think(event_data, hmn_data);
+    if (LcOptions_Main[OPTLC_TIPS].val)
+        Tips_Think(event_data, hmn_data);
 
     JOBJ *hud_jobj = event_data->hud.gobj->hsd_object;
 
@@ -341,7 +330,7 @@ void LCancel_HUDCamThink(GOBJ *gobj)
 {
 
     // if HUD enabled and not paused
-    if ((LcOptions_Main[1].val == 0) && (Pause_CheckStatus(1) != 2))
+    if ((LcOptions_Main[OPTLC_HUD].val) && (Pause_CheckStatus(1) != 2))
     {
         CObjThink_Common(gobj);
     }
@@ -357,146 +346,138 @@ void Tips_Toggle(GOBJ *menu_gobj, int value)
 void Tips_Think(LCancelData *event_data, FighterData *hmn_data)
 {
 
-    if (LcOptions_Main[2].val == 0)
+    // shield tip
+    if (event_data->tip.shield_isdisp == 0) // if not shown
     {
-        // shield tip
-        if (event_data->tip.shield_isdisp == 0) // if not shown
+        // look for a freshly buffered guard off
+        if (((hmn_data->state_id == ASID_GUARDOFF) && (hmn_data->TM.state_frame == 0)) &&                               // currently in guardoff first frame
+            (hmn_data->TM.state_prev[0] == ASID_GUARD) &&                                                            // was just in wait
+            ((hmn_data->TM.state_prev[3] >= ASID_LANDINGAIRN) && (hmn_data->TM.state_prev[3] <= ASID_LANDINGAIRLW))) // was in aerial landing a few frames ago
+        {
+            // increment condition count
+            event_data->tip.shield_num++;
+
+            // if condition met X times, show tip
+            if (event_data->tip.shield_num >= 3)
+            {
+                // display tip
+                char *shield_string = "Tip:\nDon't hold the trigger! Quickly \npress and release to prevent \nshielding after landing.";
+                if (event_vars->Tip_Display(5 * 60, shield_string))
+                {
+                    // set as shown
+                    //event_data->tip.shield_isdisp = 1;
+                    event_data->tip.shield_num = 0;
+                }
+            }
+        }
+    }
+
+    // hitbox tip
+    if (event_data->tip.hitbox_isdisp == 0) // if not shown
+    {
+        // update hitbox active bool
+        if ((hmn_data->state_id >= ASID_ATTACKAIRN) && (hmn_data->state_id <= ASID_ATTACKAIRLW)) // check if currently in aerial attack)                                                      // check if in first frame of aerial attack
         {
 
-            // update tip conditions
-            // look for a freshly buffered guard off
-            if (((hmn_data->state_id == ASID_GUARDOFF) && (hmn_data->TM.state_frame == 0)) &&                               // currently in guardoff first frame
-                (hmn_data->TM.state_prev[0] == ASID_GUARD) &&                                                            // was just in wait
-                ((hmn_data->TM.state_prev[3] >= ASID_LANDINGAIRN) && (hmn_data->TM.state_prev[3] <= ASID_LANDINGAIRLW))) // was in aerial landing a few frames ago
-            {
-                // increment condition count
-                event_data->tip.shield_num++;
+            // reset hitbox bool on first frame of aerial attack
+            if (hmn_data->TM.state_frame == 0)
+                event_data->tip.hitbox_active = 0;
 
-                // if condition met X times, show tip
-                if (event_data->tip.shield_num >= 3)
+            // check if hitbox active
+            for (int i = 0; i < (sizeof(hmn_data->hitbox) / sizeof(ftHit)); i++)
+            {
+                if (hmn_data->hitbox[i].active != 0)
                 {
-                    // display tip
-                    char *shield_string = "Tip:\nDon't hold the trigger! Quickly \npress and release to prevent \nshielding after landing.";
-                    if (event_vars->Tip_Display(5 * 60, shield_string))
-                    {
-                        // set as shown
-                        //event_data->tip.shield_isdisp = 1;
-                        event_data->tip.shield_num = 0;
-                    }
+                    event_data->tip.hitbox_active = 1;
+                    break;
                 }
             }
         }
 
-        // hitbox tip
-        if (event_data->tip.hitbox_isdisp == 0) // if not shown
+        // update tip conditions
+        if ((hmn_data->state_id >= ASID_LANDINGAIRN) && (hmn_data->state_id <= ASID_LANDINGAIRLW) && (hmn_data->TM.state_frame == 0) && // is in aerial landing
+            (!event_data->is_fail) &&
+            (event_data->tip.hitbox_active == 0)) // succeeded the last aerial landing
         {
-            // update hitbox active bool
-            if ((hmn_data->state_id >= ASID_ATTACKAIRN) && (hmn_data->state_id <= ASID_ATTACKAIRLW)) // check if currently in aerial attack)                                                      // check if in first frame of aerial attack
+            // increment condition count
+            event_data->tip.hitbox_num++;
+
+            // if condition met X times, show tip
+            if (event_data->tip.hitbox_num >= 3)
             {
-
-                // reset hitbox bool on first frame of aerial attack
-                if (hmn_data->TM.state_frame == 0)
-                    event_data->tip.hitbox_active = 0;
-
-                // check if hitbox active
-                for (int i = 0; i < (sizeof(hmn_data->hitbox) / sizeof(ftHit)); i++)
+                // display tip
+                char *hitbox_string = "Tip:\nDon't land too quickly! Make \nsure you land after the \nattack becomes active.";
+                if (event_vars->Tip_Display(5 * 60, hitbox_string))
                 {
-                    if (hmn_data->hitbox[i].active != 0)
-                    {
-                        event_data->tip.hitbox_active = 1;
-                        break;
-                    }
-                }
-            }
 
-            // update tip conditions
-            if ((hmn_data->state_id >= ASID_LANDINGAIRN) && (hmn_data->state_id <= ASID_LANDINGAIRLW) && (hmn_data->TM.state_frame == 0) && // is in aerial landing
-                (!event_data->is_fail) &&
-                (event_data->tip.hitbox_active == 0)) // succeeded the last aerial landing
-            {
-                // increment condition count
-                event_data->tip.hitbox_num++;
-
-                // if condition met X times, show tip
-                if (event_data->tip.hitbox_num >= 3)
-                {
-                    // display tip
-                    char *hitbox_string = "Tip:\nDon't land too quickly! Make \nsure you land after the \nattack becomes active.";
-                    if (event_vars->Tip_Display(5 * 60, hitbox_string))
-                    {
-
-                        // set as shown
-                        //event_data->tip.hitbox_isdisp = 1;
-                        event_data->tip.hitbox_num = 0;
-                    }
+                    // set as shown
+                    //event_data->tip.hitbox_isdisp = 1;
+                    event_data->tip.hitbox_num = 0;
                 }
             }
         }
+    }
 
-        // fastfall tip
-        if (event_data->tip.fastfall_isdisp == 0) // if not shown
+    // fastfall tip
+    if (event_data->tip.fastfall_isdisp == 0) // if not shown
+    {
+        // update fastfell bool
+        if ((hmn_data->state_id >= ASID_ATTACKAIRN) && (hmn_data->state_id <= ASID_ATTACKAIRLW)) // check if currently in aerial attack)                                                      // check if in first frame of aerial attack
         {
-            // update fastfell bool
-            if ((hmn_data->state_id >= ASID_ATTACKAIRN) && (hmn_data->state_id <= ASID_ATTACKAIRLW)) // check if currently in aerial attack)                                                      // check if in first frame of aerial attack
+
+            // reset hitbox bool on first frame of aerial attack
+            if (hmn_data->TM.state_frame == 0)
+                event_data->tip.fastfall_active = 0;
+
+            // check if fastfalling
+            if (hmn_data->flags.is_fastfall)
+                event_data->tip.fastfall_active = 1;
+        }
+
+        // update tip conditions
+        if (IsAerialLandingState(hmn_data->state_id) && (hmn_data->TM.state_frame == 0) && // is in aerial landing
+            ((event_data->current_l_input_timing >= 7) && (event_data->current_l_input_timing <= 15)) &&      // was early for an l-cancel
+            (event_data->tip.fastfall_active == 0))                                           // succeeded the last aerial landing
+        {
+            // increment condition count
+            event_data->tip.fastfall_num++;
+
+            // if condition met X times, show tip
+            if (event_data->tip.fastfall_num >= 3)
             {
-
-                // reset hitbox bool on first frame of aerial attack
-                if (hmn_data->TM.state_frame == 0)
-                    event_data->tip.fastfall_active = 0;
-
-                // check if fastfalling
-                if (hmn_data->flags.is_fastfall)
-                    event_data->tip.fastfall_active = 1;
-            }
-
-            // update tip conditions
-            if (IsAerialLandingState(hmn_data->state_id) && (hmn_data->TM.state_frame == 0) && // is in aerial landing
-                ((event_data->current_l_input_timing >= 7) && (event_data->current_l_input_timing <= 15)) &&      // was early for an l-cancel
-                (event_data->tip.fastfall_active == 0))                                           // succeeded the last aerial landing
-            {
-                // increment condition count
-                event_data->tip.fastfall_num++;
-
-                // if condition met X times, show tip
-                if (event_data->tip.fastfall_num >= 3)
+                // display tip
+                char *fastfall_string = "Tip:\nDon't forget to fastfall!\nIt will let you act sooner \nand help with your \ntiming.";
+                if (event_vars->Tip_Display(5 * 60, fastfall_string))
                 {
-                    // display tip
-                    char *fastfall_string = "Tip:\nDon't forget to fastfall!\nIt will let you act sooner \nand help with your \ntiming.";
-                    if (event_vars->Tip_Display(5 * 60, fastfall_string))
-                    {
 
-                        // set as shown
-                        //event_data->tip.hitbox_isdisp = 1;
-                        event_data->tip.fastfall_num = 0;
-                    }
+                    // set as shown
+                    //event_data->tip.hitbox_isdisp = 1;
+                    event_data->tip.fastfall_num = 0;
                 }
             }
         }
+    }
 
-        // late tip
-        if (event_data->tip.late_isdisp == 0) // if not shown
+    // late tip
+    if (event_data->tip.late_isdisp == 0) // if not shown
+    {
+        if ((hmn_data->state_id >= ASID_LANDINGAIRN) && (hmn_data->state_id <= ASID_LANDINGAIRLW) && // is in aerial landing
+            (event_data->is_fail) &&                                                      // failed the l-cancel
+            (hmn_data->input.down & (HSD_TRIGGER_L | HSD_TRIGGER_R | HSD_TRIGGER_Z)))          // was late for an l-cancel by pressing it just now
         {
+            // increment condition count
+            event_data->tip.late_num++;
 
-            // update tip conditions
-            if ((hmn_data->state_id >= ASID_LANDINGAIRN) && (hmn_data->state_id <= ASID_LANDINGAIRLW) && // is in aerial landing
-                (event_data->is_fail) &&                                                      // failed the l-cancel
-                (hmn_data->input.down & (HSD_TRIGGER_L | HSD_TRIGGER_R | HSD_TRIGGER_Z)))          // was late for an l-cancel by pressing it just now
+            // if condition met X times, show tip
+            if (event_data->tip.late_num >= 3)
             {
-                // increment condition count
-                event_data->tip.late_num++;
-
-                // if condition met X times, show tip
-                if (event_data->tip.late_num >= 3)
+                // display tip
+                char *late_string = "Tip:\nTry pressing the trigger a\nbit earlier, before the\nfighter lands.";
+                if (event_vars->Tip_Display(5 * 60, late_string))
                 {
-                    // display tip
-                    char *late_string = "Tip:\nTry pressing the trigger a\nbit earlier, before the\nfighter lands.";
-                    if (event_vars->Tip_Display(5 * 60, late_string))
-                    {
-
-                        // set as shown
-                        //event_data->tip.hitbox_isdisp = 1;
-                        event_data->tip.late_num = 0;
-                    }
+                    // set as shown
+                    //event_data->tip.hitbox_isdisp = 1;
+                    event_data->tip.late_num = 0;
                 }
             }
         }
@@ -508,7 +489,7 @@ void Barrel_Think(LCancelData *event_data)
 {
     GOBJ *barrel_gobj = event_data->barrel_gobj;
 
-    switch (LcOptions_Main[0].val)
+    switch (LcOptions_Main[OPTLC_BARREL].val)
     {
     case (0): // off
     {
@@ -734,39 +715,20 @@ void Barrel_Break(GOBJ *barrel_gobj)
 }
 int Barrel_OnHurt(GOBJ *barrel_gobj)
 {
+    if (LcOptions_Main[OPTLC_BARREL].val != 2) // move
+        return 0;
 
-    // get event data
     LCancelData *event_data = event_vars->event_gobj->userdata;
+    Barrel_Break(event_data->barrel_gobj);
 
-    switch (LcOptions_Main[0].val)
-    {
-    case (0): // off
-    {
-
-        break;
-    }
-    case (1): // stationary
-    {
-        break;
-    }
-    case (2): // move
-    {
-        // Break this barrel
-        Barrel_Break(event_data->barrel_gobj);
-
-        // spawn new barrel at a random position
-        barrel_gobj = Barrel_Spawn(1);
-        event_data->barrel_gobj = barrel_gobj;
-        break;
-    }
-    }
+    // spawn new barrel at a random position
+    barrel_gobj = Barrel_Spawn(1);
+    event_data->barrel_gobj = barrel_gobj;
 
     return 0;
 }
 int Barrel_OnDestroy(GOBJ *barrel_gobj)
 {
-
-    // get event data
     LCancelData *event_data = event_vars->event_gobj->userdata;
 
     // if this barrel is still the current barrel
