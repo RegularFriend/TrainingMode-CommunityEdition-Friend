@@ -1446,19 +1446,24 @@ int Savestate_Load(Savestate *savestate, int flags)
                 }
             }
 
-            // if subchar exists, reset its leader log, tracked position, and facing
+            // If subchar exists, reset its leader log, tracked position, and facing direction. 
+            // This is to fix a bug where the last 30 frames before save state reset would get carried into the subcharacter's
+            // queue after loading a savestate. A more ideal fix would be to save and restore the cpu leader log, but implementing
+            // that will have to wait until the upcomming save state refactor is done. For now this solves most problems by clearing
+            // out the queue on reset so the subcharacter starts with a blank cpu log, which is what you want in most situations. 
             if (queue[1].fighter != 0 && savestate->ft_state[i].data[1].is_exist == 1){
 
                 FtSaveStateData *primarychar_data = &ft_state->data[0];
                 FighterData *subchar_fighter_data = queue[1].fighter_data;
 
-                for (int j = 0; j < countof(subchar_fighter_data->cpu.leader_log); j++)
+                for (int j = 0; j < countof(subchar_fighter_data->cpu.leader_log); j++) 
                 {
                     // set the pos target to the primary character's position to avoid a force target at 0,0,0
-                    // set the facing direction to the primary character's facing direction to avoid an obo flip
+                    // set the facing direction to the primary character's facing direction to avoid the facing direction being incorrect on the first frame
                     subchar_fighter_data->cpu.leader_log[j] = (struct CPULeaderLog){
                         .pos = primarychar_data->phys.pos,
-                        .facing_direction = primarychar_data->facing_direction};
+                        .facing_direction = primarychar_data->facing_direction
+                    };
                 }
             }
 
