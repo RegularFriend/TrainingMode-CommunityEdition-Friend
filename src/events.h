@@ -329,6 +329,7 @@ typedef struct FtSaveStateData
     struct reflect_hit reflect_hit;       // 0x1a2c
     struct absorb_hit absorb_hit;         // 0x1a40
     struct cb cb;
+    struct CPULeaderLog cpu_leader_log[30];
 } FtSaveStateData;
 
 typedef struct FtSaveState

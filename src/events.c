@@ -1074,6 +1074,9 @@ int Savestate_Save(Savestate *savestate, int flags)
                         {
                             ft_data->XRotN_rot = fighter_data->bones[XRotN_id].joint->rot;
                         }
+
+                        //save CPULeaderLog
+                        memcpy(&ft_data->cpu_leader_log, &fighter_data->cpu.leader_log, sizeof(fighter_data->cpu.leader_log));
                     }
                 }
             }
@@ -1443,9 +1446,15 @@ int Savestate_Load(Savestate *savestate, int flags)
 
                         item = next_item;
                     }
+
+                    //copy cpu log
+                    if (ft_data->cpu_leader_log != 0)
+                        memcpy(fighter_data->cpu.leader_log, &ft_data->cpu_leader_log, sizeof(ft_data->cpu_leader_log));
+                    // for (int k = 0; k < countof(&ft_data->cpu_leader_log); k++){
+
+                    // }
                 }
             }
-
             // check to recreate HUD
             MatchHUDElement *hud = &stc_matchhud->element_data[i];
 
