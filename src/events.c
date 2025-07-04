@@ -1450,18 +1450,15 @@ int Savestate_Load(Savestate *savestate, int flags)
             if (queue[1].fighter != 0 && savestate->ft_state[i].data[1].is_exist == 1){
 
                 FtSaveStateData *primarychar_data = &ft_state->data[0];
-                FtSaveStateData *subchar_data = &ft_state->data[1];
-                FighterData *primarychar_fighter_data = queue[0].fighter_data;
                 FighterData *subchar_fighter_data = queue[1].fighter_data;
 
-                for (int j = 0; j < countof(subchar_fighter_data->cpu.leader_log); j++){
-                    CPULeaderLog *log = &subchar_fighter_data->cpu.leader_log[j];
-                    //clear out log entry
-                    subchar_fighter_data->cpu.leader_log[j] = (struct CPULeaderLog){0};
-                    //set the pos target to the primary character's position to avoid a force target at 0,0,0
-                    log->pos = primarychar_data->phys.pos;
-                    //set the facing direction to the primary character's facing direction to avoid an obo flip
-                    log->facing_direction = primarychar_data->facing_direction;
+                for (int j = 0; j < countof(subchar_fighter_data->cpu.leader_log); j++)
+                {
+                    // set the pos target to the primary character's position to avoid a force target at 0,0,0
+                    // set the facing direction to the primary character's facing direction to avoid an obo flip
+                    subchar_fighter_data->cpu.leader_log[j] = (struct CPULeaderLog){
+                        .pos = primarychar_data->phys.pos,
+                        .facing_direction = primarychar_data->facing_direction};
                 }
             }
 
