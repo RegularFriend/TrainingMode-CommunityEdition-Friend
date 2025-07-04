@@ -9,7 +9,7 @@
     cmpwi r3, 0 # 0 = default setting
     beq Exit
 
-    lfs f31, -0x6F88(rtoc) # loads 0.25
+    lfd f31, -0x6F88(rtoc) # loads 0.25
     fsubs f1, f1, f1       # f1 = 0.0
 
     cmpwi r3, 1
