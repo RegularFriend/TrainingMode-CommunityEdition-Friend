@@ -1450,9 +1450,6 @@ int Savestate_Load(Savestate *savestate, int flags)
                     //copy cpu log
                     if (ft_data->cpu_leader_log != 0)
                         memcpy(fighter_data->cpu.leader_log, &ft_data->cpu_leader_log, sizeof(ft_data->cpu_leader_log));
-                    // for (int k = 0; k < countof(&ft_data->cpu_leader_log); k++){
-
-                    // }
                 }
             }
             // check to recreate HUD
