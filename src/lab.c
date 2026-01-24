@@ -2278,7 +2278,7 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
         }
 
         CounterInfo info = GetCounterInfo();
-        if (info.disable)
+        if (info.disable && info.counter_delay == 0)
             goto CPULOGIC_START;
         
         // run counter logic
@@ -2287,7 +2287,7 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
             goto CPULOGIC_NONE;
         } else {
             eventData->cpu_countering = true;
-            if (Lab_CPUPerformAction(cpu, info.action_id, hmn)) {
+            if (!info.disable && Lab_CPUPerformAction(cpu, info.action_id, hmn)) {
                 CPUAction *action = Lab_CPUActions[info.action_id];
                 if (action->noActAfter) {
                     eventData->cpu_state = CPUSTATE_NONE;
