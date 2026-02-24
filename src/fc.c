@@ -5,6 +5,7 @@ void Exit(GOBJ *menu);
 
 enum options_main {
     OPT_BARREL,
+    OPT_SUBFLOAT,
     OPT_EXIT,
 
     OPT_COUNT
@@ -15,6 +16,12 @@ static EventOption Options_Main[OPT_COUNT] = {
         .kind = OPTKIND_TOGGLE,
         .name = "Target",
         .desc = {"Enable a target to attack."},
+    },
+    {
+        .kind = OPTKIND_TOGGLE,
+        .name = "Subfloat OSD",
+        .val = true,
+        .desc = {"Show your subfloat double jump timing."},
     },
     {
         .kind = OPTKIND_FUNC,
@@ -69,6 +76,7 @@ static char *action_names[] = {
 static u8 action_log[35];
 static u32 action_log_cur = countof(action_log); // start with log disabled
 static GOBJ *barrel;
+static char subfloat_timer;
 
 static GXColor action_colors[Action_Count] = {
     {40, 40, 40, 180},  // dark gray - none
@@ -155,6 +163,28 @@ void Barrel_OnDestroy(GOBJ *_) {
 }
 
 void Event_Think(GOBJ *menu) {
+    GOBJ *ft = Fighter_GetGObj(0);
+    FighterData *ft_data = ft->userdata;
+
+    // subfloat OSD ------------------------------------------------------------
+    
+    if (Options_Main[OPT_SUBFLOAT].val) {
+        if (ft_data->input.timer_jump == 0 && subfloat_timer < 10) {
+            int state_id = ft_data->state_id;
+            if (
+                (ASID_KNEEBEND <= state_id && state_id <= ASID_JUMPAERIALB)
+                || state_id == ASID_FLOAT
+            ) {
+                int colour = subfloat_timer == 4 ? MSGCOLOR_GREEN : MSGCOLOR_RED;
+                event_vars->Message_Display(
+                    15, ft_data->ply, colour,
+                    "Subfloat DJ f%i", subfloat_timer + 1
+                );
+            }
+        }
+        subfloat_timer = ft_data->input.timer_jump;
+    }
+
     // barrel ------------------------------------------------------------------
     
     if (Options_Main[OPT_BARREL].val) {
@@ -177,9 +207,6 @@ void Event_Think(GOBJ *menu) {
     // action log --------------------------------------------------------------
     
     {
-        GOBJ *ft = Fighter_GetGObj(0);
-        FighterData *ft_data = ft->userdata;
-        
         int state = ft_data->state_id;
         int is_fastfall = ft_data->flags.is_fastfall;
         
