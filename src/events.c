@@ -1566,7 +1566,7 @@ void Message_Manager(GOBJ *mngr_gobj)
         GOBJ **msg_queue = mgr_data->msg_queue[i];
 
         // anim update (time based logic)
-        for (int j = (MSGQUEUE_SIZE - 2); j >= 0; j--) // iterate through backwards (because deletions)
+        for (int j = (MSGQUEUE_SIZE - 1); j >= 0; j--) // iterate through backwards (because deletions)
         {
             GOBJ *this_msg_gobj = msg_queue[j];
 
