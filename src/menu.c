@@ -567,7 +567,13 @@ void EventMenu_UpdateText(GOBJ *gobj)
                 Text_SetText(menu_data->text_value, i, "Off");
             }
         }
-        else {
+        else if (
+            (option->kind == OPTKIND_INFO || option->kind == OPTKIND_FUNC)
+            && option->value_string
+        ) {
+            Text_SetText(menu_data->text_value, i, option->value_string);
+            JOBJ_ClearFlags(rowbox, JOBJ_HIDDEN);
+        } else {
             Text_SetText(menu_data->text_value, i, "");
             JOBJ_SetFlags(rowbox, JOBJ_HIDDEN);
         }

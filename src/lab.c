@@ -123,6 +123,54 @@ void Lab_ChangeAdvCounterLogic(GOBJ *menu_gobj, int value) {
         options[i].disable = disable;
 }
 
+int ActionLog_CurrentPage(void) {
+    // the menu always points to the current page,
+    // so we can do some pointer arithmetic to find the idx.
+    EventOption *page = LabMenu_ActionLog.options;
+    EventOption *base = LabOptions_ActionLog[0];
+    return (page - base) / countof(LabOptions_ActionLog_Default);
+}
+
+bool ActionLog_IsShowing(void) {
+    // only show if a state has been selected
+    bool draw_action_log = false;
+    for (int i = 0; i < ACTION_LOG_MAX; ++i) 
+        draw_action_log |= LabOptions_ActionLog[i][OPTACTIONLOG_STATE].val != 0;
+    return draw_action_log;
+}
+
+void Lab_ChangeActionBehaviour(GOBJ *menu_gobj, int value) {
+    for (int i = 0; i < ACTION_LOG_MAX; ++i)
+        LabOptions_ActionLog[i][OPTACTIONLOG_ACTION].val = LabOptions_ActionLog[i][OPTACTIONLOG_ACTION].val_prev;
+    LabMenu_ActionLog.options = LabOptions_ActionLog[value];
+}
+
+void Lab_RemoveActionLogState(GOBJ *menu_gobj) {
+    int action_idx = ActionLog_CurrentPage();
+    action_log_state_name_buffers[action_idx][0] = 0;
+    EventOption *opt = &LabOptions_ActionLog[action_idx][OPTACTIONLOG_STATE];
+    opt->val = 0;
+    opt->value_string = 0;
+    opt->name = LabOptions_ActionLog_Default[OPTACTIONLOG_STATE].name;
+    opt->OnSelect = LabOptions_ActionLog_Default[OPTACTIONLOG_STATE].OnSelect;
+}
+
+void Lab_SetActionLogState(GOBJ *menu_gobj) {
+    GOBJ *hmn = Fighter_GetGObj(0);
+    FighterData *hmn_data = hmn->userdata;
+
+    int action_idx = ActionLog_CurrentPage();
+
+    char *buffer = action_log_state_name_buffers[action_idx];
+    GetCurrentStateName(hmn, buffer);
+
+    EventOption *opt = &LabOptions_ActionLog[action_idx][OPTACTIONLOG_STATE];
+    opt->val = hmn_data->state_id;
+    opt->value_string = buffer;
+    opt->name = "Remove State";
+    opt->OnSelect = Lab_RemoveActionLogState;
+}
+
 void Lab_AddCustomOSD(GOBJ *menu_gobj) {
     int row = OPTCUSTOMOSD_FIRST_CUSTOM + stc_custom_osd_state_num;
     if (row == OPTCUSTOMOSD_MAX_COUNT) {
@@ -134,8 +182,7 @@ void Lab_AddCustomOSD(GOBJ *menu_gobj) {
     GOBJ *hmn = Fighter_GetGObj(0);
     FighterData *hmn_data = hmn->userdata;
     stc_custom_osd_states[stc_custom_osd_state_num++] = hmn_data->state_id;
-    int found = GetCurrentStateName(hmn, state_buf);
-    if (!found) strcpy(state_buf, "Unknown");
+    GetCurrentStateName(hmn, state_buf);
 
     char *row_text = HSD_MemAlloc(128);
     sprintf(row_text, "Remove OSD: %s", state_buf);
@@ -172,8 +219,7 @@ void Lab_CustomOSDsThink(void) {
 
         if (hmn_data->state_id == state_id) {
             char state_buf[128];
-            int found = GetCurrentStateName(hmn, state_buf);
-            if (!found) strcpy(state_buf, "Unknown");
+            GetCurrentStateName(hmn, state_buf);
 
             event_vars->Message_Display(
                 15, hmn_data->ply, 0, 
@@ -646,34 +692,50 @@ GOBJ *InfoDisplay_Init(int ply)
     return idGOBJ;
 }
 
-// Returns length of string, including null terminator. Zero if not found.
-static int GetCurrentStateName(GOBJ *fighter, char *buf) {
-    FighterData *fighter_data = fighter->userdata;
+// Returns length of string, including null terminator.
+static int GetCurrentStateName(GOBJ *ft, char *buf) {
+    FighterData *ft_data = ft->userdata;
+    
+    // normal state names
+    // This needs to be a manual lookup table because some common states use the same animation (KneeBend & Landing),
+    // causing them to both return the name of the common animation ("Landing").
+    if (0 <= ft_data->state_id && ft_data->state_id < (int)countof(action_state_name_lookup)) {
+        const char *name = action_state_name_lookup[ft_data->state_id];
+        int len = strlen(name) + 1;
+        memcpy(buf, name, len);
+        return len;
+    }
 
-    if (fighter_data->action_id == -1) return 0;
-
-    FtAction *action = Fighter_GetFtAction(fighter_data, fighter_data->action_id);
+    if (ft_data->action_id == -1) {
+        memcpy(buf, "Unknown", 8);
+        return 8;
+    }
+    
+    FtAction *action = Fighter_GetFtAction(ft_data, ft_data->action_id);
     // extract state name from symbol
     char *symbol = action->anim_symbol;
 
-    // extract from the opponent fighter actions if there is no symbol in the fighter action
+    // extract from the opponent ft actions if there is no symbol in the ft action
     // (e.g. getting Yoshi's Neutral-B, Mewtwo's Side-B, Bowser's Side-B, etc.)
     if (symbol == NULL) {
         // loop through all humans
         for (int i = 0; i < 6; i++) {
-            if (i == fighter_data->ply) { continue; }
+            if (i == ft_data->ply) { continue; }
 
-            GOBJ *other_fighter = Fighter_GetGObj(i);
-            if (other_fighter == 0) { continue; }
+            GOBJ *other_ft = Fighter_GetGObj(i);
+            if (other_ft == 0) { continue; }
 
-            FighterData *other_fighter_data = other_fighter->userdata;
-            action = Fighter_GetFtAction(other_fighter_data, fighter_data->action_id);
+            FighterData *other_ft_data = other_ft->userdata;
+            action = Fighter_GetFtAction(other_ft_data, ft_data->action_id);
             symbol = action->anim_symbol;
             if (symbol != NULL) { break; }
         }
     }
 
-    if (symbol == NULL) return 0;
+    if (symbol == NULL) {
+        memcpy(buf, "Unknown", 8);
+        return 8;
+    }
 
     int start = 0;
     int len = 0;
@@ -751,13 +813,8 @@ void InfoDisplay_Update(GOBJ *menu_gobj, EventOption menu[], GOBJ *fighter, GOBJ
                 case (INFDISP_STATE):
                 {
                     char buf[64];
-                    int found = GetCurrentStateName(fighter, buf);
-                    if (found) {
-                        Text_SetText(text, i, "State: %s", buf);
-                    } else {
-                        Text_SetText(text, i, "State: Unknown");
-                    }
-
+                    GetCurrentStateName(fighter, buf);
+                    Text_SetText(text, i, "State: %s", buf);
                     break;
                 }
                 case (INFDISP_FRAME):
@@ -3597,7 +3654,10 @@ void Record_GX(GOBJ *gobj, int pass)
     bool hideHUD = *(u8*)(R13 + -0x4948);
     rec_data.text->hidden = hideHUD;
     if (hideHUD) return;
-    
+
+    if (LabOptions_Record[OPTREC_CPUMODE].val == 0 && LabOptions_Record[OPTREC_HMNMODE].val == 0)
+        return;
+
     // update UI position
     // the reason im doing this here is because i want it to update in the menu
     if (pass == 0)
@@ -4498,6 +4558,8 @@ void Record_LoadSavestate(Savestate_v1 *savestate) {
     
     event_vars->game_timer = rec_state->frame;
     rec_data.restore_timer = 0;
+
+    action_log_cur = countof(action_log); // disable action log
 
     CPUResetVars();
 
@@ -5849,6 +5911,20 @@ void Event_Init(GOBJ *gobj)
         );
     }
     
+    // action log
+    for (int i = 0; i < ACTION_LOG_MAX; ++i) {
+        memcpy(
+            LabOptions_ActionLog[i],
+            LabOptions_ActionLog_Default,
+            sizeof(LabOptions_ActionLog_Default)
+        );
+        LabOptions_ActionLog[i][OPTACTIONLOG_ACTION].val = i;
+        LabOptions_ActionLog[i][OPTACTIONLOG_ACTION].val_prev = i;
+    }
+    // init action log display gobj
+    GOBJ *action_log_gobj = GObj_Create(0, 0, 0);
+    GObj_AddGXLink(action_log_gobj, ActionLog_GX, 5, 0);
+    
     // overlays
     memcpy(LabOptions_OverlaysHMN, LabOptions_OverlaysDefault, sizeof(LabOptions_OverlaysDefault));
     memcpy(LabOptions_OverlaysCPU, LabOptions_OverlaysDefault, sizeof(LabOptions_OverlaysDefault));
@@ -6028,11 +6104,6 @@ void Event_Update()
 
     // Check for savestates
     Savestates_Update();
-    
-    // hide UI if set to off
-    bool hide = LabOptions_Record[OPTREC_CPUMODE].val == 0 && LabOptions_Record[OPTREC_HMNMODE].val == 0;
-    HUDCamData *hud_cam = event_vars->hudcam_gobj->userdata;
-    hud_cam->hide = hide;
 }
 
 void Event_Think_LabState_Normal(GOBJ *event) {
@@ -6345,6 +6416,11 @@ void Event_Think(GOBJ *event)
         event_vars->savestate_saved_while_mirrored = event_vars->loaded_mirrored;
     }
     
+    if (ActionLog_IsShowing())
+        Match_HideTimer();
+    else
+        Match_ShowTimer();
+    
     LabData *eventData = event->userdata;
 
     Lab_CustomOSDsThink();
@@ -6490,6 +6566,26 @@ void Event_Think(GOBJ *event)
             };
         }
     }
+    
+    // fill out action log for this frame
+    u8 action_idx = 0;
+    bool start = false;
+    for (u8 i = 0; i < ACTION_LOG_MAX; ++i) {
+        int action_state_id = LabOptions_ActionLog[i][OPTACTIONLOG_STATE].val;
+        int action_state_frame = LabOptions_ActionLog[i][OPTACTIONLOG_FRAME].val;
+        if (hmn_data->state_id == action_state_id && hmn_data->TM.state_frame >= action_state_frame) {
+            action_idx = i;
+            start = i == 0; // the special 0 index resets log
+        }
+    }
+    if (start) {
+        action_log_cur = 0;
+        memset(action_log, 0, sizeof(action_log));
+    } else if (action_log_cur < countof(action_log)) {
+        action_log[action_log_cur++] = action_idx;
+    }
+
+    // TODO: update action_log
 
     if (LabOptions_CPU[OPTCPU_SET_POS].OnSelect == Lab_FinishMoveCPU) {
         // set CPU position
@@ -6513,6 +6609,26 @@ void Event_Think(GOBJ *event)
         // normal cpu
 
         Event_Think_LabState_Normal(event);
+    }
+}
+
+void ActionLog_GX(GOBJ *gobj, int pass) {
+    if (pass == 2 && ActionLog_IsShowing()) {
+        char *key_names[ACTION_LOG_MAX];
+        GXColor key_colours[ACTION_LOG_MAX];
+
+        int key_count = 0;
+        for (int i = 1; i < ACTION_LOG_MAX; ++i) {
+            EventOption *page = LabOptions_ActionLog[i];
+            if (page[OPTACTIONLOG_STATE].val) {
+                key_names[key_count] = action_log_state_name_buffers[i];
+                key_colours[key_count] = action_colors[i];
+                key_count++;
+            }
+        }
+
+        event_vars->HUD_DrawActionLogBar(action_log, action_colors, countof(action_log));
+        event_vars->HUD_DrawActionLogKey(key_names, key_colours, key_count);
     }
 }
 

@@ -848,7 +848,7 @@ void HUD_DrawActionLogBar(u8 *action_log, GXColor *color_lookup, int log_count) 
         RectSplitL(&rects[i+1], &background, log_size, log_padding);
         colors[i+1] = color_lookup[action_log[i]];
     }
-    
+
     HUD_DrawRects(rects, colors, log_count + 1);
 }
     

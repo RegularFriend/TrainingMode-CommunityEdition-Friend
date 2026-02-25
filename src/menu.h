@@ -39,6 +39,7 @@ typedef struct EventOption
         EventMenu *menu;                            // pointer to submenu for OPTKIND_MENU
         const char **values;                        // options for OPTKIND_STRING
         const char *format;                         // format string for OPTKIND_INT
+        const char *value_string;                   // optional value string for OPTKIND_FUNC / OPTKIND_INFO 
     };
     void (*OnChange)(GOBJ *menu_gobj, int value);   // function that runs when option is changed
     void (*OnSelect)(GOBJ *menu_gobj);              // function that runs when option is selected
