@@ -1,20 +1,80 @@
     # To be inserted at 8024d92c
     .include "../../../Globals.s"
-    .include "../../../m-ex/Header.s"
 
     backup
 
-    # Check For L
-    li r3, 4
-    branchl r12, Inputs_GetPlayerInstantInputs
-    
-    rlwinm. r0, r4, 0, 25, 25   # CHECK FOR L HARD PRESS
-    bne OpenFDD
-    
     load r3, 0x804c20bc # stc_css_pad
-    lbz r3, 0x1C(r3) # triggerLeft
-    cmpwi r3, AnalogTriggerThreshold
-    bge OpenFDD
+    
+    # This checks and stores if triggers were pressed this frame in r27 (L), r28 (R)
+    # We need to only process trigger events on press, not hold.
+    # But a lot of people DONT have hard press on triggers, only analog press.
+    # So we need to check analog input as well as hard input and combine the two.
+    # And because analog triggers don't register the down field in HSD_Pad, we need to do the tracking ourselves.
+    # What a pain!
+
+    li r27, 0 # triggerl was just pressed
+    li r28, 0 # triggerr was just pressed
+    bl EndStoreTriggers
+    .byte 0
+    .byte 0
+    .align 2
+EndStoreTriggers:
+    mflr r5
+    lbz r6, 0x0(r5)
+    lbz r4, 0x1C(r3)
+    stb r4, 0x0(r5)
+    cmpwi r6, AnalogTriggerThreshold
+    bge EndTriggerL
+    cmpwi r4, AnalogTriggerThreshold
+    blt EndTriggerL
+    li r27, 1
+EndTriggerL:
+    lbz r6, 0x1(r5)
+    lbz r4, 0x1D(r3)
+    stb r4, 0x1(r5)
+    cmpwi r6, AnalogTriggerThreshold
+    bge EndTriggerR
+    cmpwi r4, AnalogTriggerThreshold
+    blt EndTriggerR
+    li r28, 1
+EndTriggerR:
+
+    lwz r4, 0x8(r3) # down
+
+    andi. r0, r4, 0x40
+    beq EndTriggerLHard
+    li r27, 1
+EndTriggerLHard:
+    
+    andi. r0, r4, 0x20
+    beq EndTriggerRHard
+    li r28, 1
+EndTriggerRHard:
+
+    bl StoreHelpGObjPtr
+    .long 0
+StoreHelpGObjPtr:
+    mflr r29
+    lwz r4, 0x0(r29)
+    cmpwi r4, 0
+    beq NotInHelp
+
+    lwz r4, 0x8(r3) # down
+    or r4, r4, r27
+    or r4, r4, r28
+    cmpwi r4, 0
+    bne CloseHelp
+    lwz r4, 0x18(r3) # stick/cstick x/y
+    cmpwi r4, 0
+    bne CloseHelp
+    b exit
+    
+NotInHelp:
+    cmpwi r27, 0
+    bne OpenFDD
+
+    cmpwi r28, 0
+    bne OpenHelp
 
 CheckToSwitchPage:
     li r3, 4
@@ -59,6 +119,26 @@ OpenFDD:
     lwz r3, -0x3E84(r13)
     branchl r12, GObj_Destroy
 
+    b exit
+    
+CloseHelp:
+    lwz r3, 0x0(r29)
+    branchl r12, GObj_Destroy
+    li r3, 0
+    stw r3, 0x0(r29)
+    b exit
+    
+OpenHelp:
+    li r3, 0
+    li r4, 0
+    li r5, 0
+    branchl r12, GObj_Create
+    stw r3, 0x0(r29)
+    bl HelpGX_Ptr
+    mflr r4
+    li r5, 17
+    li r6, 0
+    branchl r12, GObj_AddGXLink
     b exit
 
 SwitchPage:
@@ -150,6 +230,154 @@ SwitchPage_DrawEventTextLoop:
     # Play SFX
     li r3, 2
     branchl r12, SFX_MenuCommonSound
+    
+    b exit
+
+#######################################
+
+HelpGX_Ptr:
+    blrl
+    
+HelpGX:
+    backup
+    
+    bl QRData
+    # 37 squares on each side
+    .long 0x18AE33C, 0x3EBF3BA, 0xAF9142D6, 0xDD448A26
+    .long 0x655A245A, 0xE02D513E, 0xCC5ADAF8, 0x5555550
+    .long 0x1FE8309A, 0xFF7D156E, 0x898EF548, 0xDFE14117
+    .long 0x127251C4, 0x7BCC9765, 0xDCA7E6DB, 0x5F3E3731
+    .long 0x5E26316F, 0x9885FAAF, 0xBD51D980, 0xD095D3D4
+    .long 0xDBFF1461, 0x2C521334, 0x5454FBF5, 0xED023351
+    .long 0x95BF1517, 0x65AB0082, 0xD7809260, 0xA19B07D5
+    .long 0x55A771F2, 0x139E8795, 0xD4301AD0, 0x289F2A9C
+    .long 0xE72686A8, 0x4201FF87, 0xB173B006, 0xF023D5CF
+    .long 0xB13FCCEF, 0x45DAC900, 0x4A2FAD85, 0xEC916FFE
+    .long 0x65E0FB84, 0xCFEA6017, 0x3A672F7F
+QRData:
+    .set qr, r31
+    mflr qr
+
+    cmpwi r4, 2
+    bne HelpGX_Exit
+
+    bl Attrs
+    .float 210 # start x
+    .float 50 # start y
+    .float 6 # square size
+    .long 0x101010ff # black
+    .long 0xe0e0e0ff # white
+    .float 3
+    .float 40
+Attrs:
+    .set attrs, r30
+    mflr attrs
+
+    li r3, 0x80 # GX_QUADS
+    li r4, 0
+    li r5, 2728
+    branchl r12, GXBegin
+
+    .set x, f1
+    .set y, f2
+    .set x_min, f3
+    .set y_min, f4
+    .set square_size, f5
+    .set x_end, f6
+    .set y_end, f7
+    .set x_i, r3
+    .set y_i, r4
+    .set bit, r5
+    .set bit_i, r6
+    .set gxpipe, r7
+    .set color, r8
+    
+    lfs x_min, 0x0(attrs)
+    lfs y_min, 0x4(attrs)
+    lfs square_size, 0x8(attrs)
+    load gxpipe, GXPipe
+    
+    # draw background and border
+    fmr x, x_min
+    fmr y, y_min
+    lfs f8, 0x14(attrs) # 3
+    fmuls f8, f8, square_size
+    fsubs x, x_min, f8
+    fsubs y, y_min, f8
+    lfs f8, 0x18(attrs) # 40
+    fmuls f8, f8, square_size
+    fadds x_end, x_min, f8
+    fadds y_end, y_min, f8
+    lwz color, 0x10(attrs)
+    stfs x, 0(gxpipe)
+    stfs y, 0(gxpipe)
+    stw color, 0(gxpipe)
+    stfs x_end, 0(gxpipe)
+    stfs y, 0(gxpipe)
+    stw color, 0(gxpipe)
+    stfs x_end, 0(gxpipe)
+    stfs y_end, 0(gxpipe)
+    stw color, 0(gxpipe)
+    stfs x, 0(gxpipe)
+    stfs y_end, 0(gxpipe)
+    stw color, 0(gxpipe)
+
+    lwz color, 0xC(attrs)
+    li bit_i, 31
+
+    fmr y, y_min
+    li y_i, 0
+HelpGX_NextRow:
+    fmr x, x_min
+    li x_i, 0
+    
+    HelpGX_NextCol:
+        # find vtx colour from bit
+        cmpwi bit_i, 0
+        bge HelpGX_EndIncWord
+            addi qr, qr, 4
+            li bit_i, 31
+        HelpGX_EndIncWord:
+
+        # check if bit is set
+        lwz bit, 0x0(qr)
+        srw bit, bit, bit_i
+        andi. bit, bit, 1
+        bne HelpGX_EndDraw
+
+        fadds x_end, x, square_size
+        fadds y_end, y, square_size
+
+        # write black to pipe
+        stfs x, 0(gxpipe)
+        stfs y, 0(gxpipe)
+        stw color, 0(gxpipe)
+        stfs x_end, 0(gxpipe)
+        stfs y, 0(gxpipe)
+        stw color, 0(gxpipe)
+        stfs x_end, 0(gxpipe)
+        stfs y_end, 0(gxpipe)
+        stw color, 0(gxpipe)
+        stfs x, 0(gxpipe)
+        stfs y_end, 0(gxpipe)
+        stw color, 0(gxpipe)
+
+        HelpGX_EndDraw:
+
+        addi bit_i, bit_i, -1
+        addi x_i, x_i, 1
+        fadds x, x, square_size
+        cmpwi x_i, 37
+        bne HelpGX_NextCol
+
+    addi y_i, y_i, 1
+    fadds y, y, square_size
+    cmpwi y_i, 37
+    bne HelpGX_NextRow
+
+HelpGX_Exit:
+    restore
+    blr
 
 #######################################
 

@@ -362,6 +362,7 @@
     .set DevelopText_StoreBGColor, 0x80302b90
     .set DevelopText_HideBG, 0x80302ae0
     .set DevelopText_ShowBG, 0x80302ad0
+    .set DevelopText_DrawRect, 0x80391580
     .set cvt_sll_flt, 0x80322da0
     .set cvt_fp2unsigned, 0x803228c0
     .set sprintf, 0x80323cf4
@@ -370,6 +371,9 @@
     .set LoadRulesSettingsPointer1, 0x8015cc34
     .set CSS_UpdateCSPInfo, 0x8025db34
     .set Rumble_StoreRumbleFlag, 0x8015ed4c
+    .set GXBegin, 0x8033D0DC
+    .set GXEnd, 0x8033D0DC
+    .set GXPipe, 0xCC008000
 
     # Custom Functions
     .set TextCreateFunction, 0x80005928
