@@ -3,44 +3,72 @@
 
     backup
 
-    load r3, 0x804c20bc # stc_css_pad
-    
     # This checks and stores if triggers were pressed this frame in r27 (L), r28 (R)
     # We need to only process trigger events on press, not hold.
-    # But a lot of people DONT have hard press on triggers, only analog press.
+    # But a lot of people DONT have hard press on triggers, only analog press. And they complained a lot.
     # So we need to check analog input as well as hard input and combine the two.
     # And because analog triggers don't register the down field in HSD_Pad, we need to do the tracking ourselves.
+    # And we need to process EVERY pad! Because the combined pad used for menus (0x80479C30) doesn't store analog triggers!
     # What a pain!
 
     li r27, 0 # triggerl was just pressed
     li r28, 0 # triggerr was just pressed
+
+    # put maximum analog values in r27, r28
+    li r25, 0
+    load r26, 0x804c1fac # master pad array
+    CheckAnalogTriggerLoop:
+        lbz r3, 0x1C(r26)
+        cmpw r3, r27
+        blt EndNewMaxLTrigger
+            mr r27, r3
+    EndNewMaxLTrigger:
+    
+        lbz r3, 0x1D(r26)
+        cmpw r3, r28
+        blt EndNewMaxRTrigger
+            mr r28, r3
+    EndNewMaxRTrigger:
+    
+        addi r25, r25, 1
+        addi r26, r26, 0x44
+        cmpwi r25, 4
+        bne CheckAnalogTriggerLoop
+    
     bl EndStoreTriggers
-    .byte 0
-    .byte 0
+    .byte 0 # prev analog L
+    .byte 0 # prev analog R
     .align 2
 EndStoreTriggers:
-    mflr r5
-    lbz r6, 0x0(r5)
-    lbz r4, 0x1C(r3)
-    stb r4, 0x0(r5)
-    cmpwi r6, AnalogTriggerThreshold
-    bge EndTriggerL
+    mflr r3
+    
+    # r27 = new_l >= thresh && old_l < thresh
+    lbz r4, 0x0(r3)
+    stb r27, 0x0(r3)
+    mr r5, r27
+    li r27, 0
     cmpwi r4, AnalogTriggerThreshold
+    bge EndTriggerL
+    cmpwi r5, AnalogTriggerThreshold
     blt EndTriggerL
     li r27, 1
 EndTriggerL:
-    lbz r6, 0x1(r5)
-    lbz r4, 0x1D(r3)
-    stb r4, 0x1(r5)
-    cmpwi r6, AnalogTriggerThreshold
-    bge EndTriggerR
+
+    # r28 = new_r >= thresh && old_r < thresh
+    lbz r4, 0x1(r3)
+    stb r28, 0x1(r3)
+    mr r5, r28
+    li r28, 0
     cmpwi r4, AnalogTriggerThreshold
+    bge EndTriggerR
+    cmpwi r5, AnalogTriggerThreshold
     blt EndTriggerR
     li r28, 1
 EndTriggerR:
 
-    lwz r4, 0x8(r3) # down
-
+    load r3, 0x80479cf0 # combined pad
+    lwz r4, 0xC(r3) # down
+    
     andi. r0, r4, 0x40
     beq EndTriggerLHard
     li r27, 1
