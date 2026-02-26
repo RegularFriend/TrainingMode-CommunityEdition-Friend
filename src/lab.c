@@ -3654,8 +3654,10 @@ void Record_GX(GOBJ *gobj, int pass)
     bool hideHUD = *(u8*)(R13 + -0x4948);
     rec_data.text->hidden = hideHUD;
     if (hideHUD) return;
-
-    if (LabOptions_Record[OPTREC_CPUMODE].val == 0 && LabOptions_Record[OPTREC_HMNMODE].val == 0)
+    
+    bool hidden = LabOptions_Record[OPTREC_CPUMODE].val == 0 && LabOptions_Record[OPTREC_HMNMODE].val == 0;
+    rec_data.text->hidden = hidden;
+    if (hidden)
         return;
 
     // update UI position
