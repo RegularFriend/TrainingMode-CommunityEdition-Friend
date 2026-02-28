@@ -3333,6 +3333,10 @@ static Shortcut Lab_Shortcuts[] = {
         .button_mask = HSD_BUTTON_DPAD_DOWN,
         .option = &LabOptions_Main[OPTLAB_RECORD_OPTIONS],
     },
+    {
+        .button_mask = HSD_TRIGGER_Z,
+        .option = &LabOptions_Record[OPTREC_RESAVE],
+    },
 };
 
 static ShortcutList Lab_ShortcutList = {

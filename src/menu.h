@@ -96,6 +96,7 @@ void EventMenu_UpdateText(GOBJ *gobj);
 void EventMenu_CreateText(GOBJ *gobj);
 void EventMenu_CreateModel(GOBJ *gobj);
 void EventMenu_MenuThink(GOBJ *gobj, EventMenu *currMenu);
+void EventMenu_RunFuncOption(GOBJ *gobj, EventOption *func_option);
 void EventMenu_TextGX(GOBJ *gobj, int pass);
 void EventMenu_MenuGX(GOBJ *gobj, int pass);
 void EventMenu_Update(GOBJ *gobj);

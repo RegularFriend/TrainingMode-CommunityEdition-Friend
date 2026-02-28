@@ -187,6 +187,9 @@ void EventMenu_Update(GOBJ *gobj)
                     EventMenu_ChangeOptionVal(gobj, option, !option->val);
                     SFX_PlayCommon(option->val ? 2 : 0);
                 }
+                else if (option->kind == OPTKIND_FUNC) {
+                    EventMenu_RunFuncOption(gobj, option);
+                }
                 else if (option->kind == OPTKIND_STRING || option->kind == OPTKIND_INT) {
                     int val = (option->val + 1 - option->value_min) % option->value_num + option->value_min;
                     EventMenu_ChangeOptionVal(gobj, option, val);
@@ -227,6 +230,16 @@ void EventMenu_TextGX(GOBJ *gobj, int pass)
     MenuData *menu_data = event_vars->menu_gobj->userdata;
     if (!menu_data->hide_menu)
         Text_GX(gobj, pass);
+}
+
+void EventMenu_RunFuncOption(GOBJ *gobj, EventOption *func_option) {
+    // execute function option
+    if (!func_option->OnSelect)
+        assert("Missing menu function");
+    func_option->OnSelect(gobj);
+
+    EventMenu_UpdateText(gobj);
+    SFX_PlayCommon(1);
 }
 
 void EventMenu_MenuThink(GOBJ *gobj, EventMenu *curr_menu) {
@@ -345,13 +358,7 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *curr_menu) {
         }
         else if (curr_option->kind == OPTKIND_FUNC)
         {
-            // execute function option
-            if (!curr_option->OnSelect)
-                assert("Missing menu function");
-            curr_option->OnSelect(gobj);
-
-            EventMenu_UpdateText(gobj);
-            SFX_PlayCommon(1);
+            EventMenu_RunFuncOption(gobj, curr_option);
         }
     }
 }
