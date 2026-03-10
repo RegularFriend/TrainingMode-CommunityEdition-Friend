@@ -3005,34 +3005,25 @@ void DIDraw_GX(void)
                 if (sdidraw->num[j] > 1) {
                     int vertex_num = sdidraw->num[j];
                     Vec2 *vertices = sdidraw->vertices[j];
-                
-                    // alloc prim
-                    PRIM_DrawMode draw_mode = {
-                        .line_width = 31,
-                        .z_compare_enable = false,
-                        .z_update_enable = true,
-                        .z_logic_eq = true,
-                        .z_logic_lt = true,
-                        .shape = PRIM_SHAPE_LINE_STRIP,
-                    };
-                    PRIM_BlendMode blend_mode = { 0 };
-                    PRIM_NEW(vertex_num + vertex_num - 2, draw_mode, blend_mode);
+
+                    GFX_Params params = { .shape = GX_LINESTRIP, .size = 31 };
+                    event_vars->GFX_Start(vertex_num + vertex_num - 2, params);
 
                     // draw each
                     for (int k = 1;;)
                     {
+                        GXColor yellow = { 0xff, 0xff, 0x00, 0xff };
+                        GXColor orange = { 0xff, 0xa5, 0x00, 0xff };
+
                         // alternate yellow/orange so it's easier to see individual inputs
-                        PRIM_DRAW(vertices[k-1].X, vertices[k-1].Y, 0, 0xffff00ff);
-                        PRIM_DRAW(vertices[k].X, vertices[k].Y, 0, 0xffff00ff);
+                        GFX_AddVtx(vertices[k-1].X, vertices[k-1].Y, 0, yellow);
+                        GFX_AddVtx(vertices[k].X, vertices[k].Y, 0, yellow);
                         if (++k >= vertex_num) break;
 
-                        PRIM_DRAW(vertices[k-1].X, vertices[k-1].Y, 0, 0xffa500ff);
-                        PRIM_DRAW(vertices[k].X, vertices[k].Y, 0, 0xffa500ff);
+                        GFX_AddVtx(vertices[k-1].X, vertices[k-1].Y, 0, orange);
+                        GFX_AddVtx(vertices[k].X, vertices[k].Y, 0, orange);
                         if (++k >= vertex_num) break;
                     }
-    
-                    // close
-                    PRIM_CLOSE();
                 }
 
                 // DI DISPLAY --------------------------------------------
@@ -3045,25 +3036,12 @@ void DIDraw_GX(void)
                     int vertex_num = didraw->num[j];
                     Vec2 *vertices = didraw->vertices[j];
 
-                    // alloc prim
-                    PRIM_DrawMode draw_mode = {
-                        .line_width = 31,
-                        .z_compare_enable = true,
-                        .z_logic_eq = true,
-                        .z_logic_lt = true,
-                        .shape = PRIM_SHAPE_LINE_STRIP,
-                    };
-                    PRIM_BlendMode blend_mode = { 0 };
-                    PRIM_NEW(vertex_num, draw_mode, blend_mode);
+                    GFX_Params params = { .shape = GX_LINESTRIP, .size = 31 };
+                    event_vars->GFX_Start(vertex_num, params);
 
                     // draw each
                     for (int k = 0; k < vertex_num; k++)
-                    {
-                        PRIM_DRAW(vertices[k].X, vertices[k].Y, 0, 0x008affff);
-                    }
-
-                    // close
-                    PRIM_CLOSE();
+                        GFX_AddVtx(vertices[k].X, vertices[k].Y, 0, (GXColor) { 0x00, 0x8a, 0xff, 0xff });
                 }
             }
         }
