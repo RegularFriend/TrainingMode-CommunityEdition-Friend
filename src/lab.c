@@ -1560,6 +1560,299 @@ void CPUResetVars(void) {
     stc_rndm_counter_slot = -1;
 }
 
+void CPUOnHit(void) {
+    LabData *eventData = event_vars->event_gobj->userdata;
+    GOBJ *hmn = Fighter_GetGObj(0);
+    GOBJ *cpu = Fighter_GetGObj(1);
+    FighterData *hmn_data = hmn->userdata;
+    FighterData *cpu_data = cpu->userdata;
+
+    DIDraw_Reset(cpu_data->ply);
+
+    eventData->cpu_isactionable = 0;
+    eventData->cpu_countertimer = 0;
+    eventData->cpu_hitnum++;
+    eventData->cpu_lasthit = cpu_data->dmg.atk_instance_hurtby;
+    
+    // if set during TDI calc, SDI and ASDI will override and follow suit
+    CustomTDI *custom_di = NULL;
+
+    // decide TDI direction ------------------------------------
+    
+    float hit_angle; // knockback angle, ignoring direction.
+    float dir; // x direction from cpu to attacker to DI based on.
+    if (IsThrown(cpu))
+    {
+        FighterData *attacker_data = cpu_data->grab.attacker->userdata;
+
+        float reverse_min_angle = 95.0f * M_1DEGREE;
+
+        hit_angle = (float)attacker_data->throw_hitbox[0].angle * M_1DEGREE;
+
+        if (attacker_data->state_id != ASID_THROWB) {
+            if (hit_angle < reverse_min_angle) {
+                // Most throws
+                dir = -attacker_data->facing_direction;
+            } else {
+                // Is a "reverse" throw (e.x. marth dthrow)
+                dir = attacker_data->facing_direction;
+                hit_angle = M_PI - hit_angle;
+            }
+        } else {
+            // Bthrow is special - we can't use attacker direction cuz it's different between throws,
+            // e.x. peach doesn't turn around, but fox does. So we need to use cpu direction.
+            // We assume that bthrows will always be a "reverse" throw.
+
+            dir = cpu_data->facing_direction;
+            if (hit_angle > reverse_min_angle)
+                hit_angle = M_PI - hit_angle;
+        }
+    }
+    else
+    {
+        hit_angle = Fighter_GetKnockbackAngle(cpu_data);
+        dir = Fighter_GetOpponentDir(cpu_data, hmn_data);
+    }
+
+    float kb_angle; // actual knockback angle.
+    if (dir < 0)
+        kb_angle = hit_angle;
+    else
+        kb_angle = M_PI - hit_angle;
+
+    // modulus angle
+    float M_PI2 = M_PI*2;
+    while (kb_angle < 0) kb_angle += M_PI2;
+    while (kb_angle >= M_PI2) kb_angle -= M_PI2;
+
+    // calc TDI vals
+    int tdi_kind = LabOptions_CPU[OPTCPU_TDI].val;
+    switch (tdi_kind)
+    {
+        case (CPUTDI_RANDOM):
+        TDI_RANDOM:
+        {
+            switch (HSD_Randi(3)) {
+                case 0: goto TDI_IN;
+                case 1: goto TDI_OUT;
+                case 2: goto TDI_NONE;
+                default: goto TDI_IN; // just here to prevent warning
+            }
+        }
+
+        case (CPUTDI_IN):
+        TDI_IN:
+        {
+            float tdi_angle;
+            if (kb_angle <= M_PI)
+                tdi_angle = kb_angle - M_PI * 0.5 * dir;
+            else
+                tdi_angle = kb_angle + M_PI * 0.5 * dir;
+
+            eventData->cpu_tdi_lstick_x = cos(tdi_angle) * 127;
+            eventData->cpu_tdi_lstick_y = sin(tdi_angle) * 127;
+
+            break;
+        }
+
+        case (CPUTDI_OUT):
+        TDI_OUT:
+        {
+            float tdi_angle;
+            if (kb_angle <= M_PI)
+                tdi_angle = kb_angle + M_PI * 0.5 * dir;
+            else
+                tdi_angle = kb_angle - M_PI * 0.5 * dir;
+
+            eventData->cpu_tdi_lstick_x = cos(tdi_angle) * 127;
+            eventData->cpu_tdi_lstick_y = sin(tdi_angle) * 127;
+
+            break;
+        }
+        case (CPUTDI_NATURAL):
+        {
+            struct DI { s8 x; s8 y; };
+            static const struct DI di_options[] = {
+                // upper half TDI angles
+                {-127, 0},
+                {127, 0},
+                {-89, 89},
+                {89, 89},
+                {0, 127},
+                
+                // downwards TDI angles - only apply during combos to avoid floorhugging
+                {89, -89},
+                {-89, -89},
+                {0, -127},
+            };
+            
+            int di_num = eventData->cpu_hitnum > 1 ? 8 : 5;
+            struct DI di = di_options[HSD_Randi(di_num)];
+            
+            eventData->cpu_tdi_lstick_x = di.x;
+            eventData->cpu_tdi_lstick_y = di.y;
+            break;
+        }
+        case (CPUTDI_CUSTOM):
+        {
+            int hit_idx = eventData->cpu_hitnum - 1;
+
+            // ensure we have a DI input for this hitnum
+            if (hit_idx < stc_tdi_val_num)
+            {
+                custom_di = &stc_tdi_vals[hit_idx];
+                int dir_factor = CustomTDI_DirectionFactor(cpu, hmn, custom_di);
+                eventData->cpu_tdi_lstick_x = (int)(custom_di->lstickX * 127.f) * dir_factor;
+                eventData->cpu_tdi_lstick_y = (int)(custom_di->lstickY * 127.f) * dir_factor;
+                break;
+            } else {
+                goto TDI_RANDOM;
+            }
+        }
+        case (CPUTDI_RANDOM_CUSTOM):
+        {
+            custom_di = &stc_tdi_vals[HSD_Randi(stc_tdi_val_num)];
+            int dir_factor = CustomTDI_DirectionFactor(cpu, hmn, custom_di);
+            eventData->cpu_tdi_lstick_x = (int)(custom_di->lstickX * 127.f) * dir_factor;
+            eventData->cpu_tdi_lstick_y = (int)(custom_di->lstickY * 127.f) * dir_factor;
+            break;
+        }
+        case (CPUTDI_NONE):
+        TDI_NONE:
+        {
+            eventData->cpu_tdi_lstick_x = 0;
+            eventData->cpu_tdi_lstick_y = 0;
+            break;
+        }
+    }
+    
+    // decide ASDI direction ----------------------------------------
+    
+    // only apply ASDI setting when not using custom TDI.
+    if (custom_di) goto ASDI_AUTO;
+
+    int asdi_kind = LabOptions_CPU[OPTCPU_ASDI].val;
+    switch (asdi_kind)
+    {
+        case (ASDI_AUTO):
+        ASDI_AUTO:
+        {
+            // follow TDI
+            eventData->cpu_asdi_cstick_x = 0;
+            eventData->cpu_asdi_cstick_y = 0;
+            break;
+        }
+        case (ASDI_AWAY):
+        {
+            eventData->cpu_asdi_cstick_x = -127 * Fighter_GetOpponentDir(cpu_data, hmn_data);
+            eventData->cpu_asdi_cstick_y = 0;
+            break;
+        }
+        case (ASDI_TOWARD):
+        {
+            eventData->cpu_asdi_cstick_x = 127 * Fighter_GetOpponentDir(cpu_data, hmn_data);
+            eventData->cpu_asdi_cstick_y = 0;
+            break;
+        }
+        case (ASDI_LEFT):
+        {
+            eventData->cpu_asdi_cstick_x = -127;
+            eventData->cpu_asdi_cstick_y = 0;
+            break;
+        }
+        case (ASDI_RIGHT):
+        {
+            eventData->cpu_asdi_cstick_x = 127;
+            eventData->cpu_asdi_cstick_y = 0;
+            break;
+        }
+        case (ASDI_UP):
+        {
+            eventData->cpu_asdi_cstick_x = 0;
+            eventData->cpu_asdi_cstick_y = 127;
+            break;
+        }
+        case (ASDI_DOWN):
+        {
+            eventData->cpu_asdi_cstick_x = 0;
+            eventData->cpu_asdi_cstick_y = -127;
+            break;
+        }
+    }
+
+    // decide SDI direction ------------------------------------
+    
+    if (custom_di) {
+        custom_di = &stc_tdi_vals[HSD_Randi(stc_tdi_val_num)];
+        int dir_factor = CustomTDI_DirectionFactor(cpu, hmn, custom_di);
+        eventData->cpu_tdi_lstick_x = (int)(custom_di->lstickX * 127.f) * dir_factor;
+        eventData->cpu_tdi_lstick_y = (int)(custom_di->lstickY * 127.f) * dir_factor;
+    } else {
+        int sdi_kind = LabOptions_CPU[OPTCPU_SDIDIR].val;
+        switch (sdi_kind) {
+            case (SDIDIR_AUTO):
+            {
+                eventData->cpu_sdi_lstick_x = eventData->cpu_tdi_lstick_x;
+                eventData->cpu_sdi_lstick_y = eventData->cpu_tdi_lstick_y;
+                break;
+            }
+            case (SDIDIR_RANDOM):
+            {
+                // when grounded, only left right
+                if (cpu_data->phys.air_state == 0)
+                {
+                    eventData->cpu_sdi_lstick_x = HSD_Randi(2) ? -127 : 127;
+                    eventData->cpu_sdi_lstick_y = 0;
+                }
+                // when airborne, any direction
+                else
+                {
+                    float angle = HSD_Randf() * (2.f * M_PI);
+                    eventData->cpu_sdi_lstick_x = cos(angle) * 127.f;
+                    eventData->cpu_sdi_lstick_y = sin(angle) * 127.f;
+                }
+                break;
+            }
+            case (SDIDIR_AWAY):
+            {
+                eventData->cpu_sdi_lstick_x = -127 * Fighter_GetOpponentDir(cpu_data, hmn_data);
+                eventData->cpu_sdi_lstick_y = 0;
+                break;
+            }
+            case (SDIDIR_TOWARD):
+            {
+                eventData->cpu_sdi_lstick_x = 127 * Fighter_GetOpponentDir(cpu_data, hmn_data);
+                eventData->cpu_sdi_lstick_y = 0;
+                break;
+            }
+            case (SDIDIR_LEFT):
+            {
+                eventData->cpu_sdi_lstick_x = -127;
+                eventData->cpu_sdi_lstick_y = 0;
+                break;
+            }
+            case (SDIDIR_RIGHT):
+            {
+                eventData->cpu_sdi_lstick_x = 127;
+                eventData->cpu_sdi_lstick_y = 0;
+                break;
+            }
+            case (SDIDIR_UP):
+            {
+                eventData->cpu_sdi_lstick_x = 0;
+                eventData->cpu_sdi_lstick_y = 127;
+                break;
+            }
+            case (SDIDIR_DOWN):
+            {
+                eventData->cpu_sdi_lstick_x = 0;
+                eventData->cpu_sdi_lstick_y = -127;
+                break;
+            }
+        }
+    }
+}
+
 void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
 {
     // get gobjs data
@@ -1772,22 +2065,9 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
     case (CPUSTATE_SDI):
     CPULOGIC_SDI:
     {
-        static int lastSDIWasCardinal = 0;
-
         // update move instance
         if (eventData->cpu_lasthit != cpu_data->dmg.atk_instance_hurtby)
-        {
-            eventData->cpu_isactionable = 0;
-            eventData->cpu_countertimer = 0;
-            eventData->cpu_hitnum++;
-            eventData->cpu_lasthit = cpu_data->dmg.atk_instance_hurtby;
-
-            // decide random SDI direction for grounded cpu
-            if ((LabOptions_CPU[OPTCPU_SDINUM].val > 0) && (LabOptions_CPU[OPTCPU_SDIDIR].val == SDIDIR_RANDOM))
-            {
-                eventData->cpu_sdidir = HSD_Randi(2);
-            }
-        }
+            CPUOnHit();
 
         // if no more hitlag, enter tech state
         if (cpu_data->flags.hitlag == 0)
@@ -1815,104 +2095,17 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
         }
 
         // perform SDI behavior
-        if (eventData->cpu_sdinum < LabOptions_CPU[OPTCPU_SDINUM].val)
-        {
+        // This will start SDI f2 half of the time. Is there a better method?
+        if ((event_vars->game_timer & 1) && eventData->cpu_sdinum < LabOptions_CPU[OPTCPU_SDINUM].val) {
             eventData->cpu_sdinum++;
-            float angle = 0.f;
-            float magnitude = 0.f;
-
-            switch (LabOptions_CPU[OPTCPU_SDIDIR].val)
-            {
-            case SDIDIR_RANDOM:
-            {
-                // when grounded, only left right
-                if (cpu_data->phys.air_state == 0)
-                {
-                    magnitude = 1;
-
-                    // decide left or right
-                    if (eventData->cpu_sdidir == 0)
-                        angle = lastSDIWasCardinal ? M_1DEGREE * 17 : M_1DEGREE * 0; // right
-                    else
-                        angle = lastSDIWasCardinal ? M_1DEGREE * 197 : M_1DEGREE * 180; // left
-                }
-                // when airborne, any direction
-                else
-                {
-                    // random input
-                    angle = HSD_Randi(360) * M_1DEGREE;
-                    magnitude = 0.49 + (HSD_Randf() * 0.51);
-
-                    angle = GetAngleOutOfDeadzone(angle, lastSDIWasCardinal);
-                }
-
-                break;
-            }
-            case SDIDIR_AWAY:
-            {
-                int dir = Fighter_GetOpponentDir(cpu_data, hmn_data) * -1;
-                if (dir == 1)
-                {
-                    angle = 0;
-                }
-                else
-                {
-                    angle = 180;
-                }
-                angle = lastSDIWasCardinal ? (angle + 17) * M_1DEGREE : angle * M_1DEGREE;
-                magnitude = 1;
-
-                break;
-            }
-            case SDIDIR_TOWARD:
-            {
-                int dir = Fighter_GetOpponentDir(cpu_data, hmn_data);
-                if (dir == 1)
-                {
-                    angle = 0;
-                }
-                else
-                {
-                    angle = 180;
-                }
-                angle = lastSDIWasCardinal ? (angle + 17) * M_1DEGREE : angle * M_1DEGREE;
-                magnitude = 1;
-
-                break;
-            }
-            case SDIDIR_UP:
-            {
-                angle = lastSDIWasCardinal ? M_1DEGREE * 107 : M_1DEGREE * 90;
-                magnitude = 1;
-                break;
-            }
-            case SDIDIR_DOWN:
-            {
-                angle = lastSDIWasCardinal ? M_1DEGREE * 287 : M_1DEGREE * 270;
-                magnitude = 1;
-                break;
-            }
-            case SDIDIR_LEFT:
-            {
-                angle = lastSDIWasCardinal ? M_1DEGREE * 197 : M_1DEGREE * 180;
-                magnitude = 1;
-                break;
-            }
-            case SDIDIR_RIGHT:
-            {
-                angle = lastSDIWasCardinal ? M_1DEGREE * 17 : M_1DEGREE * 0;
-                magnitude = 1;
-                break;
-            }
-            }
-
-            // flip if the last sdi was cardinal
-            lastSDIWasCardinal = lastSDIWasCardinal ? 0 : 1;
-
-            // store
-            cpu_data->cpu.lstickX = cos(angle) * 127 * magnitude;
-            cpu_data->cpu.lstickY = sin(angle) * 127 * magnitude;
+            cpu_data->cpu.lstickX = eventData->cpu_sdi_lstick_x;
+            cpu_data->cpu.lstickY = eventData->cpu_sdi_lstick_y;
+        } else {
+            cpu_data->cpu.lstickX = 0;
+            cpu_data->cpu.lstickY = 0;
         }
+        
+        // setting cpu_data->input.lstick here prevents SDI from coming out. No idea why.
 
         break;
     }
@@ -1934,231 +2127,19 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
         if (cpu_data->dmg.hitlag_frames > 1)
             goto CPULOGIC_SDI;
 
-        float hit_angle; // knockback angle, ignoring direction.
-        float dir; // x direction from cpu to attacker to DI based on.
-        if (is_thrown)
-        {
-            FighterData *attacker_data = cpu_data->grab.attacker->userdata;
+        cpu_data->cpu.lstickX = eventData->cpu_tdi_lstick_x;
+        cpu_data->cpu.lstickY = eventData->cpu_tdi_lstick_y;
+        cpu_data->cpu.cstickX = eventData->cpu_asdi_cstick_x;
+        cpu_data->cpu.cstickY = eventData->cpu_asdi_cstick_y;
 
-            float reverse_min_angle = 95.0f * M_1DEGREE;
+        // NOT setting cpu_data->input.lstick here causes SDI to come out. No idea why.
+        cpu_data->input.lstick.X = (float)cpu_data->cpu.lstickX / 127.f;
+        cpu_data->input.lstick.Y = (float)cpu_data->cpu.lstickY / 127.f;
+        cpu_data->input.cstick.X = (float)cpu_data->cpu.cstickX / 127.f;
+        cpu_data->input.cstick.Y = (float)cpu_data->cpu.cstickY / 127.f;
 
-            hit_angle = (float)attacker_data->throw_hitbox[0].angle * M_1DEGREE;
-
-            if (attacker_data->state_id != ASID_THROWB) {
-                if (hit_angle < reverse_min_angle) {
-                    // Most throws
-                    dir = -attacker_data->facing_direction;
-                } else {
-                    // Is a "reverse" throw (e.x. marth dthrow)
-                    dir = attacker_data->facing_direction;
-                    hit_angle = M_PI - hit_angle;
-                }
-            } else {
-                // Bthrow is special - we can't use attacker direction cuz it's different between throws,
-                // e.x. peach doesn't turn around, but fox does. So we need to use cpu direction.
-                // We assume that bthrows will always be a "reverse" throw.
-
-                dir = cpu_data->facing_direction;
-                if (hit_angle > reverse_min_angle)
-                    hit_angle = M_PI - hit_angle;
-            }
-        }
-        else
-        {
-            hit_angle = Fighter_GetKnockbackAngle(cpu_data);
-            dir = Fighter_GetOpponentDir(cpu_data, hmn_data);
-        }
-
-        float kb_angle; // actual knockback angle.
-        if (dir < 0)
-            kb_angle = hit_angle;
-        else
-            kb_angle = M_PI - hit_angle;
-
-        // modulus angle
-        float M_PI2 = M_PI*2;
-        while (kb_angle < 0) kb_angle += M_PI2;
-        while (kb_angle >= M_PI2) kb_angle -= M_PI2;
-
-        // perform TDI behavior
-        int tdi_kind = LabOptions_CPU[OPTCPU_TDI].val;
-        int asdi_kind = LabOptions_CPU[OPTCPU_ASDI].val;
-        switch (tdi_kind)
-        {
-            case (CPUTDI_RANDOM):
-            TDI_RANDOM:
-            {
-                switch (HSD_Randi(3)) {
-                    case 0: goto TDI_IN;
-                    case 1: goto TDI_OUT;
-                    case 2: goto TDI_NONE;
-                    default: goto TDI_IN;
-                }
-            }
-
-            case (CPUTDI_IN):
-            TDI_IN:
-            {
-                float tdi_angle;
-                if (kb_angle <= M_PI)
-                    tdi_angle = kb_angle - M_PI * 0.5 * dir;
-                else
-                    tdi_angle = kb_angle + M_PI * 0.5 * dir;
-
-                cpu_data->cpu.lstickX = cos(tdi_angle) * 127;
-                cpu_data->cpu.lstickY = sin(tdi_angle) * 127;
-
-                break;
-            }
-
-            case (CPUTDI_OUT):
-            TDI_OUT:
-            {
-                float tdi_angle;
-                if (kb_angle <= M_PI)
-                    tdi_angle = kb_angle + M_PI * 0.5 * dir;
-                else
-                    tdi_angle = kb_angle - M_PI * 0.5 * dir;
-
-                cpu_data->cpu.lstickX = cos(tdi_angle) * 127;
-                cpu_data->cpu.lstickY = sin(tdi_angle) * 127;
-
-                break;
-            }
-            case (CPUTDI_NATURAL):
-            {
-                struct DI { s8 x; s8 y; };
-                static const struct DI di_options[] = {
-                    // upper half TDI angles
-                    {-127, 0},
-                    {127, 0},
-                    {-89, 89},
-                    {89, 89},
-                    {0, 127},
-                    
-                    // downwards TDI angles - only apply during combos to avoid floorhugging
-                    {89, -89},
-                    {-89, -89},
-                    {0, -127},
-                };
-                
-                int di_num = eventData->cpu_hitnum > 1 ? 8 : 5;
-                struct DI di = di_options[HSD_Randi(di_num)];
-                
-                cpu_data->cpu.lstickX = di.x;
-                cpu_data->cpu.lstickY = di.y;
-                break;
-            }
-            case (CPUTDI_CUSTOM):
-            {
-                int cpu_hitnum = eventData->cpu_hitnum;
-
-                // ensure we have a DI input for this hitnum
-                if (cpu_hitnum <= stc_tdi_val_num)
-                {
-                    // get the stick values for this hit num
-                    cpu_hitnum--;
-                    CustomTDI_Apply(cpu, hmn, &stc_tdi_vals[cpu_hitnum]);
-
-                    // increment
-                } else {
-                    goto TDI_RANDOM;
-                }
-
-                break;
-            }
-            case (CPUTDI_RANDOM_CUSTOM):
-            {
-                int i = HSD_Randi(stc_tdi_val_num);
-
-                CustomTDI_Apply(cpu, hmn, &stc_tdi_vals[i]);
-
-                break;
-            }
-            case (CPUTDI_NONE):
-            TDI_NONE:
-            {
-                Fighter_ZeroCPUInputs(cpu_data);
-                break;
-            }
-        }
-        
-        // only apply ASDI setting when not using custom TDI.
-        if (
-            (tdi_kind != CPUTDI_CUSTOM || eventData->cpu_hitnum > stc_tdi_val_num)
-            && tdi_kind != CPUTDI_RANDOM_CUSTOM
-        ) {
-            switch (asdi_kind)
-            {
-                case (ASDI_NONE):
-                case (ASDI_AUTO):
-                {
-                    // follow TDI, or custom SDI
-                    break;
-                }
-                case (ASDI_AWAY):
-                {
-                    int dir = Fighter_GetOpponentDir(cpu_data, hmn_data) * -1;
-                    if (dir == 1)
-                    {
-                        cpu_data->cpu.cstickX = 127;
-                        cpu_data->cpu.cstickY = 0;
-                    }
-                    else
-                    {
-                        cpu_data->cpu.cstickX = -127;
-                        cpu_data->cpu.cstickY = 0;
-                    }
-                    break;
-                }
-                case (ASDI_TOWARD):
-                {
-                    int dir = Fighter_GetOpponentDir(cpu_data, hmn_data);
-                    if (dir == 1)
-                    {
-                        cpu_data->cpu.cstickX = 127;
-                        cpu_data->cpu.cstickY = 0;
-                    }
-                    else
-                    {
-                        cpu_data->cpu.cstickX = -127;
-                        cpu_data->cpu.cstickY = 0;
-                    }
-                    break;
-                }
-                case (ASDI_LEFT):
-                {
-                    cpu_data->cpu.cstickX = -127;
-                    cpu_data->cpu.cstickY = 0;
-                    break;
-                }
-                case (ASDI_RIGHT):
-                {
-                    cpu_data->cpu.cstickX = 127;
-                    cpu_data->cpu.cstickY = 0;
-                    break;
-                }
-                case (ASDI_UP):
-                {
-                    cpu_data->cpu.cstickX = 0;
-                    cpu_data->cpu.cstickY = 127;
-                    break;
-                }
-                case (ASDI_DOWN):
-                {
-                    cpu_data->cpu.cstickX = 0;
-                    cpu_data->cpu.cstickY = -127;
-                    break;
-                }
-            }
-        }
-
-        // this is kinda meh, maybe i can come up with something better later
-        // spoof last input as current input as to not trigger SDI
-        // also spoof input as held for more than the SDI window
-        cpu_data->input.lstick.X = ((float)cpu_data->cpu.lstickX * 0.0078125);
+        // spoof slow tilt input to prevent SDI
         cpu_data->input.timer_lstick_tilt_x = 5;
-        cpu_data->input.lstick.Y = ((float)cpu_data->cpu.lstickY * 0.0078125);
         cpu_data->input.timer_lstick_tilt_y = 5;
 
         break;
@@ -2965,27 +2946,30 @@ void DIDraw_Update(void)
     // is off, remove all di draw
     else
     {
-        // all slots
         for (int i = 0; i < 6; i++)
-        {
-            DIDraw *didraw = &didraws[i];
-            SDIDraw *sdidraw = &sdidraws[i];
-
-            // all subchars
-            for (int j = 0; j < 2; j++)
-            {
-                if (didraw->vertices[j] != 0)
-                {
-                    HSD_Free(didraw->vertices[j]);
-                    didraw->num[j] = 0;
-                    didraw->vertices[j] = 0;
-                }
-
-                sdidraw->num[j] = 0;
-            }
-        }
+            DIDraw_Reset(i);
     }
 }
+
+void DIDraw_Reset(int ply)
+{
+    DIDraw *didraw = &didraws[ply];
+    SDIDraw *sdidraw = &sdidraws[ply];
+
+    // all subchars
+    for (int i = 0; i < 2; i++)
+    {
+        if (didraw->vertices[i] != 0)
+        {
+            HSD_Free(didraw->vertices[i]);
+            didraw->num[i] = 0;
+            didraw->vertices[i] = 0;
+        }
+
+        sdidraw->num[i] = 0;
+    }
+}
+
 void DIDraw_GX(void)
 {
     // if toggle enabled
@@ -3048,14 +3032,11 @@ void DIDraw_GX(void)
     }
 }
 
-void CustomTDI_Apply(GOBJ *cpu, GOBJ *hmn, CustomTDI *di)
-{
+int CustomTDI_DirectionFactor(GOBJ *cpu, GOBJ *hmn, CustomTDI *di) {
     FighterData *hmn_data = hmn->userdata;
     FighterData *cpu_data = cpu->userdata;
 
-    float di_direction = 1.f;
     float diff = cpu_data->phys.pos.X - hmn_data->phys.pos.X;
-
     int cur_direction;
     if (diff > 3.f) {
         cur_direction = 1;
@@ -3065,13 +3046,8 @@ void CustomTDI_Apply(GOBJ *cpu, GOBJ *hmn, CustomTDI *di)
         cur_direction = hmn_data->facing_direction > 0.f;
     }
 
-    if (di->reversing && di->direction != cur_direction)
-        di_direction = -1.f;
-
-    cpu_data->cpu.lstickX = di->lstickX * 127.f * di_direction;
-    cpu_data->cpu.lstickY = di->lstickY * 127.f;
-    cpu_data->cpu.cstickX = di->cstickX * 127.f * di_direction;
-    cpu_data->cpu.cstickY = di->cstickY * 127.f;
+    int di_direction = (di->reversing && di->direction != cur_direction) ? -1 : 1;
+    return di_direction;
 }
 
 void Lab_SelectCustomTDI(GOBJ *menu_gobj)
@@ -6765,28 +6741,6 @@ static void ReboundChances(s16 *chances[], unsigned int chance_count, int just_c
 
         just_changed_option = rebound_option;
     }
-}
-
-static float GetAngleOutOfDeadzone(float angle, int lastSDIWasCardinal)
-{
-    // get out of deadzone if last sdi was cardinal
-    if (angle > M_1DEGREE * 73.5f || (angle < M_1DEGREE * 106.5f && lastSDIWasCardinal))
-    {
-        angle = M_1DEGREE * 73.f;
-    }
-    else if (angle > M_1DEGREE * 163.5f || (angle < M_1DEGREE * 196.5f && lastSDIWasCardinal))
-    {
-        angle = M_1DEGREE * 163.f;
-    }
-    else if (angle > M_1DEGREE * 253.5f || (angle < M_1DEGREE * 296.5f && lastSDIWasCardinal))
-    {
-        angle = M_1DEGREE * 253.f;
-    }
-    else if (angle > M_1DEGREE * 343.5f || (angle < M_1DEGREE * 16.5f && lastSDIWasCardinal))
-    {
-        angle = M_1DEGREE * 343.f;
-    }
-    return angle;
 }
 
 static int pow_n(int x, int n)

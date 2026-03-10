@@ -155,16 +155,14 @@ static int button_bits[] = {
     HSD_TRIGGER_L,         // L
     HSD_TRIGGER_R,         // R
     HSD_TRIGGER_Z,         // Z
- };// GX
+};
+// GX
 #define INPUT_GXLINK 12
 #define INPUT_GXPRI 80
 // params
 #define INPUT_SHELL_JOBJ 14
 #define INPUT_SHELL_DOBJ 0
-#define INPUT_COLOR_PRESSED \
-    {                       \
-        255, 255, 255, 255  \
-    }
+#define INPUT_COLOR_PRESSED { 255, 255, 255, 255 }
 
 typedef struct Arch_ImportData
 {
@@ -183,6 +181,14 @@ typedef struct Arch_LabData
     JOBJDesc *export_menu;
     JOBJDesc *export_popup;
 } Arch_LabData;
+
+// Aitch: BE CAREFUL WITH THE LAYOUT OF THIS STRUCT!
+// Recordings serialize and restore this. Changing the layout will mess up people's recordings!
+// This should store CPU variables that need to be saved/restored in savestates,
+// and would otherwise desync recordings.
+// There are unfortunately a lot of defunct fields here. The lab code sucks.
+//
+// This struct must never grow larger than EVENT_DATASIZE.
 typedef struct LabData
 {
     EventDesc *eventInfo;
@@ -190,7 +196,7 @@ typedef struct LabData
     u8 cpu_hitshield;
     u8 cpu_hitnum;
     u8 cpu_sdinum;
-    u8 cpu_sdidir;
+    u8 cpu_sdidir__defuct; // unused but maintained to keep layout
 
     // Delay timer for "Counter After Frames" Option
     u8 cpu_countertimer;
@@ -209,7 +215,7 @@ typedef struct LabData
     u8 cpu_countering_no_interrupt: 1;
 
     // Aitch: This counter needs to be manually set. We can't use the baked in ssbm timer, because
-    // It'll mess with internal ssbm stuff probably. If the timer is not zero, then no tech.stuff
+    // It'll mess with internal ssbm stuff probably. If the timer is not zero, then no tech.
     // This is set when hit in tumble.
     int cpu_tech_lockout;
 
@@ -219,14 +225,29 @@ typedef struct LabData
     s16 cpu_lasthit;
     s16 cpu_lastshieldstun; // last move instance of the opponent in shield stun. used to tell how many times the shield was hit
     s8 cpu_hitkind;         // how the CPU was hit, damage or shield
-    u8 cpu_hitshieldnum;    // times the CPUs shield was hit
+    u8 cpu_hitshieldnum__defunct; // times the CPUs shield was hit
     u8 cpu_isactionable;    // flag that indicates if a cpu has become actionable
     u8 cpu_groundstate;     // indicates if the player was touching ground upon being actionable
-    s32 timer;
+    s32 timer__defunct;
     u8 cpu_isthrown; // bool for if the cpu is being thrown
-    GOBJ *rec_gobj;
-    u8 hmn_controller;
-    u8 cpu_controller;
+    GOBJ *rec_gobj__defunct;
+    u8 hmn_controller__defunct;
+    u8 cpu_controller__defunct;
+
+    // Aitch: We need to calc the tdi lstick vals right at the start of a move,
+    // so that we can know the sdi dir if set to follow the tdi dir.
+    // And we need to store the sdi vals because random should not be true random, but random in some direction.
+    // Why are asdi vals here? Just for consistency.
+    // 
+    // But then we need to save these vals if the user savestates in the middle of hitlag.
+    // Otherwise it will use the previous hit's info.
+    // Thus they are here.
+    s8 cpu_tdi_lstick_x;
+    s8 cpu_tdi_lstick_y;
+    s8 cpu_sdi_lstick_x;
+    s8 cpu_sdi_lstick_y;
+    s8 cpu_asdi_cstick_x;
+    s8 cpu_asdi_cstick_y;
 } LabData;
 typedef struct InfoDisplayData
 {

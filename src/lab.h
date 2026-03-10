@@ -87,7 +87,6 @@ enum custom_asid_groups
 
 static u32 lz77Compress(u8 *uncompressed_text, u32 uncompressed_size, u8 *compressed_text, u8 pointer_length_width);
 static u32 lz77Decompress(u8 *compressed_text, u8 *uncompressed_text);
-static float GetAngleOutOfDeadzone(float angle, int lastSDIWasCardinal);
 static void DistributeChances(s16 *chances[], unsigned int chance_count);
 static void ReboundChances(s16 *chances[], unsigned int chance_count, int just_changed_option);
 static int IsTechAnim(int state);
@@ -99,7 +98,7 @@ static int IsHitlagVictim(GOBJ *character);
 static int InShieldStun(int state);
 int CustomTDI_Update(GOBJ *gobj);
 void CustomTDI_Destroy(GOBJ *gobj);
-void CustomTDI_Apply(GOBJ *cpu, GOBJ *hmn, CustomTDI *di);
+int CustomTDI_DirectionFactor(GOBJ *cpu, GOBJ *hmn, CustomTDI *di);
 void CPUResetVars(void);
 void Lab_ChangeAdvCounterHitNumber(GOBJ *menu_gobj, int value);
 void Lab_ChangeAdvCounterLogic(GOBJ *menu_gobj, int value);
@@ -110,6 +109,7 @@ void Lab_ChangeActionBehaviour(GOBJ *menu_gobj, int value);
 void Lab_SetActionLogState(GOBJ *menu_gobj);
 void ActionLog_GX(GOBJ *gobj, int pass);
 void DIDraw_Init(void);
+void DIDraw_Reset(int ply);
 void DIDraw_Update(void);
 void DIDraw_GX(void);
 
@@ -1892,7 +1892,6 @@ enum cpu_inf_shield {
 
 enum asdi
 {
-    ASDI_NONE,
     ASDI_AUTO,
     ASDI_AWAY,
     ASDI_TOWARD,
@@ -1906,13 +1905,14 @@ enum asdi
 
 enum sdi_dir
 {
+    SDIDIR_AUTO,
     SDIDIR_RANDOM,
     SDIDIR_AWAY,
     SDIDIR_TOWARD,
-    SDIDIR_UP,
-    SDIDIR_DOWN,
     SDIDIR_LEFT,
     SDIDIR_RIGHT,
+    SDIDIR_UP,
+    SDIDIR_DOWN,
 
     SDIDIR_COUNT
 };
@@ -1962,8 +1962,8 @@ static const char *LabValues_Shield[] = {"Off", "On Until Hit", "On"};
 static const char *LabValues_ShieldDir[] = {"Neutral", "Up", "Towards", "Down", "Away"};
 static const char *LabValues_CPUBehave[] = {"Stand", "Shield", "Crouch", "Jump"};
 static const char *LabValues_TDI[] = {"Random", "Inwards", "Outwards", "Natural", "Custom", "Random Custom", "None"};
-static const char *LabValues_ASDI[] = {"None", "Auto", "Away", "Towards", "Left", "Right", "Up", "Down"};
-static const char *LabValues_SDIDir[] = {"Random", "Away", "Towards", "Up", "Down", "Left", "Right"};
+static const char *LabValues_ASDI[] = {"Auto", "Away", "Towards", "Left", "Right", "Up", "Down"};
+static const char *LabValues_SDIDir[] = {"Auto", "Random", "Away", "Towards", "Left", "Right", "Up", "Down"};
 static const char *LabValues_Tech[] = {"Random", "In Place", "Away", "Towards", "None"};
 static const char *LabValues_Getup[] = {"Random", "Stand", "Away", "Towards", "Attack"};
 static const char *LabValues_GrabEscape[] = {"None", "Medium", "High", "Perfect"};
@@ -2039,7 +2039,6 @@ static EventOption LabOptions_CPU[OPTCPU_COUNT] = {
     {
         .kind = OPTKIND_STRING,
         .value_num = sizeof(LabValues_ASDI) / 4,
-        .val = 1,
         .name = "ASDI",
         .desc = {"Set CPU C-stick ASDI direction"},
         .values = LabValues_ASDI,
