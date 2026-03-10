@@ -100,13 +100,13 @@ static EventOption Options_Main[] = {
     {
         .kind = OPTKIND_TOGGLE,
         .name = "Enable Line Guides",
-        .desc = {"Draws horizontal lines at the ledges and at your",
-                 "Calculated ledgegrab position"},
+        .desc = {"Side-B just above the line guide",
+                 "to sweetspot the ledge."},
     },
     {
         .kind = OPTKIND_INFO,
         .name = "Help",
-        .desc = {"D-Pad left/right to reset manually to that side"}
+        .desc = {"Use D-Pad left/right to reset."}
     },
     {
         .kind = OPTKIND_FUNC,
@@ -137,7 +137,7 @@ static struct sideb {
 static int reset_timer = 0;
 static int state = STATE_ENDLAG;
 
-void Draw_Lines() {
+void Draw_Lines(void) {
     GOBJ *hmn = Fighter_GetGObj(0);
     FighterData *hmn_data = hmn->userdata;
     CollData *coll_data = &hmn_data->coll_data;
@@ -148,15 +148,6 @@ void Draw_Lines() {
     COBJ *cur_cam = COBJ_GetCurrent();
     CObj_SetCurrent(*stc_matchcam_cobj);
 
-    PRIM_DrawMode draw_mode = {
-        .line_width = 16,
-        .z_compare_enable = true,
-        .z_logic_eq = true,
-        .z_logic_lt = true,
-        .shape = PRIM_SHAPE_LINE_STRIP,
-    };
-    PRIM_BlendMode blend_mode = { 0 };
-
     // Melee calculation for the top of the ledgegrab box
     float ledgegrab_offset = coll_data->cliffgrab_y_offset + 0.5 * coll_data->cliffgrab_height;
     if (hmn_data->kind == FTKIND_FOX) {
@@ -166,7 +157,7 @@ void Draw_Lines() {
 
     float y = hmn_data->phys.pos.Y + ledgegrab_offset; 
     float x = hmn_data->phys.pos.X; 
-    u32 color = 0x0000ffff;
+    GXColor color = { 0x00, 0x00, 0xff, 0xff };
     if (sideb.attempted) {
         x = sideb.pos.X;
         y = sideb.pos.Y + ledgegrab_offset;
@@ -180,34 +171,31 @@ void Draw_Lines() {
         float delta = y - target_ledge.Y;
 
         if (delta <= 0) { // failure (SD)
-            color = 0xff0000ff;
+            color = (GXColor) { 0xff, 0x00, 0x00, 0xff };
         } else if (hmn_data->state_id == ASID_CLIFFCATCH
             || hmn_data->state_id == ASID_CLIFFWAIT) { // success
-            color = 0x00ff00ff;
+            color = (GXColor) { 0x00, 0xff, 0x00, 0xff };
         }
     }
 
     // draw line at top of ledgegrab box
-    PRIM_NEW(2, draw_mode, blend_mode);
-    PRIM_DRAW(-300, y, 0, color);
-    PRIM_DRAW(300, y, 0, color);
+    event_vars->GFX_Start(6, (GFX_Params) { .shape = GX_LINES, .size = 16 });
+    GFX_AddVtx(-300, y, 0, color);
+    GFX_AddVtx(300, y, 0, color);
 
     // draw line from left edge
-    color = 0xffffffff;
+    GXColor white = { 0xff, 0xff, 0xff, 0xff };
     x = ledge_positions[0].X;
     y = ledge_positions[0].Y;
-    PRIM_NEW(2, draw_mode, blend_mode);
-    PRIM_DRAW(x, y, 0, color);
-    PRIM_DRAW(x - 100, y, 0, color);
+    GFX_AddVtx(x, y, 0, white);
+    GFX_AddVtx(x - 100, y, 0, white);
 
     // draw line from right edge
     x = ledge_positions[1].X;
     y = ledge_positions[1].Y;
-    PRIM_NEW(2, draw_mode, blend_mode);
-    PRIM_DRAW(x, y, 0, color);
-    PRIM_DRAW(x + 100, y, 0, color);
+    GFX_AddVtx(x, y, 0, white);
+    GFX_AddVtx(x + 100, y, 0, white);
 
-    PRIM_CLOSE();
     CObj_SetCurrent(cur_cam);
 }
 
