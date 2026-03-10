@@ -173,8 +173,8 @@ static inline void RectSplitD(Rect *dst, Rect *src, float size, float padding)
 // This reimplementation aims to not crash on console.
 
 typedef struct GFX_Params {
-    u32 shape : 8; // GX_TRIANGLES, GL_LINES, etc.
-    u32 size : 10; // width of lines and points
+    u8 shape; // GX_TRIANGLES, GL_LINES, etc.
+    u8 size; // width of lines and points
 
     // more fields may be added in the future
 } GFX_Params;

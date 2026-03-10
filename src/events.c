@@ -738,8 +738,8 @@ void GFX_Start(u16 vtx_count, GFX_Params params)
     GXSetCurrentMtx(0);
     COBJ_GetViewingMtx(COBJ_GetCurrent(), &mtx);
     GXLoadPosMtxImm(mtx, 0);
-    HSD_StateSetLineWidth(12, 5);
-    HSD_StateSetPointSize(12 * 2, 5);
+    HSD_StateSetLineWidth(params.size, 5);
+    HSD_StateSetPointSize(params.size, 5);
     HSD_SetupRenderMode(0x68000002);
     GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
     GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
