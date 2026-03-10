@@ -671,6 +671,7 @@ EventVars stc_event_vars = {
     .Message_Display = Message_Display,
     .Tip_Display = Tip_Display,
     .Tip_Destroy = Tip_Destroy,
+    .GFX_Start = GFX_Start,
     .HUD_DrawRects = HUD_DrawRects,
     .HUD_DrawText = HUD_DrawText,
     .HUD_DrawActionLogBar = HUD_DrawActionLogBar,
@@ -729,6 +730,27 @@ static GXColor stc_msg_colors[] = {
 /// Primitives ///
 //////////////////
 
+void GFX_Start(u16 vtx_count, GFX_Params params)
+{
+    // mostly copy pasted from 80391A04
+    Mtx mtx;
+    HSD_ClearVtxDesc();
+    GXSetCurrentMtx(0);
+    COBJ_GetViewingMtx(COBJ_GetCurrent(), &mtx);
+    GXLoadPosMtxImm(mtx, 0);
+    HSD_StateSetLineWidth(12, 5);
+    HSD_StateSetPointSize(12 * 2, 5);
+    HSD_SetupRenderMode(0x68000002);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GXSetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    HSD_StateSetCullMode(0);
+    COBJ_GetViewingMtx(COBJ_GetCurrent(), &mtx);
+
+    GXBegin(params.shape, GX_VTXFMT0, vtx_count);
+}
+
 void HUD_DrawRects(Rect *rects, GXColor *colors, int count)
 {
     HUDCamData *cam_data = stc_event_vars.hudcam_gobj->userdata;
@@ -737,44 +759,23 @@ void HUD_DrawRects(Rect *rects, GXColor *colors, int count)
 
     COBJ *cur_cam = COBJ_GetCurrent();
     CObj_SetCurrent(stc_event_vars.hudcam_gobj->hsd_object);
-    
-    // https://smashboards.com/threads/primitive-drawing-module.454232/
-    // params1: no culling, no point/line size, no zbuffer, triangles
-    // params2: blending, blend src = src.a, blend dst = 1-src.a, noop blend op
-    PRIM_DrawMode draw_mode = {
-        .shape = PRIM_SHAPE_TRIANGLES,
-    };
-    PRIM_BlendMode blend_mode = {
-        .blend_type = PRIM_BLEND_BLEND,
-        .blend_src = PRIM_SOURCE_SRC_ALPHA,
-        .blend_dst = PRIM_SOURCE_SRC_INV_ALPHA,
-        .blend_logic = PRIM_LOGIC_NOOP,
-    };
-    PRIM_NEW(count * 6, draw_mode, blend_mode);
-    
+
+    GFX_Start(count * 4, (GFX_Params) { .shape = GX_QUADS });
     for (int i = 0; i < count; ++i) {
-        GXColor gx_color = colors[i];
-        u32 color = ((u32)gx_color.r << 24u)
-            | ((u32)gx_color.g << 16u)
-            | ((u32)gx_color.b << 8u)
-            | ((u32)gx_color.a << 0u);
-        
+        GXColor color = colors[i];
+
         Rect *rect = &rects[i];
         float x1 = rect->x;
         float y1 = rect->y;
         float x2 = x1 + rect->w;
         float y2 = y1 + rect->h;
-        
-        PRIM_DRAW(x1, y1, 0.f, color);
-        PRIM_DRAW(x1, y2, 0.f, color);
-        PRIM_DRAW(x2, y1, 0.f, color);
-        
-        PRIM_DRAW(x1, y2, 0.f, color);
-        PRIM_DRAW(x2, y1, 0.f, color);
-        PRIM_DRAW(x2, y2, 0.f, color);
+
+        GFX_AddVtx(x1, y1, 0.f, color);
+        GFX_AddVtx(x1, y2, 0.f, color);
+        GFX_AddVtx(x2, y2, 0.f, color);
+        GFX_AddVtx(x2, y1, 0.f, color);
     }
     
-    PRIM_CLOSE();
     CObj_SetCurrent(cur_cam);
 }
 

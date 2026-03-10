@@ -168,6 +168,33 @@ static inline void RectSplitD(Rect *dst, Rect *src, float size, float padding)
     src->h -= size + padding;
 }
 
+// GFX_Start and GFX_AddVtx is an incomplete reimplementation of the PRIM_LITE functions.
+// I don't know why, but it very occasionally crashes on console.
+// This reimplementation aims to not crash on console.
+
+typedef struct GFX_Params {
+    u32 shape : 8; // GX_TRIANGLES, GL_LINES, etc.
+    u32 size : 10; // width of lines and points
+
+    // more fields may be added in the future
+} GFX_Params;
+
+void GFX_Start(u16 vtx_count, GFX_Params params);
+
+// This is an inline function to avoid calling a function pointer for every single vtx.
+// It just writes to the gx_pipe anyways.
+//
+// EXPECTS PREMULTIPLIED COLORS
+static inline void GFX_AddVtx(f32 x, f32 y, f32 z, GXColor color) {
+    gx_pipe->d.F32 = x;
+    gx_pipe->d.F32 = y;
+    gx_pipe->d.F32 = z;
+    gx_pipe->d.U8 = color.r;
+    gx_pipe->d.U8 = color.g;
+    gx_pipe->d.U8 = color.b;
+    gx_pipe->d.U8 = color.a;
+}
+
 void HUD_DrawRects(Rect *rects, GXColor *colors, int count);
 void HUD_DrawText(const char *text, Rect *pos, float size);
 void HUD_DrawActionLogBar(u8 *action_log, GXColor *color_lookup, int log_count);
@@ -215,6 +242,7 @@ typedef struct EventVars
     DevText *db_console_text;
     Text *watermark;
     GOBJ *hudcam_gobj;
+    void (*GFX_Start)(u16 vtx_count, GFX_Params params);
     void (*HUD_DrawRects)(Rect *rects, GXColor *colors, int count);
     void (*HUD_DrawText)(const char *text, Rect *pos, float size);
     void (*HUD_DrawActionLogBar)(u8 *action_log, GXColor *color_lookup, int log_count);

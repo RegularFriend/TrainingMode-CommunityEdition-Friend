@@ -537,7 +537,7 @@
 8033E55C:GXSetNumChans
 8033E5A8:GXSetChanCtrl
 8033FDC4:GXSetTevOp
-80340518:GX_blr
+80340518:GXSetTevClampMode
 8034051C:GXSetAlphaCompare
 803405F0:GXSetTevOrder
 803401EC:GXSetTevColor
@@ -594,6 +594,7 @@
 801A3A74:HSD_PadRenewUpdateStruct2
 8036C244:HSD_ClearVtxDesc
 803620A4:HSD_SetupChannel
+8036199C:HSD_SetupRenderMode
 80361D6C:HSD_StateSetColorUpdate
 80361DC0:HSD_StateSetAlphaUpdate
 80361E14:HSD_StateSetDstAlpha

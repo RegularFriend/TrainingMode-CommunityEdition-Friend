@@ -372,7 +372,6 @@
     .set CSS_UpdateCSPInfo, 0x8025db34
     .set Rumble_StoreRumbleFlag, 0x8015ed4c
     .set GXBegin, 0x8033D0DC
-    .set GXEnd, 0x8033D0DC
     .set GXPipe, 0xCC008000
 
     # Custom Functions
