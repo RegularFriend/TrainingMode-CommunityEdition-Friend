@@ -1076,6 +1076,13 @@ static int in_tumble_anim(int state) {
 }
 
 static int CheckIASA(FighterData *data) {
+    // The spotdodge state is weird - its subaction list contains an IASA event which sets the IASA bit,
+    // but the initial state entry function does not clear the flag.
+    // This causes it to not function - the player can't cancel it,
+    // but it causes us to think they can if it is performed after a state that clears the iasa bit (e.g. landing with an aerial).
+    if (data->state_id == ASID_ESCAPE)
+        return false;
+
     // For some reason, the iasa flag isn't reset when the state changes, only when a new action that has iasa starts.
     // So we need to do some bs tracking to figure out if the character is in iasa.
     return data->TM.iasa_frames && data->TM.iasa_frames <= data->TM.state_frame;
