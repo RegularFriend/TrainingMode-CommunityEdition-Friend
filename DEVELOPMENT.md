@@ -103,6 +103,10 @@ The powershield event is the simplest and easiest to learn from.
     - You will need to find the function that does the processing of the value you want to measure (reach out to me if you're not sure how to find this).
     - Create and write an asm file for the new OSD in `ASM/training-mode/Onscreen Display/`.
     - Add the OSD to the OSD list in `ASM/training-mode/Globals.s`. OSD ids are weird, I don't know exactly how to do this.
+- If you want to draw graphics (easy):
+    - Use the `GFX_Start` and `GFX_AddVtx` functions. Search around to see the specific usage.
+    - You can use the `HUD_*` functions for higher level drawing.
+    - Drawing from ASM is currently difficult. Check out `ASM/.../Custom ESS Button Actions.asm` for a possible method.
 
 ## Debugging Tips
 - Development builds enable logging! Call `TMLOG(...)` to print to the dolphin console and the onscreen console. L/R+Z toggles console visibility.
