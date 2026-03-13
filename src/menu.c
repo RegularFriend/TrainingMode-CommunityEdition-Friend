@@ -278,6 +278,7 @@ void EventMenu_MenuThink(GOBJ *gobj, EventMenu *curr_menu) {
         // If cursor went too far down, scroll down to compensate
         if (cursor >= MENU_MAXOPTION - MENU_SCROLLOFF) {
             int max_scroll = curr_menu->option_num - MENU_MAXOPTION - scroll;
+            if (max_scroll < 0) max_scroll = 0;
             int want_scroll = cursor - MENU_MAXOPTION + MENU_SCROLLOFF + 1;
             int delta_scroll = min(want_scroll, max_scroll);
 
