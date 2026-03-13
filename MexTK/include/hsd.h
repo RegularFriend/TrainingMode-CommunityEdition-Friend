@@ -370,7 +370,7 @@ void HSD_StateSetDither();
 void HSD_StateSetLineWidth(u8 width, int tex_offsets);
 void HSD_StateSetNumTevStages(u8 stages);
 void HSD_StateSetNumTexGens(u8 nTexGens);
-void HSD_StateSetPointSize();
+void HSD_StateSetPointSize(u8 size, int unk);
 void HSD_StateSetZCompLoc(GXBool enable);
 void HSD_ClearVtxDesc();
 void HSD_VICopyXFBASync(int unk);
