@@ -2399,8 +2399,8 @@ static EventOption LabOptions_Tech[OPTTECH_COUNT] = {
     {
         .kind = OPTKIND_TOGGLE,
         .name = "Tech Sound",
-        .desc = {"Toggle playing a sound when tech is",
-                 "distinguishable."},
+        .desc = {"Play a sound cue for reacting to techs.",
+                 "Only useful on console."},
     },
     {
         .kind = OPTKIND_STRING,

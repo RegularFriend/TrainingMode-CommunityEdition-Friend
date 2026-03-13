@@ -6459,29 +6459,29 @@ void Event_Think(GOBJ *event)
     }
 
     // apply invisibility
-    int invisible = LabOptions_Tech[OPTTECH_INVISIBLE].val;
-    if (invisible) {
-        if (IsTechAnim(cpu_data->state_id))
-        {
-            // get distinguishable frame from lookup table
-            u32 char_id = cpu_data->kind;
-            if (char_id >= countof(tech_frame_distinguishable))
-                assert("invalid character kind causing read out of bounds");
+    if (IsTechAnim(cpu_data->state_id)) {
+        // get distinguishable frame from lookup table
+        u32 char_id = cpu_data->kind;
+        if (char_id >= countof(tech_frame_distinguishable))
+            assert("invalid character kind causing read out of bounds");
 
-            int frame_distinguishable = tech_frame_distinguishable[char_id];
+        int frame_distinguishable = tech_frame_distinguishable[char_id];
 
-            // apply if tech anim is after distinguishable frame and invulnerable
-            if (frame_distinguishable != -1) {
-                // state frame is 0-indexed but frame distinguishable is 1-indexed, so add 1
-                int state_frame = cpu_data->TM.state_frame + 1;
+        // apply if tech anim is after distinguishable frame and invulnerable
+        if (frame_distinguishable != -1) {
+            // state frame is 0-indexed but frame distinguishable is 1-indexed, so add 1
+            int state_frame = cpu_data->TM.state_frame + 1;
+
+            int invisible = LabOptions_Tech[OPTTECH_INVISIBLE].val;
+            if (invisible) {
                 int delay = LabOptions_Tech[OPTTECH_INVISIBLE_DELAY].val;
                 int after = state_frame > frame_distinguishable + delay;
                 cpu_data->flags.invisible = after && state_frame < 20;
-
-                int sound = LabOptions_Tech[OPTTECH_SOUND].val;
-                if (sound && state_frame == frame_distinguishable)
-                    SFX_PlayCommon(1);
             }
+
+            int sound = LabOptions_Tech[OPTTECH_SOUND].val;
+            if (sound && state_frame == frame_distinguishable)
+                SFX_Play(287); // 249 also ok
         }
     }
 
