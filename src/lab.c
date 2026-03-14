@@ -2324,6 +2324,8 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
 
         CounterInfo info = GetCounterInfo();
         if (info.disable)
+            // We want to continue CPU behaviour when using counter delay,
+            // so we skip the recovery entry in the case that the CPU is waiting in the air.
             goto CPULOGIC_START_NO_RECOVERY;
 
         // run counter logic
