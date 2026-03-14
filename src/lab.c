@@ -1966,6 +1966,7 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
             goto CPULOGIC_RECOVER;
         }
 
+    CPULOGIC_START_NO_RECOVERY:
         // clear held inputs
         Fighter_ZeroCPUInputs(cpu_data);
 
@@ -1977,7 +1978,6 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
         {
             break;
         }
-
         case (CPUBEHAVE_SHIELD):
         {
             // hold R
@@ -2019,7 +2019,7 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
         case (CPUBEHAVE_JUMP):
         {
             // run jump command
-            Lab_CPUPerformAction(cpu, 12, hmn);
+            Lab_CPUPerformAction(cpu, CPUACT_SHORTHOP, hmn);
             break;
         }
         }
@@ -2323,16 +2323,16 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
         }
 
         CounterInfo info = GetCounterInfo();
-        if (info.disable && info.counter_delay == 0)
-            goto CPULOGIC_START;
-        
+        if (info.disable)
+            goto CPULOGIC_START_NO_RECOVERY;
+
         // run counter logic
         if (info.action_id == 0) {
             eventData->cpu_state = CPUSTATE_NONE;
             goto CPULOGIC_NONE;
         } else {
             eventData->cpu_countering = true;
-            if (!info.disable && Lab_CPUPerformAction(cpu, info.action_id, hmn)) {
+            if (Lab_CPUPerformAction(cpu, info.action_id, hmn)) {
                 CPUAction *action = Lab_CPUActions[info.action_id];
                 if (action->noActAfter) {
                     eventData->cpu_state = CPUSTATE_NONE;
