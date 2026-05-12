@@ -1,11 +1,9 @@
 #include "../MexTK/mex.h"
 #include "events.h"
 
-#define CPU_LEFT_STAGE_POS_X 70.f
-#define CPU_LEFT_DIRECTION -1.f
-
-#define FULL_FALCO_SHORTHOP_DISTANCE 30.f // TODO: adjust
-#define SLIGHT_FALCO_SHORTHOP_DISTANCE 15.f // TODO: adjust
+#define LEDGE_X 70.f
+#define FULL_FALCO_SHORTHOP_DISTANCE 30.f
+#define SLIGHT_FALCO_SHORTHOP_DISTANCE 13.f
 
 void Exit(GOBJ *menu);
 void ChangeFireSpeedOption(GOBJ *event_menu, int value);
@@ -129,16 +127,23 @@ static int falco_dash_direction = 0;
 static int falco_jump_direction = 0;
 static int falco_shoot_direction = 0;
 
+static void PutOnGround(GOBJ *ft);
+
 void Event_Think(GOBJ *menu) {
-    if (event_vars->game_timer == 1) {
-        event_vars->Savestate_Save_v1(event_vars->savestate, Savestate_Silent);
-        Reset();
-    }
-    
     GOBJ *player = Fighter_GetGObj(0);
     FighterData *player_data = player->userdata;
     GOBJ *falco = Fighter_GetGObj(1);
     FighterData *falco_data = falco->userdata;
+
+    if (event_vars->game_timer == 1) {
+        player_data->facing_direction = -1;
+        PutOnGround(player);
+        PutOnGround(falco);
+        Match_CorrectCamera();
+
+        event_vars->Savestate_Save_v1(event_vars->savestate, Savestate_Silent);
+        Reset();
+    }
 
     Fighter_ZeroCPUInputs(falco_data);
     falco_data->flags.no_reaction_always = true;
@@ -197,11 +202,16 @@ void Event_Think(GOBJ *menu) {
     if (ground_actionable && falco_wait_delay == 0) {
         // choose shoot type
         if (falco_shoot_direction == 0) {
+            float falco_x = falco_data->phys.pos.X;
+            float player_x = player_data->phys.pos.X;
+        
+            float approaching_dir = player_x < falco_x ? -1.f : 1.f;
+            float retreating_dir = -approaching_dir;
             bool can_in_place = true;
-            bool can_full_approach = true;
-            bool can_slight_approach = true;
-            bool can_full_retreat = fabs(falco_data->phys.pos.X) < (CPU_LEFT_STAGE_POS_X - FULL_FALCO_SHORTHOP_DISTANCE); // TODO: test
-            bool can_slight_retreat = fabs(falco_data->phys.pos.X) < (CPU_LEFT_STAGE_POS_X - SLIGHT_FALCO_SHORTHOP_DISTANCE); // TODO: test
+            bool can_full_approach = fabs(falco_x + FULL_FALCO_SHORTHOP_DISTANCE*approaching_dir) < LEDGE_X;
+            bool can_slight_approach = fabs(falco_x + SLIGHT_FALCO_SHORTHOP_DISTANCE*approaching_dir) < LEDGE_X;
+            bool can_full_retreat = fabs(falco_x + FULL_FALCO_SHORTHOP_DISTANCE*retreating_dir) < LEDGE_X;
+            bool can_slight_retreat = fabs(falco_x + SLIGHT_FALCO_SHORTHOP_DISTANCE*retreating_dir) < LEDGE_X;
 
             typedef struct {
                 int in_place_odds;
@@ -361,28 +371,54 @@ void ChangeFireSpeedOption(GOBJ *event_menu, int value) {
     Options_Main[OPT_FIRE_DELAY_RANDOM_MAX].disable = disable_random_bounds;
 }
 
+static void PutOnGround(GOBJ *ft) {
+    FighterData *ft_data = ft->userdata;
+    ft_data->coll_data.ground_index = 1;
+
+    Vec3 pos = { ft_data->phys.pos.X, 0, 0 };
+    ft_data->phys.pos = pos;
+    ft_data->coll_data.topN_Curr = pos;
+    ft_data->coll_data.topN_CurrCorrect = pos;
+    ft_data->coll_data.topN_Prev = pos;
+    ft_data->coll_data.topN_Proj = pos;
+    ft_data->coll_data.coll_test = *stc_colltest;
+
+    JOBJ *jobj = ft->hsd_object;
+    jobj->trans = pos;
+    JOBJ_SetMtxDirtySub(jobj);
+    
+    Fighter_SetPosition(ft_data->ply, ft_data->flags.ms, &ft_data->phys.pos);
+
+    EnvironmentCollision_WaitLanding(ft);
+    Fighter_SetGrounded(ft_data);
+    Fighter_EnterWait(ft);
+
+    Fighter_UpdateCameraBox(ft);
+    CmSubject *subject = ft_data->camera_subject;
+    subject->boundtop_curr = subject->boundtop_proj;
+    subject->boundbottom_curr = subject->boundbottom_proj;
+    subject->boundleft_curr = subject->boundleft_proj;
+    subject->boundright_curr = subject->boundright_proj;
+}
+
 void Reset(void) {
-    event_vars->Savestate_Load_v1(event_vars->savestate, Savestate_Silent);
-    
-    GOBJ *hmn = Fighter_GetGObj(0);
-    GOBJ *falco = Fighter_GetGObj(1);
-    FighterData *hmn_data = hmn->userdata;
-    FighterData *falco_data = falco->userdata;
-    
-    hmn_data->phys.pos.Y = 0.f;
-    falco_data->phys.pos.Y = 0.f;
-
-    Fighter_EnterWait(hmn);
-    Fighter_EnterWait(falco);
-
     int direction = Options_Main[OPT_DIRECTION].val;
-    if (direction == DIRECTION_LEFT) {
-        falco_data->facing_direction = CPU_LEFT_DIRECTION;
-        falco_data->phys.pos.X = CPU_LEFT_STAGE_POS_X;
-    } else {
-        falco_data->facing_direction = -CPU_LEFT_DIRECTION;
-        falco_data->phys.pos.X = -CPU_LEFT_STAGE_POS_X;    
-    }
+    int mirror = direction == DIRECTION_LEFT ? Savestate_Mirror : 0;
+    event_vars->Savestate_Load_v1(event_vars->savestate, Savestate_Silent | mirror);
+
+    falco_wait_delay = -1;
+    falco_shoot_delay = -1;
+    falco_fastfall_delay = -1;
+    falco_dash_direction = 0;
+    falco_jump_direction = 0;
+    falco_shoot_direction = 0;
+    
+    GOBJ *player = Fighter_GetGObj(0);
+    GOBJ *falco = Fighter_GetGObj(1);
+    
+    PutOnGround(player);
+    PutOnGround(falco);
+    Match_CorrectCamera();
 }
 
 void ChangeDirection(GOBJ *event_menu, int value) {
