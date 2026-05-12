@@ -95,6 +95,26 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
     }
 }
 
+static void RunOSD_IceClimbersHandoff(GOBJ *ft, GOBJ *ft_sub) {
+    /*
+     * A Handoff is defined as a regrab where Climber A grabs the opponent out of a throw from Climber B.
+
+     * If the grab hits, and Climber A's grab hitbox overlaps with Climber B's grab release, it is considered a
+     * true handoff and is inescapable. Flash Green.
+
+     * If the Grab hits, and Climber A's grab hitbox is within 10 frames of Climber B's grab release, it is considered
+     * a situational handoff, and may be escapable with certain DI and at certain %s. Flash Yellow.
+     * TODO: we could have a precompiled table of 'reasonable' situational handoffs to count as full successes and
+     * TODO: Flash green. For instance, you don't need the 2f inescapable handoff on donkey kong until well above kill %
+
+     * If Climber A's grab misses and is within N frames of Climber B's throw release, it is considered to be
+     * a failed handoff attempt. Flash Red.
+
+     * If Climber A's grab hurtbox ends before Climber B's throw release, it is considered to be a failed handoff.
+     * Flash Red.
+     */
+}
+
 void OSD_Think(GOBJ *event) {
     u32 osd_enabled = stc_memcard->TM_OSDEnabled;
 
