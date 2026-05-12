@@ -25,6 +25,7 @@ void OSD_Think(GOBJ *event);
 #define OSD_ComboCounter 22
 #define OSD_GrabBreakout 24
 #define OSD_Ledge 26
+#define IceClimbersHandoff 27 //TODO: eventually this can probably be baked into OSD_FighterSpecificTech.
 #define OSD_ActOoHitstun 28
 
 // Special ID: always displays. Never overwrites another OSD.
