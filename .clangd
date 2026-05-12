@@ -4,6 +4,7 @@ CompileFlags:
   Compiler: C:\devkitPro\devkitPPC\bin\powerpc-eabi-gcc.exe
 
   Add:
+    - -Dbool=_Bool
     - -DTM_DEBUG
     - -Wall
     - -Wextra
