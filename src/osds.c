@@ -168,7 +168,7 @@ static void RunOSD_Handoff(GOBJ *grabber, GOBJ *thrower, GOBJ *enemy, GOBJ *enem
         throw_release_frames[thrower_data->ply] = 0;
         grabber_hitbox_frames[grabber_data->ply] = 0;
     }
-    if (throw_to_now_frame_dif > 15) {
+    else if (throw_to_now_frame_dif > 15) {
         int frames_off = throw_grab_frame_dif < 0 ? throw_grab_frame_dif + 1 : throw_grab_frame_dif;
         Message_Display(OSD_Handoff, grabber_data->ply, MSGCOLOR_RED,
                         "Handoff Failure\nIncorrect Spacing or timing. %d Frame(s) off", frames_off);
@@ -194,7 +194,7 @@ void OSD_Think(GOBJ *event) {
         if (osd_enabled & (1u << OSD_FrameAdvantage)) RunOSD_FrameAdvantage(ft, ft_sub);
         if (osd_enabled & (1u << OSD_Handoff)) {
             if (ft && ft_sub) {
-                for (int enm = 0; enm < 6; ++ennm) {
+                for (int enm = 0; enm < 6; ++enn) {
                     if (enm == ply) continue;
                     GOBJ *enm_ft = Fighter_GetSubcharGObj(enm, 0);
                     GOBJ *enm_ft_sub = Fighter_GetSubcharGObj(enm, 1);
