@@ -118,14 +118,11 @@ static void RunOSD_Handoff(GOBJ *grabber, GOBJ *thrower, GOBJ *enemy, GOBJ *enem
     FighterData *grabber_data = grabber->userdata;
     FighterData *thrower_data = thrower->userdata;
 
-    int gbr_ply = grabber_data->ply;
-    int twr_ply = thrower_data->ply;
+    static int throw_release_frames[6] = {0};
+    static int grabber_hitbox_frames[6] = {0};
 
-    static int release_frames[6] = {0};
-    static int frm_grb_hitbox[6] = {0};
-
-    static int enm_prev_state[6] = {0};
-    static int sub_prev_state[6] = {0};
+    static int enemy_prev_states[6] = {0};
+    static int enemy_sub_prev_states[6] = {0};
 
     // Huge assumptions being made here about the specific ordering of state enums.
     if (thrower_data->state_id >= ASID_THROWF && thrower_data->state_id <= ASID_THROWLW) {
@@ -133,23 +130,51 @@ static void RunOSD_Handoff(GOBJ *grabber, GOBJ *thrower, GOBJ *enemy, GOBJ *enem
 
         bool released_this_frame = enemy_data->state_id >= ASID_THROWNF
                      && enemy_data->state_id <= ASID_THROWNLWWOMEN
-                     && enm_prev_state[enemy_data->ply] < ASID_THROWNF;
+                     && enemy_prev_states[enemy_data->ply] < ASID_THROWNF;
 
         if (enemy_sub) {
             FighterData *enemy_sub_data = enemy_sub->userdata;
 
             released_this_frame |= enemy_sub_data->state_id >= ASID_THROWNF
                      && enemy_sub_data->state_id <= ASID_THROWNLWWOMEN
-                     && sub_prev_state[enemy_sub_data->ply] < ASID_THROWNF;
+                     && enemy_sub_prev_states[enemy_sub_data->ply] < ASID_THROWNF;
 
-            sub_prev_state[enemy_sub_data->ply] = enemy_sub_data->state_id;
+            enemy_sub_prev_states[enemy_sub_data->ply] = enemy_sub_data->state_id;
         }
 
-        enm_prev_state[enemy_data->ply] = enemy_data->state_id;
-        if (released_this_frame) release_frames[twr_ply] = event_vars->game_timer;
+        enemy_prev_states[enemy_data->ply] = enemy_data->state_id;
+        if (released_this_frame) throw_release_frames[thrower_data->ply] = event_vars->game_timer;
     }
 
-    
+    const bool grabber_hitbox_active = grabber_data->throw_hitbox[0].active || grabber_data->throw_hitbox[1].active;
+    if (grabber_hitbox_active) {
+        //icies grab has two active frames. only record the first one
+        if (grabber_hitbox_frames[grabber_data->ply] == event_vars->game_timer -1) return;
+        grabber_hitbox_frames[grabber_data->ply] = event_vars->game_timer;
+    }
+
+    const int throw_grab_frame_dif = grabber_hitbox_frames[grabber_data->ply] - throw_release_frames[thrower_data->ply];
+    const bool guarenteed_timing = throw_grab_frame_dif == 0 || throw_grab_frame_dif == -1;
+    const int throw_to_now_frame_dif = event_vars->game_timer - throw_release_frames[thrower_data->ply];
+
+    if (grabber_data->state_id == ASID_CATCHWAIT) {
+        //BANG. LOG OSD
+        if (guarenteed_timing)
+            Message_Display(OSD_Handoff, grabber_data->ply, MSGCOLOR_GREEN, "Handoff Sucessful\nPerfect Timing");
+        else
+            Message_Display(OSD_Handoff, grabber_data->ply, MSGCOLOR_YELLOW, "Handoff Sucessful\n%d Frame(s) Late",
+                            throw_grab_frame_dif);
+
+        throw_release_frames[thrower_data->ply] = 0;
+        grabber_hitbox_frames[grabber_data->ply] = 0;
+    }
+    if (throw_to_now_frame_dif > 15) {
+        int frames_off = throw_grab_frame_dif < 0 ? throw_grab_frame_dif + 1 : throw_grab_frame_dif;
+        Message_Display(OSD_Handoff, grabber_data->ply, MSGCOLOR_RED,
+                        "Handoff Failure\nIncorrect Spacing or timing. %d Frame(s) off", frames_off);
+        throw_release_frames[thrower_data->ply] = 0;
+        grabber_hitbox_frames[grabber_data->ply] = 0;
+    }
 }
 
 void OSD_Think(GOBJ *event) {
