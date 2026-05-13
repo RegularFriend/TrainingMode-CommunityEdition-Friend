@@ -194,7 +194,7 @@ void OSD_Think(GOBJ *event) {
         if (osd_enabled & (1u << OSD_FrameAdvantage)) RunOSD_FrameAdvantage(ft, ft_sub);
         if (osd_enabled & (1u << OSD_Handoff)) {
             if (ft && ft_sub) {
-                for (int enm = 0; enm < 6; ++enn) {
+                for (int enm = 0; enm < 6; ++enm) {
                     if (enm == ply) continue;
                     GOBJ *enm_ft = Fighter_GetSubcharGObj(enm, 0);
                     GOBJ *enm_ft_sub = Fighter_GetSubcharGObj(enm, 1);
