@@ -113,7 +113,7 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
  * Flash Red.
  */
 static void RunOSD_Handoff(GOBJ *grabber, GOBJ *thrower, GOBJ *enemy, GOBJ *enemy_sub) {
-    if (!grabber || !thrower || enemy) return;
+    if (!grabber || !thrower || !enemy) return;
 
     FighterData *grabber_data = grabber->userdata;
     FighterData *thrower_data = thrower->userdata;
