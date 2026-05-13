@@ -37,12 +37,12 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
 
     FighterData *ft_data = ft->userdata;
     FighterData *ft_def_data = ft_data->TM.fighter_hurt_shield;
-    if (ft_def_data == 0) return; 
+    if (ft_def_data == 0) return;
     GOBJ *ft_def = ft_def_data->fighter;
 
     int ply = ft_data->ply;
     static int atk_hit_state[6] = {0};
-    
+
     // Wait for GuardSetOff to end before running frame advantage code again
     if (atk_hit_state[ply] == -1) {
         if (ft_def_data->state_id != ASID_GUARDSETOFF)
@@ -58,7 +58,7 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
     }
 
     int atk_state = ft_data->state_id;
-    
+
     // "actionable" if either state changed or in iasa, and not in aerial or ac landing lag.
     bool atk_actionable = (atk_hit_state[ply] != atk_state || CheckIASA(ft_data))
         && (atk_state != ASID_LANDING || ft_data->state.frame >= ft_data->attr.normal_landing_lag)
@@ -66,7 +66,7 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
 
     if (atk_actionable) {
         int advantage;
-    
+
         if (ft_def_data->state_id == ASID_GUARDSETOFF) {
             // + on shield: advantage is frames until shieldstun is gone.
             float anim_speed = ft_def_data->state.rate;
@@ -95,24 +95,61 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
     }
 }
 
-static void RunOSD_IceClimbersHandoff(GOBJ *ft, GOBJ *ft_sub) {
-    /*
-     * A Handoff is defined as a regrab where Climber A grabs the opponent out of a throw from Climber B.
+/*
+ * A Handoff is defined as a regrab where Climber A grabs the opponent out of a throw from Climber B.
 
-     * If the grab hits, and Climber A's grab hitbox overlaps with Climber B's grab release, it is considered a
-     * true handoff and is inescapable. Flash Green.
+ * If the grab hits, and Climber A's grab hitbox overlaps with Climber B's grab release, it is considered a
+ * true handoff and is inescapable. Flash Green.
 
-     * If the Grab hits, and Climber A's grab hitbox is within 10 frames of Climber B's grab release, it is considered
-     * a situational handoff, and may be escapable with certain DI and at certain %s. Flash Yellow.
-     * TODO: we could have a precompiled table of 'reasonable' situational handoffs to count as full successes and
-     * TODO: Flash green. For instance, you don't need the 2f inescapable handoff on donkey kong until well above kill %
+ * If the Grab hits, and Climber A's grab hitbox is within 10 frames of Climber B's grab release, it is considered
+ * a situational handoff, and may be escapable with certain DI and at certain %s. Flash Yellow.
+ * TODO: we could have a precompiled table of 'reasonable' situational handoffs to count as full successes and
+ * TODO: Flash green. For instance, you don't need the 2f inescapable handoff on donkey kong until well above kill %
 
-     * If Climber A's grab misses and is within N frames of Climber B's throw release, it is considered to be
-     * a failed handoff attempt. Flash Red.
+ * If Climber A's grab misses and is within N frames of Climber B's throw release, it is considered to be
+ * a failed handoff attempt. Flash Red.
 
-     * If Climber A's grab hurtbox ends before Climber B's throw release, it is considered to be a failed handoff.
-     * Flash Red.
-     */
+ * If Climber A's grab hurtbox ends before Climber B's throw release, it is considered to be a failed handoff.
+ * Flash Red.
+ */
+static void RunOSD_Handoff(GOBJ *grabber, GOBJ *thrower, GOBJ *enemy, GOBJ *enemy_sub) {
+    if (!grabber || !thrower || enemy) return;
+
+    FighterData *grabber_data = grabber->userdata;
+    FighterData *thrower_data = thrower->userdata;
+
+    int gbr_ply = grabber_data->ply;
+    int twr_ply = thrower_data->ply;
+
+    static int release_frames[6] = {0};
+    static int frm_grb_hitbox[6] = {0};
+
+    static int enm_prev_state[6] = {0};
+    static int sub_prev_state[6] = {0};
+
+    // Huge assumptions being made here about the specific ordering of state enums.
+    if (thrower_data->state_id >= ASID_THROWF && thrower_data->state_id <= ASID_THROWLW) {
+        const FighterData *enemy_data = enemy->userdata;
+
+        bool released_this_frame = enemy_data->state_id >= ASID_THROWNF
+                     && enemy_data->state_id <= ASID_THROWNLWWOMEN
+                     && enm_prev_state[enemy_data->ply] < ASID_THROWNF;
+
+        if (enemy_sub) {
+            FighterData *enemy_sub_data = enemy_sub->userdata;
+
+            released_this_frame |= enemy_sub_data->state_id >= ASID_THROWNF
+                     && enemy_sub_data->state_id <= ASID_THROWNLWWOMEN
+                     && sub_prev_state[enemy_sub_data->ply] < ASID_THROWNF;
+
+            sub_prev_state[enemy_sub_data->ply] = enemy_sub_data->state_id;
+        }
+
+        enm_prev_state[enemy_data->ply] = enemy_data->state_id;
+        if (released_this_frame) release_frames[twr_ply] = event_vars->game_timer;
+    }
+
+    
 }
 
 void OSD_Think(GOBJ *event) {
@@ -124,11 +161,22 @@ void OSD_Think(GOBJ *event) {
 
         // subchar is usually null except for nana and the inactive sheik/zelda tform
         GOBJ *ft_sub = Fighter_GetSubcharGObj(ply, 1);
-        
+
         if (ft) UpdateIASATracking(ft);
         if (ft_sub) UpdateIASATracking(ft_sub);
 
+
         if (osd_enabled & (1u << OSD_FrameAdvantage)) RunOSD_FrameAdvantage(ft, ft_sub);
-        if (osd_enabled & (1u << OSD_Handoff)) RunOSD_IceClimbersHandoff(ft, ft_sub);
+        if (osd_enabled & (1u << OSD_Handoff)) {
+            if (ft && ft_sub) {
+                for (int enm = 0; enm < 6; ++ennm) {
+                    if (enm == ply) continue;
+                    GOBJ *enm_ft = Fighter_GetSubcharGObj(enm, 0);
+                    GOBJ *enm_ft_sub = Fighter_GetSubcharGObj(enm, 1);
+                    RunOSD_Handoff(ft, ft_sub, enm_ft, enm_ft_sub);
+                    RunOSD_Handoff(ft_sub, ft, enm_ft, enm_ft_sub);
+                }
+            }
+        }
     }
 }
