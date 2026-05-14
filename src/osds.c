@@ -30,7 +30,7 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
             the advantage is the # frames until shieldstun is gone.
         If the attacker is actionable and the defender is also actionable,
             the advantages is -frames since shieldstun.
-    
+
     We use the 0 state to wait for GuardSetOff to start.
     We use the -1 state to wait for GuardSetOff to end.
     */
@@ -113,10 +113,8 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
  * Flash Red.
  */
 
-//TODO: I THINK MY CORE ISSUE IS THTAT HTE GRABBER DOES NOT HAVE A UNIQUE PID
 static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
     if (!ft_sub || !ft || !enm) return;
-    //settings
     const int osd_window_after_throw = 120;
     const int handoff_reset_time = 60;
     const int osd_window_after_grab = 15;
@@ -124,51 +122,39 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
     FighterData *ft_data = ft->userdata;
     FighterData *sub_data = ft_sub->userdata;
     FighterData *enemy_data = enm->userdata;
-    // FighterData *enemy_sub_data = enm_sub->userdata;
 
     // state. arrays use ply as id for lookup.
     static int primary_throw_start_frame[6] = {0};
-    static int sub_throw_start_frame[6];
+    static int sub_throw_start_frame[6] = {0};
 
     static int primary_grab_hitbox_frame_active[6] = {0};
     static int sub_grab_hitbox_frame_active[6] = {0};
-
-    static int primary_state_last_frame[6] = {0};
-    static int sub_state_last_frame[6];
 
     static bool grab_hitbox_last_frame[6] = {0};
     static bool sub_grab_hitbox_last_frame[6] = {0};
 
     static int primary_handoff_end_frame[6] = {0};
-    static int sub_handoff_end_frame[6];
+    static int sub_handoff_end_frame[6] = {0};
 
     static int enemy_state_last_frame[6] = {0};
     static int enemy_released_frame[6] = {0};
 
-    //valid window is an offset from the thrower's last throw time
     const int active_pid = ft_data->ply;
     const int enemy_pid = enemy_data->ply;
 
-    //osd window is valid when a throw has happened in the last N seconds, and when the last recoreded
-    //throw wasnt in the future (solving for resets)
     bool check_primary_handoff = primary_throw_start_frame[active_pid] != 0 &&
-                                 event_vars->game_timer - primary_throw_start_frame[active_pid] < osd_window_after_throw
-                                 &&
+                                 event_vars->game_timer - primary_throw_start_frame[active_pid] < osd_window_after_throw &&
                                  primary_throw_start_frame[active_pid] <= event_vars->game_timer;
 
-    bool sub_thrown_recently = sub_throw_start_frame[active_pid] != 0 &&
-                               event_vars->game_timer - sub_throw_start_frame[active_pid] < osd_window_after_throw &&
-                               sub_throw_start_frame[active_pid] <= event_vars->game_timer;
+    bool check_sub_handoff = sub_throw_start_frame[active_pid] != 0 &&
+                             event_vars->game_timer - sub_throw_start_frame[active_pid] < osd_window_after_throw &&
+                             sub_throw_start_frame[active_pid] <= event_vars->game_timer;
 
-
-    //if you aren't within the osd window, just check to see if the thrower is throwing
+    // --- Primary -> Sub handoff: primary throws, sub grabs ---
     if (check_primary_handoff) {
-        // check for enemy release
         const bool enemy_released_this_frame = (enemy_state_last_frame[enemy_pid] >= ASID_THROWNF &&
-                                                enemy_state_last_frame[enemy_pid] <=
-                                                ASID_THROWNLWWOMEN)
-                                               && (enemy_data->state_id < ASID_THROWNF || enemy_data->state_id >
-                                                   ASID_THROWNLWWOMEN);
+                                                enemy_state_last_frame[enemy_pid] <= ASID_THROWNLWWOMEN)
+                                               && (enemy_data->state_id < ASID_THROWNF || enemy_data->state_id > ASID_THROWNLWWOMEN);
         if (enemy_released_this_frame) {
             enemy_released_frame[enemy_pid] = event_vars->game_timer;
             Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "PH:: Enemy Released %d", enemy_released_frame[enemy_pid]);
@@ -190,83 +176,109 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
         }
 
         //if its been more than 15 frames since the grab hitbox came out, then we consider the handoff a miss and fail.
-
-        //if the sub enters a sucessful grab state, the handoff was a success. wait at least 2 frames after the grab hitbox to avoid lack of necessary data
-        int throw_to_grab_delta = enemy_released_frame[enemy_pid] - sub_grab_hitbox_frame_active[active_pid];
+        //if the sub enters a sucessful grab state, the handoff was a success.
+        int grab_to_throw_delta =  sub_grab_hitbox_frame_active[active_pid] - enemy_released_frame[enemy_pid];
         if (sub_data->state_id >= ASID_CATCHPULL && sub_data->state_id <= ASID_CATCHCUT) {
             //if throw release was never caught, that means it was this same frame. same deal for grab hurtbox.
             if (enemy_released_frame[enemy_pid] == 0) enemy_released_frame[enemy_pid] = event_vars->game_timer;
             if (sub_grab_hitbox_frame_active[active_pid] == 0) sub_grab_hitbox_frame_active[active_pid] = event_vars->game_timer;
-            throw_to_grab_delta = enemy_released_frame[enemy_pid] - sub_grab_hitbox_frame_active[active_pid];
+            grab_to_throw_delta = sub_grab_hitbox_frame_active[active_pid] - enemy_released_frame[enemy_pid];
 
-            if (throw_to_grab_delta == -1 || throw_to_grab_delta == 0) {
-                Message_Display(OSD_Handoff, active_pid, MSGCOLOR_GREEN, "Perfect Handoff: %d", throw_to_grab_delta);
+            if (grab_to_throw_delta == -1 || grab_to_throw_delta == 0) {
+                Message_Display(OSD_Handoff, active_pid, MSGCOLOR_GREEN, "Perfect Handoff: %d", grab_to_throw_delta);
             } else {
-                Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "Imperfect Handoff: %d", throw_to_grab_delta);
+                Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "Imperfect Handoff: %d", grab_to_throw_delta);
             }
             primary_handoff_end_frame[active_pid] = event_vars->game_timer;
             primary_throw_start_frame[active_pid] = 0;
-        }
-        else if (sub_grab_hitbox_frame_active[active_pid] != 0 &&
-            event_vars->game_timer - sub_grab_hitbox_frame_active[active_pid] > osd_window_after_grab) {
-            Message_Display(OSD_Handoff, active_pid, MSGCOLOR_RED, "Handoff Missed: %d", throw_to_grab_delta);
-            //this kicks us back to 'not looking for a handoff'
+        } else if (sub_grab_hitbox_frame_active[active_pid] != 0 &&
+                   event_vars->game_timer - sub_grab_hitbox_frame_active[active_pid] > osd_window_after_grab) {
+            Message_Display(OSD_Handoff, active_pid, MSGCOLOR_RED, "Handoff Missed: %d", grab_to_throw_delta);
             primary_throw_start_frame[active_pid] = 0;
         }
 
-
         enemy_state_last_frame[enemy_pid] = enemy_data->state_id;
         sub_grab_hitbox_last_frame[active_pid] = sub_grab_hitbox_active;
-        sub_state_last_frame[active_pid] = sub_data->state_id;
     } else {
-        //check to see if the primary has started a throw
         const bool primary_in_throw = ft_data->state_id >= ASID_THROWF && ft_data->state_id <= ASID_THROWLW;
-        const bool osd_on_cooldown = primary_handoff_end_frame[active_pid] != 0 &&
-                                     primary_handoff_end_frame[active_pid] <= event_vars->game_timer &&
-                                     event_vars->game_timer - primary_handoff_end_frame[active_pid] <
-                                     handoff_reset_time;
-        //determine if a throw happened, reset all other state.
-        if (primary_in_throw && !osd_on_cooldown) {
+        const bool primary_osd_on_cooldown = primary_handoff_end_frame[active_pid] != 0 &&
+                                             primary_handoff_end_frame[active_pid] <= event_vars->game_timer &&
+                                             event_vars->game_timer - primary_handoff_end_frame[active_pid] < handoff_reset_time;
+        if (primary_in_throw && !primary_osd_on_cooldown) {
             Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "Primary Throw Started");
             primary_throw_start_frame[active_pid] = event_vars->game_timer;
             primary_handoff_end_frame[active_pid] = 0;
         }
 
-        //reset all other state todo: maybe i need to be smart about what ireset instead of evertyhing.
-        if (!sub_thrown_recently && !osd_on_cooldown) {
-            primary_grab_hitbox_frame_active[active_pid] = 0;
+        if (!check_sub_handoff && !primary_osd_on_cooldown) {
             sub_grab_hitbox_frame_active[active_pid] = 0;
-            primary_state_last_frame[active_pid] = 0;
-            sub_state_last_frame[active_pid] = 0;
-            grab_hitbox_last_frame[active_pid] = 0;
             sub_grab_hitbox_last_frame[active_pid] = 0;
             enemy_state_last_frame[enemy_pid] = 0;
             enemy_released_frame[enemy_pid] = 0;
         }
     }
 
-
-    // if (sub_thrown_recently) {
-    //
-    // } else {
-    //     //checkt o see if the sub started a throw
-    //     const bool sub_in_throw = sub_data->state_id >= ASID_THROWF && sub_data->state_id <= ASID_THROWLW;
-    //     if (sub_in_throw) {
-    //         Message_Display(OSD_Handoff, sub_data->ply, MSGCOLOR_YELLOW,
-    //                         "Secondary Climber Handoff Window Started. GameTime: %d", event_vars->game_timer);
+    // // --- Sub -> Primary handoff: sub throws, primary grabs ---
+    // if (check_sub_handoff) {
+    //     const bool enemy_released_this_frame = (enemy_state_last_frame[enemy_pid] >= ASID_THROWNF &&
+    //                                             enemy_state_last_frame[enemy_pid] <= ASID_THROWNLWWOMEN)
+    //                                            && (enemy_data->state_id < ASID_THROWNF || enemy_data->state_id > ASID_THROWNLWWOMEN);
+    //     if (enemy_released_this_frame) {
+    //         enemy_released_frame[enemy_pid] = event_vars->game_timer;
+    //         Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "SH:: Enemy Released %d", enemy_released_frame[enemy_pid]);
     //     }
-    //     sub_throw_start_frame[active_pid] = sub_in_throw ? event_vars->game_timer : 0;
     //
-    //     //reset all other state todo: maybe i need to be smart about what ireset instead of evertyhing.
-    //     if (!primary_thrown_recently) {
-    //         primary_grab_hitbox_frame_active[active_pid] = 0;
-    //         sub_grab_hitbox_frame_active[active_pid] = 0;
-    //         primary_state_last_frame[active_pid] = 0;
-    //         sub_state_last_frame[active_pid] = 0;
-    //         grab_hitbox_last_frame[active_pid] = 0;
-    //         sub_grab_hitbox_last_frame[active_pid] = 0;
-    //         enemy_state_last_frame[enemy_pid] = 0;
+    //     //check for primary grab hitbox out
+    //     bool primary_grab_hitbox_active = false;
+    //     //ensure its been more than 8 frames from the sub's throw to avoid confusion with the synced grab
+    //     if (event_vars->game_timer - sub_throw_start_frame[active_pid] >= 8 && ft_data->state_id == ASID_CATCH) {
+    //         for (int i = 0; i < 4; i++) {
+    //             if (ft_data->hitbox[i].active) {
+    //                 primary_grab_hitbox_active = true;
+    //             }
+    //         }
+    //     }
+    //     if (primary_grab_hitbox_active && !grab_hitbox_last_frame[active_pid]) {
+    //         Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "SH: Grab hitbox out %d", event_vars->game_timer);
+    //         primary_grab_hitbox_frame_active[active_pid] = event_vars->game_timer;
+    //     }
+    //
+    //     int throw_to_grab_delta = enemy_released_frame[enemy_pid] - primary_grab_hitbox_frame_active[active_pid];
+    //     if (ft_data->state_id >= ASID_CATCHPULL && ft_data->state_id <= ASID_CATCHCUT) {
+    //         if (enemy_released_frame[enemy_pid] == 0) enemy_released_frame[enemy_pid] = event_vars->game_timer;
+    //         if (primary_grab_hitbox_frame_active[active_pid] == 0) primary_grab_hitbox_frame_active[active_pid] = event_vars->game_timer;
+    //         throw_to_grab_delta = enemy_released_frame[enemy_pid] - primary_grab_hitbox_frame_active[active_pid];
+    //
+    //         if (throw_to_grab_delta == -1 || throw_to_grab_delta == 0) {
+    //             Message_Display(OSD_Handoff, active_pid, MSGCOLOR_GREEN, "Perfect Handoff: %d", throw_to_grab_delta);
+    //         } else {
+    //             Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "Imperfect Handoff: %d", throw_to_grab_delta);
+    //         }
+    //         sub_handoff_end_frame[active_pid] = event_vars->game_timer;
+    //         sub_throw_start_frame[active_pid] = 0;
+    //     } else if (primary_grab_hitbox_frame_active[active_pid] != 0 &&
+    //                event_vars->game_timer - primary_grab_hitbox_frame_active[active_pid] > osd_window_after_grab) {
+    //         Message_Display(OSD_Handoff, active_pid, MSGCOLOR_RED, "Handoff Missed: %d", throw_to_grab_delta);
+    //         sub_throw_start_frame[active_pid] = 0;
+    //     }
+    //
+    //     enemy_state_last_frame[enemy_pid] = enemy_data->state_id;
+    //     grab_hitbox_last_frame[active_pid] = primary_grab_hitbox_active;
+    // } else {
+    //     const bool sub_in_throw = sub_data->state_id >= ASID_THROWF && sub_data->state_id <= ASID_THROWLW;
+    //     const bool sub_osd_on_cooldown = sub_handoff_end_frame[active_pid] != 0 &&
+    //                                      sub_handoff_end_frame[active_pid] <= event_vars->game_timer &&
+    //                                      event_vars->game_timer - sub_handoff_end_frame[active_pid] < handoff_reset_time;
+    //     if (sub_in_throw && !sub_osd_on_cooldown) {
+    //         Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "Secondary Throw Started");
+    //         sub_throw_start_frame[active_pid] = event_vars->game_timer;
+    //         sub_handoff_end_frame[active_pid] = 0;
     //         enemy_released_frame[enemy_pid] = 0;
+    //     }
+    //
+    //     if (!check_primary_handoff && !sub_osd_on_cooldown) {
+    //         primary_grab_hitbox_frame_active[active_pid] = 0;
+    //         grab_hitbox_last_frame[active_pid] = 0;
     //     }
     // }
 }
@@ -292,7 +304,6 @@ void OSD_Think(GOBJ *event) {
                     if (enm == ply) continue;
                     GOBJ *enm_ft = Fighter_GetSubcharGObj(enm, 0);
                     RunOSD_Handoff(ft, ft_sub, enm_ft);
-                    // RunOSD_Handoff(ft_sub, ft, enm_ft, enm_ft_sub);
                 }
             }
         }
