@@ -1682,6 +1682,7 @@ static u8 LabOSD_ID[] = {
     OSD_GrabBreakout,
     OSD_Ledge,
     OSD_ActOoHitstun,
+    OSD_Handoff,
 };
 
 // Must match LabOSD_ID order
@@ -1779,6 +1780,11 @@ static EventOption LabOptions_OSDs[] = {
     {
         .kind = OPTKIND_TOGGLE,
         .name = "Act OoHitstun",
+        .OnChange = Lab_ChangeOSDs,
+    },
+    {
+        .kind = OPTKIND_TOGGLE,
+        .name = "Handoff",
         .OnChange = Lab_ChangeOSDs,
     },
 };
