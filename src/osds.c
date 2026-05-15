@@ -151,7 +151,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
                              event_vars->game_timer - sub_throw_start_frame[active_pid] < osd_window_after_throw &&
                              sub_throw_start_frame[active_pid] <= event_vars->game_timer;
 
-    // --- Primary -> Sub handoff: primary throws, sub grabs ---
+    //Primary to sub handoff.
     if (check_primary_handoff) {
         const bool enemy_released_this_frame = (enemy_state_last_frame[enemy_pid] >= ASID_THROWNF &&
                                                 enemy_state_last_frame[enemy_pid] <= ASID_THROWNLWWOMEN)
@@ -159,8 +159,6 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
                                                    ASID_THROWNLWWOMEN);
         if (enemy_released_this_frame) {
             enemy_released_frame[enemy_pid] = event_vars->game_timer;
-            Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "PH:: Enemy Released %d",
-                            enemy_released_frame[enemy_pid]);
         }
 
         //check for sub grab hitbox out
@@ -174,7 +172,6 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
             }
         }
         if (sub_grab_hitbox_active && !sub_grab_hitbox_last_frame[active_pid]) {
-            Message_Display(OSD_Handoff, active_pid, MSGCOLOR_YELLOW, "PH: Grab hitbox out %d", event_vars->game_timer);
             sub_grab_hitbox_frame_active[active_pid] = event_vars->game_timer;
         }
 
@@ -222,7 +219,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
         }
     }
 
-    // // --- Sub -> Primary handoff: sub throws, primary grabs ---
+    //Sub to primary handoff.
     if (check_sub_handoff) {
         const bool enemy_released_this_frame = (enemy_state_last_frame[enemy_pid] >= ASID_THROWNF &&
                                                 enemy_state_last_frame[enemy_pid] <= ASID_THROWNLWWOMEN)
