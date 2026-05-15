@@ -178,7 +178,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
         //if its been more than 15 frames since the grab hitbox came out, then we consider the handoff a miss and fail.
         //if the sub enters a sucessful grab state, the handoff was a success.
         int grab_to_throw_delta = sub_grab_hitbox_frame_active[active_pid] - enemy_released_frame[enemy_pid];
-        if (sub_data->state_id >= ASID_CATCHPULL && sub_data->state_id <= ASID_CATCHCUT) {
+        if (sub_data->state_id == ASID_CATCHPULL) {
             //if throw release was never caught, that means it was this same frame. same deal for grab hurtbox.
             if (enemy_released_frame[enemy_pid] == 0) enemy_released_frame[enemy_pid] = event_vars->game_timer;
             if (sub_grab_hitbox_frame_active[active_pid] == 0)
@@ -244,7 +244,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
         }
 
         int grab_to_throw_delta = primary_grab_hitbox_frame_active[active_pid] - enemy_released_frame[enemy_pid];
-        if (ft_data->state_id >= ASID_CATCHPULL && ft_data->state_id <= ASID_CATCHCUT) {
+        if (ft_data->state_id == ASID_CATCHPULL) {
             if (enemy_released_frame[enemy_pid] == 0)
                 enemy_released_frame[enemy_pid] = event_vars->game_timer;
             if (primary_grab_hitbox_frame_active[active_pid] == 0)
