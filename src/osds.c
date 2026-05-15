@@ -249,7 +249,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
                 enemy_released_frame[enemy_pid] = event_vars->game_timer;
             if (primary_grab_hitbox_frame_active[active_pid] == 0)
                 primary_grab_hitbox_frame_active[active_pid] = event_vars->game_timer;
-            int grab_to_throw_delta = primary_grab_hitbox_frame_active[active_pid] - enemy_released_frame[enemy_pid];
+            grab_to_throw_delta = primary_grab_hitbox_frame_active[active_pid] - enemy_released_frame[enemy_pid];
 
             if (grab_to_throw_delta == -1 || grab_to_throw_delta == 0) {
                 Message_Display(OSD_Handoff, active_pid, MSGCOLOR_GREEN, "Perfect Handoff: %d", grab_to_throw_delta);
