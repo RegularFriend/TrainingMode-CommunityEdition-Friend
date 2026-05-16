@@ -184,7 +184,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
             if (state.sub_grab_hitbox_begin[ft_ply] == 0) state.sub_grab_hitbox_begin[ft_ply] = event_vars->game_timer;
 
             int grab_to_throw_delta = state.sub_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
-            bool grab_was_early = grab_to_throw_delta < 0;
+            bool grab_was_early = grab_to_throw_delta < 1;
             int color_timing = grab_to_throw_delta == -1 || grab_to_throw_delta == 0 ? MSGCOLOR_GREEN : MSGCOLOR_WHITE;
             GOBJ *msg_gobj = Message_Display(OSD_FighterSpecificTech, ft_ply, MSGCOLOR_WHITE, "Handoff Success\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
             MsgData *msg = msg_gobj->userdata;
@@ -195,7 +195,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
         //if you threw out a grab, and it didn't grab by the timeout, you tried to handoff and failed.
         else if (state.sub_grab_hitbox_begin[ft_ply] != 0 && event_vars->game_timer - state.sub_grab_hitbox_begin[ft_ply] > grab_miss_timeout) {
             int grab_to_throw_delta = state.sub_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
-            bool grab_was_early = grab_to_throw_delta < 0;
+            bool grab_was_early = grab_to_throw_delta < 1;
             Message_Display(OSD_FighterSpecificTech, ft_ply, MSGCOLOR_RED, "Handoff Failure\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
             state.ft_handoff_begin[ft_ply] = 0;
         }
@@ -245,12 +245,8 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
         } else if (state.ft_grab_hitbox_begin[ft_ply] != 0 &&
                    event_vars->game_timer - state.ft_grab_hitbox_begin[ft_ply] > grab_miss_timeout) {
             int grab_to_throw_delta = state.ft_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
-            bool grab_was_early = grab_to_throw_delta < 0;
-            int color_timing = grab_to_throw_delta == -1 || grab_to_throw_delta == 0 ? MSGCOLOR_GREEN : MSGCOLOR_WHITE;
-            GOBJ *msg_gobj = Message_Display(OSD_FighterSpecificTech, ft_ply, MSGCOLOR_WHITE, "Handoff Failure\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
-            MsgData *msg = msg_gobj->userdata;
-            Text_SetColor(msg->text, 0, &stc_msg_colors[MSGCOLOR_RED]);
-            Text_SetColor(msg->text, 1, &stc_msg_colors[color_timing]);
+            bool grab_was_early = grab_to_throw_delta < 1;
+             Message_Display(OSD_FighterSpecificTech, ft_ply, MSGCOLOR_RED, "Handoff Failure\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
             state.sub_handoff_begin[ft_ply] = 0;
         }
 
@@ -289,7 +285,7 @@ void OSD_Think(GOBJ *event) {
 
 
         if (osd_enabled & (1u << OSD_FrameAdvantage)) RunOSD_FrameAdvantage(ft, ft_sub);
-        if (osd_enabled & 1u << OSD_FighterSpecificTech) {
+        if (osd_enabled & (1u << OSD_FighterSpecificTech)) {
             //Handoff OSD. Checks for ice climbers within the function.
             for (int enm = 0; enm < 6; ++enm) {
                 if (enm == ply) continue;
