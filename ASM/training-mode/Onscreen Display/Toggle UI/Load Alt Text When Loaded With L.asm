@@ -345,7 +345,7 @@ TextASCIIRight:
     .string "Combo Counter"
     .string "" # OSD ID 0x800000 (???????????)
     .string ""
-    .string "Handoffs" # OSD ID 27
+    .string "" # OSD ID 27
     .align 2
 
 FDDTitleText:

@@ -69,7 +69,6 @@
     .set OSD.ComboCounter, 22
     .set OSD.GrabBreakout, 24
     .set OSD.Ledge, 26
-	.set OSD.Handoff, 27 #TODO: eventually this can probably be baked into OSD_FighterSpecificTech.
     .set OSD.ActOoHitstun, 28
 
     # Special ID: always displays. Never overwrites another OSD.
