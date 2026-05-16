@@ -2,6 +2,13 @@
 #include "events.h"
 #include "osds.h"
 
+static GXColor stc_msg_colors[] = {
+    {255, 255, 255, 255},
+    {141, 255, 110, 255},
+    {255, 162, 186, 255},
+    {255, 240, 0, 255},
+};
+
 static void UpdateIASATracking(GOBJ *ft) {
     FighterData *ft_data = ft->userdata;
     if (ft_data->flags.past_iasa)
@@ -137,16 +144,17 @@ static bool IsGrabHitboxActive(const FighterData *ft_data) {
 static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
     //icies check
     if (!ft_sub || !ft || !enm) return;
+    static HandoffState state = {0};
+
+    //tweakables
     const int timeout = 60;
-    // frames after the grab hitbox appears before a miss is declared
-    const int failure_time_post_grab = 15;
+    const int grab_miss_timeout = 15;
 
     const FighterData *ft_data = ft->userdata;
     const FighterData *sub_data = ft_sub->userdata;
     const FighterData *enemy_data = enm->userdata;
     const int ft_ply = ft_data->ply;
     const int enemy_ply = enemy_data->ply;
-    static HandoffState state = {0};
 
     //tick if they've thrown recently and not in the future (in the case of the reset)
     const bool tick_ft_handoff = state.ft_handoff_begin[ft_ply] != 0 &&
@@ -169,27 +177,29 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
             state.sub_grab_hitbox_begin[ft_ply] = event_vars->game_timer;
         }
 
-        int grab_to_throw_delta = state.sub_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
+        //if you grabbed them, handoff complete.
         if (sub_data->state_id == ASID_CATCHPULL) {
             //if throw release was never caught, that means it was this same frame. same deal for grab hurtbox.
             if (state.enemy_release[enemy_ply] == 0) state.enemy_release[enemy_ply] = event_vars->game_timer;
-            if (state.sub_grab_hitbox_begin[ft_ply] == 0)
-                state.sub_grab_hitbox_begin[ft_ply] = event_vars->game_timer;
-            grab_to_throw_delta = state.sub_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
+            if (state.sub_grab_hitbox_begin[ft_ply] == 0) state.sub_grab_hitbox_begin[ft_ply] = event_vars->game_timer;
 
-            if (grab_to_throw_delta == -1 || grab_to_throw_delta == 0) {
-                Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_GREEN, "Perfect Handoff: %d", grab_to_throw_delta);
-            } else {
-                Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_YELLOW, "Imperfect Handoff: %d", grab_to_throw_delta);
-            }
+            int grab_to_throw_delta = state.sub_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
+            bool grab_was_early = grab_to_throw_delta < 0;
+            int color_timing = grab_to_throw_delta == -1 || grab_to_throw_delta == 0 ? MSGCOLOR_GREEN : MSGCOLOR_YELLOW;
+            GOBJ *msg_gobj = Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_WHITE, "Handoff Success\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
+            MsgData *msg = msg_gobj->userdata;
+            Text_SetColor(msg->text, 0, &stc_msg_colors[MSGCOLOR_GREEN]);
+            Text_SetColor(msg->text, 1, &stc_msg_colors[color_timing]);
             state.ft_handoff_begin[ft_ply] = 0;
-        } else if (state.sub_grab_hitbox_begin[ft_ply] != 0 &&
-                   event_vars->game_timer - state.sub_grab_hitbox_begin[ft_ply] > failure_time_post_grab) {
-            Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_RED, "Handoff Missed: %d", grab_to_throw_delta);
+        }
+        //if you threw out a grab, and it didn't grab by the timeout, you tried to handoff and failed.
+        else if (state.sub_grab_hitbox_begin[ft_ply] != 0 && event_vars->game_timer - state.sub_grab_hitbox_begin[ft_ply] > grab_miss_timeout) {
+            int grab_to_throw_delta = state.sub_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
+            bool grab_was_early = grab_to_throw_delta < 0;
+            Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_RED, "Handoff Failure\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
             state.ft_handoff_begin[ft_ply] = 0;
         }
 
-        state.enemy_state_previous[enemy_ply] = enemy_data->state_id;
     } else {
         //Don't start a new handoff if you were throwing last frame.
         if (!IsThrowState(state.ft_state_previous[ft_ply])) {
@@ -219,27 +229,27 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
             state.ft_grab_hitbox_begin[ft_ply] = event_vars->game_timer;
         }
 
-        int grab_to_throw_delta = state.ft_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
         if (ft_data->state_id == ASID_CATCHPULL) {
-            if (state.enemy_release[enemy_ply] == 0)
-                state.enemy_release[enemy_ply] = event_vars->game_timer;
-            if (state.ft_grab_hitbox_begin[ft_ply] == 0)
-                state.ft_grab_hitbox_begin[ft_ply] = event_vars->game_timer;
-            grab_to_throw_delta = state.ft_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
+            //if throw release was never caught, that means it was this same frame. same deal for grab hurtbox.
+            if (state.enemy_release[enemy_ply] == 0) state.enemy_release[enemy_ply] = event_vars->game_timer;
+            if (state.ft_grab_hitbox_begin[ft_ply] == 0) state.ft_grab_hitbox_begin[ft_ply] = event_vars->game_timer;
 
-            if (grab_to_throw_delta == -1 || grab_to_throw_delta == 0) {
-                Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_GREEN, "Perfect Handoff: %d", grab_to_throw_delta);
-            } else {
-                Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_YELLOW, "Imperfect Handoff: %d", grab_to_throw_delta);
-            }
+            int grab_to_throw_delta = state.ft_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
+            bool grab_was_early = grab_to_throw_delta < 1;
+            int color_timing = grab_to_throw_delta == -1 || grab_to_throw_delta == 0 ? MSGCOLOR_GREEN : MSGCOLOR_YELLOW;
+            GOBJ *msg_gobj = Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_WHITE, "Handoff Success\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
+            MsgData *msg = msg_gobj->userdata;
+            Text_SetColor(msg->text, 0, &stc_msg_colors[MSGCOLOR_GREEN]);
+            Text_SetColor(msg->text, 1, &stc_msg_colors[color_timing]);
             state.sub_handoff_begin[ft_ply] = 0;
         } else if (state.ft_grab_hitbox_begin[ft_ply] != 0 &&
-                   event_vars->game_timer - state.ft_grab_hitbox_begin[ft_ply] > failure_time_post_grab) {
-            Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_RED, "Handoff Missed: %d", grab_to_throw_delta);
+                   event_vars->game_timer - state.ft_grab_hitbox_begin[ft_ply] > grab_miss_timeout) {
+            int grab_to_throw_delta = state.ft_grab_hitbox_begin[ft_ply] - state.enemy_release[enemy_ply];
+            bool grab_was_early = grab_to_throw_delta < 0;
+            Message_Display(OSD_Handoff, ft_ply, MSGCOLOR_RED, "Handoff Failure\n %dF %s", abs(grab_to_throw_delta), grab_was_early ? "early" : "late");
             state.sub_handoff_begin[ft_ply] = 0;
         }
 
-        state.enemy_state_previous[enemy_ply] = enemy_data->state_id;
     } else {
         //Don't start a new handoff if you were throwing last frame.
         if (!IsThrowState(state.sub_state_previous[ft_ply])) {
@@ -254,6 +264,7 @@ static void RunOSD_Handoff(GOBJ *ft, GOBJ *ft_sub, GOBJ *enm) {
             }
         }
     }
+    state.enemy_state_previous[enemy_ply] = enemy_data->state_id;
     state.ft_state_previous[ft_ply] = ft_data->state_id;
     state.sub_state_previous[ft_ply] = sub_data->state_id;
 }
