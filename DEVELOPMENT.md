@@ -32,11 +32,11 @@ Examples:
 - `build.sh iso build/edgeguard.dat`: only rebuild edgeguard event. You can use any dat file here.
 
 ## Project Structure
-There are four important directories to know about:
+There are a few important directories to know about:
 1. `src/`: this directory contains the source for the C events, as well as some setup code for the event in `events.c`.
 2. `MexTK/`:
     - The `include/` subdirectory contains headers for internal melee functions. Calling these will call native ssbm code.
-    - The `MexTK` binary is the compiler executable, which takes in C source and spits out a dat file.
+    - The `melee.link` file maps native melee symbols to addresses.
     - The `.txt` files contain symbols that we want called by the m-ex system.
         For example, C events will want their `Event_Init` and `Event_Think` functions called.
         We only use the evFunction and cssFunction modes.
@@ -47,6 +47,10 @@ The `.asm` files will be injected and run, while the `.s` files contain include 
 4. `dats/`: The dat file format is used by SSBM for storing data, such as models and animations.
 This directory contains HUD models and animations for events.
 You will need to use [HSDRawViewer](https://github.com/Ploaj/HSDLib) to view these.
+5. `bin/`: This directory contains binaries used in compilation.
+    - `hgecko` is a reimplementation of Fizzi's `gecko` tool for better performance. This compiles asm files into gecko codes.
+    - `hmex` is a reimplementation of Ploaj's `MexTK` tool for better performance. This compiles C code into DLLs run by m-ex.
+    - `gc_fst` allows modifying the ISO filesystem.
 
 ## Melee Stuff
 

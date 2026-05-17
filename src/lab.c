@@ -51,7 +51,14 @@ static char *slots_names[] = {"A", "B"};
 
 // timer variables
 static int lockout_timer = 0;
-const int LOCKOUT_DURATION = 30;
+static const int LOCKOUT_DURATION = 30;
+
+// Aitch: It is unfortunately very difficult to detect if a powershield occurred this frame.
+// The method I chose is to shield when a projectile is close by, force a powershield for n frames,
+// then perform a counter action after that window.
+// This timer counts down those n frames.
+static int stc_powershield_timer = -1;
+static const int stc_powershield_window = 4;
 
 static float cpu_locked_percent = 0;
 static float hmn_locked_percent = 0;
@@ -264,8 +271,13 @@ void Lab_ChangeInputDisplay(GOBJ *menu_gobj, int value) {
     stc_memcard->TM_LabCPUInputDisplay = value;
 }
 
-void Lab_ChangeTauntEnabled(GOBJ *menu_gobj, int value) {
-    stc_memcard->TM_LabTauntEnabled = value;
+void Lab_ChangeDPadOption(GOBJ *menu_gobj, int value) {
+    u8 u = LabOptions_Controls[OPTCTRL_DPAD_UP].val;
+    u8 d = LabOptions_Controls[OPTCTRL_DPAD_DOWN].val;
+    u8 l = LabOptions_Controls[OPTCTRL_DPAD_LEFT].val;
+    u8 r = LabOptions_Controls[OPTCTRL_DPAD_RIGHT].val;
+    stc_memcard->TM_LabDPadUD = u | (d << 4);
+    stc_memcard->TM_LabDPadLR = l | (r << 4);
 }
 
 void Lab_ChangeOverlays(GOBJ *menu_gobj, int value) {
@@ -367,12 +379,6 @@ void Lab_FinishMoveCPU(GOBJ *menu_gobj) {
 void Lab_FreezeCPU(GOBJ *menu_gobj) {
     GOBJ *cpu = Fighter_GetGObj(1);
     FrameSpeedChange(cpu, 0.f);
-}
-
-void Lab_ChangeFrameAdvance(GOBJ *menu_gobj, int value)
-{
-    LabOptions_General[OPTGEN_FRAMEBTN].disable = !value;
-    LabOptions_General[OPTGEN_FRAMEBTNREV].disable = !value;
 }
 
 void Lab_ChangeFrameAdvanceButton(GOBJ *menu_gobj, int value) {
@@ -1286,7 +1292,14 @@ int CPUAction_CheckASID(GOBJ *cpu, int asid_kind)
                 || cpu_state == ASID_RUN
                 || cpu_state == ASID_SQUATWAIT
                 || cpu_state == ASID_OTTOTTOWAIT
-                || cpu_state == ASID_GUARD;
+                || cpu_state == ASID_GUARD
+                || cpu_state == ASID_GUARDREFLECT;
+        }
+
+        case (ASID_ACTIONABLESHIELD):
+        {
+            return cpu_state == ASID_GUARD
+                || cpu_state == ASID_GUARDREFLECT;
         }
 
         // check normal action states
@@ -1551,6 +1564,7 @@ void CPUResetVars(void) {
 
     eventData->counter_slot_frame = 0;
     stc_rndm_counter_slot = -1;
+    stc_powershield_timer = -1;
 }
 
 void CPUOnHit(void) {
@@ -2009,6 +2023,58 @@ void CPUThink(GOBJ *event, GOBJ *hmn, GOBJ *cpu)
             Lab_CPUPerformAction(cpu, CPUACT_SHORTHOP, hmn);
             break;
         }
+
+        case (CPUBEHAVE_POWERSHIELD):
+        {
+            Vec3 shield_pos = cpu_data->coll_data.topN_Curr;
+            shield_pos.X += cpu_data->coll_data.ecbCurr_top.X;
+            shield_pos.Y += cpu_data->coll_data.ecbCurr_left.Y;
+            float shield_size = cpu_data->attr.initial_shield_size;
+
+            bool shield = false;
+            for (GOBJ *item = (*stc_gobj_lookup)[MATCHPLINK_ITEM]; item; item = item->next) {
+                ItemData *item_data = item->userdata;
+                for (u32 i = 0; i < countof(item_data->hitbox); ++i) {
+                    itHit *hit = &item_data->hitbox[i];
+                    if (!hit->active) continue;
+                    Vec3 pos = item_data->pos;
+                    pos.X += item_data->self_vel.X;
+                    pos.Y += item_data->self_vel.Y;
+                    pos.Z += item_data->self_vel.Z;
+                    pos.X += hit->offset.X;
+                    pos.Y += hit->offset.Y;
+                    pos.Z += hit->offset.Z;
+
+                    Vec3 to_shield = { pos.X - shield_pos.X, pos.Y - shield_pos.Y, pos.Z - shield_pos.Z };
+                    to_shield.X *= to_shield.X;
+                    to_shield.Y *= to_shield.Y;
+                    to_shield.Z *= to_shield.Z;
+                    float dist_to_shield_sq = to_shield.X + to_shield.Y + to_shield.Z;
+                    float min_dist_to_shield_sq = shield_size + hit->size;
+                    min_dist_to_shield_sq *= min_dist_to_shield_sq;
+
+                    shield |= dist_to_shield_sq <= min_dist_to_shield_sq;
+                }
+            }
+
+            if (shield)
+                stc_powershield_timer = stc_powershield_window;
+
+            if (stc_powershield_timer > 0) {
+                stc_powershield_timer--;
+                cpu_data->cpu.held |= PAD_TRIGGER_R;
+                cpu_data->flags.reflect_enable = 1;
+                cpu_data->reflect_bubble.size_mult = cpu_data->shield_bubble.size_mult;
+            } else if (stc_powershield_timer == 0) {
+                stc_powershield_timer = -1;
+                eventData->cpu_hitnum++;
+                eventData->cpu_state = CPUSTATE_COUNTER;
+                eventData->cpu_hitkind = HITKIND_SHIELD;
+                goto CPULOGIC_COUNTER;
+            }
+
+            break;
+        }
         }
 
         break;
@@ -2402,7 +2468,6 @@ int Update_CheckPause()
     if ((Pause_CheckStatus(1) != 2) && (*stc_dblevel >= 3) && (pad->down & HSD_BUTTON_START))
     {
         LabOptions_General[OPTGEN_FRAME].val ^= 1;
-        Lab_ChangeFrameAdvance(0, LabOptions_General[OPTGEN_FRAME].val);
         isChange = 1;
     }
 
@@ -2459,8 +2524,8 @@ int Update_CheckAdvance()
     HSD_Pad *engine_pad = PadGetEngine(controller);
 
     // get their advance input
-    int advance_btn = LabValues_FrameAdvButtonMask[LabOptions_General[OPTGEN_FRAMEBTN].val];
-    int decrement_btn = LabValues_FrameDecButtonMask[LabOptions_General[OPTGEN_FRAMEBTNREV].val];
+    int advance_btn = LabValues_FrameAdvButtonMask[LabOptions_Controls[OPTCTRL_FRAME_ADVANCE].val];
+    int decrement_btn = LabValues_FrameDecButtonMask[LabOptions_Controls[OPTCTRL_FRAME_DECREMENT].val];
     
     if (stc_recording_target_frame >= 0)
         return 1;
@@ -4668,6 +4733,16 @@ void Savestates_Update()
         }
         else
         {
+            int savestate_mask = 0;
+            int loadstate_mask = 0;
+            
+            {
+                int dpad_r = LabOptions_Controls[OPTCTRL_DPAD_RIGHT].val;
+                int dpad_l = LabOptions_Controls[OPTCTRL_DPAD_LEFT].val;
+                if (dpad_r == DPAD_R_SAVE_STATE) savestate_mask = HSD_BUTTON_DPAD_RIGHT;
+                if (dpad_l == DPAD_L_LOAD_STATE) loadstate_mask = HSD_BUTTON_DPAD_LEFT;
+            }
+
             // loop through all controller ports
             for (int port = 0; port < 4; port++)
             {
@@ -4675,7 +4750,7 @@ void Savestates_Update()
                 if (pad == NULL) continue; // Skip if no controller in this port
 
                 // Save state (D-pad right)
-                if (pad->held & HSD_BUTTON_DPAD_RIGHT)
+                if (pad->held & savestate_mask)
                 {
                     save_timer[port]++;
                     if (save_timer[port] == SAVE_THRESHOLD)
@@ -4693,7 +4768,7 @@ void Savestates_Update()
                 }
 
                 // Load state (D-pad left)
-                if (pad->down & HSD_BUTTON_DPAD_LEFT)
+                if (pad->down & loadstate_mask)
                 {
                     // load state
                     Record_LoadSavestate(event_vars->savestate);
@@ -5974,36 +6049,68 @@ void Event_Init(GOBJ *gobj)
     // saved options
     Memcard *memcard = stc_memcard;
 
-    // load frame advance option, resetting if invalid
-    u8 advance_btn = memcard->TM_LabFrameAdvanceButton & 0xF;
-    u8 decrement_btn = memcard->TM_LabFrameAdvanceButton >> 4;
-    
-    if (advance_btn < LabOptions_General[OPTGEN_FRAMEBTN].value_num) {
-        LabOptions_General[OPTGEN_FRAMEBTN].val = advance_btn;
-    } else {
-        memcard->TM_LabFrameAdvanceButton &= 0xF0;
-        memcard->TM_LabFrameAdvanceButton |= LabOptions_General[OPTGEN_FRAMEBTN].val;
-    }
-
-    // load frame decrement option, resetting if invalid
-    if (decrement_btn < LabOptions_General[OPTGEN_FRAMEBTNREV].value_num) {
-        LabOptions_General[OPTGEN_FRAMEBTNREV].val = decrement_btn;
-    } else {
-        memcard->TM_LabFrameAdvanceButton &= 0x0F;
-        memcard->TM_LabFrameAdvanceButton |= LabOptions_General[OPTGEN_FRAMEBTNREV].val << 4;
-    }
-
     // load input display option, resetting if invalid
     if (memcard->TM_LabCPUInputDisplay < LabOptions_General[OPTGEN_INPUT].value_num)
         LabOptions_General[OPTGEN_INPUT].val = memcard->TM_LabCPUInputDisplay;
     else
         memcard->TM_LabCPUInputDisplay = LabOptions_General[OPTGEN_INPUT].val;
 
-    // load taunt option, resetting if invalid
-    if (memcard->TM_LabTauntEnabled <= 1)
-        LabOptions_General[OPTGEN_TAUNT].val = memcard->TM_LabTauntEnabled;
-    else
-        memcard->TM_LabTauntEnabled = LabOptions_General[OPTGEN_TAUNT].val;
+    // load frame advance option, resetting if invalid
+    u8 advance_btn = memcard->TM_LabFrameAdvanceButton & 0xF;
+    u8 decrement_btn = memcard->TM_LabFrameAdvanceButton >> 4;
+    
+    if (advance_btn < LabOptions_Controls[OPTCTRL_FRAME_ADVANCE].value_num) {
+        LabOptions_Controls[OPTCTRL_FRAME_ADVANCE].val = advance_btn;
+    } else {
+        memcard->TM_LabFrameAdvanceButton &= 0xF0;
+        memcard->TM_LabFrameAdvanceButton |= LabOptions_Controls[OPTCTRL_FRAME_ADVANCE].val;
+    }
+
+    // load frame decrement option, resetting if invalid
+    if (decrement_btn < LabOptions_Controls[OPTCTRL_FRAME_DECREMENT].value_num) {
+        LabOptions_Controls[OPTCTRL_FRAME_DECREMENT].val = decrement_btn;
+    } else {
+        memcard->TM_LabFrameAdvanceButton &= 0x0F;
+        memcard->TM_LabFrameAdvanceButton |= LabOptions_Controls[OPTCTRL_FRAME_DECREMENT].val << 4;
+    }
+
+    u8 dpad_u = memcard->TM_LabDPadUD & 0xF;
+    u8 dpad_d = memcard->TM_LabDPadUD >> 4;
+
+    // load dpad up option, resetting if invalid
+    if (dpad_u < LabOptions_Controls[OPTCTRL_DPAD_UP].value_num) {
+        LabOptions_Controls[OPTCTRL_DPAD_UP].val = dpad_u;
+    } else {
+        memcard->TM_LabDPadUD &= 0xF0;
+        memcard->TM_LabDPadUD |= LabOptions_Controls[OPTCTRL_DPAD_UP].val;
+    }
+
+    // load dpad down option, resetting if invalid
+    if (dpad_d < LabOptions_Controls[OPTCTRL_DPAD_DOWN].value_num) {
+        LabOptions_Controls[OPTCTRL_DPAD_DOWN].val = dpad_d;
+    } else {
+        memcard->TM_LabDPadUD &= 0x0F;
+        memcard->TM_LabDPadUD |= LabOptions_Controls[OPTCTRL_DPAD_DOWN].val << 4;
+    }
+
+    u8 dpad_l = memcard->TM_LabDPadLR & 0xF;
+    u8 dpad_r = memcard->TM_LabDPadLR >> 4;
+
+    // load dpad left option, resetting if invalid
+    if (dpad_l < LabOptions_Controls[OPTCTRL_DPAD_LEFT].value_num) {
+        LabOptions_Controls[OPTCTRL_DPAD_LEFT].val = dpad_l;
+    } else {
+        memcard->TM_LabDPadLR &= 0xF0;
+        memcard->TM_LabDPadLR |= LabOptions_Controls[OPTCTRL_DPAD_LEFT].val;
+    }
+
+    // load dpad right option, resetting if invalid
+    if (dpad_r < LabOptions_Controls[OPTCTRL_DPAD_RIGHT].value_num) {
+        LabOptions_Controls[OPTCTRL_DPAD_RIGHT].val = dpad_r;
+    } else {
+        memcard->TM_LabDPadLR &= 0x0F;
+        memcard->TM_LabDPadLR |= LabOptions_Controls[OPTCTRL_DPAD_RIGHT].val << 4;
+    }
 
     // load overlays, resetting if invalid
     int overlay_save_count = sizeof(memcard->TM_LabSavedOverlays_HMN) / sizeof(OverlaySave);
@@ -6141,6 +6248,14 @@ void Event_Update(void)
         HSD_SetSpeedEasy(1.0);
     }
 
+    // Toggle frame advance
+    HSD_Pad *pad = PadGetMaster(stc_hmn_controller);
+    int frame_advance_mask = 0;
+    if (LabOptions_Controls[OPTCTRL_DPAD_DOWN].val == DPAD_D_FRAME_ADVANCE)
+        frame_advance_mask = HSD_BUTTON_DPAD_DOWN;
+    if (pad->down & frame_advance_mask)
+        LabOptions_General[OPTGEN_FRAME].val ^= 1;
+
     // update DI draw
     DIDraw_Update();
 
@@ -6174,7 +6289,11 @@ void Event_Think_LabState_Normal(GOBJ *event) {
     }
     else
     {
-        if (pad->held & HSD_BUTTON_DPAD_DOWN)
+        int place_cpu_mask = 0;
+        if (LabOptions_Controls[OPTCTRL_DPAD_DOWN].val == DPAD_D_PLACE_CPU)
+            place_cpu_mask = HSD_BUTTON_DPAD_DOWN;
+    
+        if (pad->held & place_cpu_mask)
         {
             move_timer++;
             if (move_timer == MOVE_THRESHOLD)
@@ -6489,9 +6608,9 @@ void Event_Think(GOBJ *event)
         eventData->cpu_tech_lockout--;
 
     // Disable the D-pad up button according to the OPTGEN_TAUNT value
-    if (LabOptions_General[OPTGEN_TAUNT].val == 1)
+    if (LabOptions_Controls[OPTCTRL_DPAD_UP].val == DPAD_U_DISABLED)
     {
-      pad->held &= ~PAD_BUTTON_DPAD_UP;
+        pad->held &= ~PAD_BUTTON_DPAD_UP;
     }
 
     // lock percent if enabled
@@ -6601,19 +6720,6 @@ void Event_Think(GOBJ *event)
                 FighterData *data = fighter->userdata;
                 data->shield.health = health;
             }
-        }
-    }
-    
-    if (LabOptions_General[OPTGEN_POWERSHIELD].val) {
-        if (cpu_data->shield_bubble.bone) {
-            memcpy((u8*)&cpu_data->reflect_bubble, (u8*)&cpu_data->shield_bubble, sizeof(cpu_data->shield_bubble));
-            cpu_data->flags.reflect_enable = 1;
-            
-            cpu_data->reflect_hit = (struct reflect_hit) {
-                .max_dmg = 10000000,
-                .dmg_mult = 0.5f,
-                .is_break = 0,
-            };
         }
     }
     

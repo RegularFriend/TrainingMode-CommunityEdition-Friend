@@ -7,6 +7,7 @@
 
 static ShortcutList Lab_ShortcutList;
 static EventMenu LabMenu_General;
+static EventMenu LabMenu_Controls;
 static EventMenu LabMenu_OverlaysHMN;
 static EventMenu LabMenu_OverlaysCPU;
 static EventMenu LabMenu_InfoDisplayHMN;
@@ -80,8 +81,8 @@ enum custom_asid_groups
     ASID_ACTIONABLE = 1000,
     ASID_ACTIONABLEGROUND,
     ASID_ACTIONABLEAIR,
+    ASID_ACTIONABLESHIELD,
     ASID_DAMAGEAIR,
-    ASID_CROUCH,
     ASID_ANY,
 };
 
@@ -130,12 +131,7 @@ static CPUAction Lab_CPUActionShield[] = {
         .isLast    = 1,
     },
     {
-        .state     = ASID_GUARDREFLECT,
-        .input     = PAD_TRIGGER_R,
-        .isLast    = 1,
-    },
-    {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R,
         .isLast    = 1,
     },
@@ -143,7 +139,7 @@ static CPUAction Lab_CPUActionShield[] = {
 };
 static CPUAction Lab_CPUActionGrab[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_BUTTON_A | PAD_TRIGGER_R,
         .isLast    = 1,
     },
@@ -206,12 +202,8 @@ static CPUAction Lab_CPUActionDashAttack[] = {
 };
 static CPUAction Lab_CPUActionUpB[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
-    },
-    {
-        .state     = ASID_GUARD,
-        .input     = PAD_BUTTON_X,
     },
     {
         .state     = ASID_KNEEBEND,
@@ -229,12 +221,8 @@ static CPUAction Lab_CPUActionUpB[] = {
 };
 static CPUAction Lab_CPUActionSideBToward[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
-    },
-    {
-        .state     = ASID_GUARD,
-        .input     = PAD_BUTTON_X,
     },
     {
         .state     = ASID_ACTIONABLE,
@@ -247,12 +235,8 @@ static CPUAction Lab_CPUActionSideBToward[] = {
 };
 static CPUAction Lab_CPUActionSideBAway[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
-    },
-    {
-        .state     = ASID_GUARD,
-        .input     = PAD_BUTTON_X,
     },
     {
         .state     = ASID_ACTIONABLE,
@@ -265,13 +249,8 @@ static CPUAction Lab_CPUActionSideBAway[] = {
 };
 static CPUAction Lab_CPUActionDownB[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
-    },
-    {
-        .state     = ASID_GUARD,
-        .input     = PAD_BUTTON_X,
-        .isLast    = 1,
     },
     {
         .state     = ASID_ACTIONABLE,
@@ -283,15 +262,9 @@ static CPUAction Lab_CPUActionDownB[] = {
 };
 static CPUAction Lab_CPUActionNeutralB[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
-    {
-        .state     = ASID_GUARD,
-        .input     = PAD_BUTTON_X,
-        .isLast    = 1,
-    },
-
     {
         .state     = ASID_ACTIONABLE,
         .input     = PAD_BUTTON_B,
@@ -311,7 +284,7 @@ static CPUAction Lab_CPUActionSpotdodge[] = {
         .input     = PAD_TRIGGER_R,
     },
     {
-        .state     = ASID_GUARDREFLECT,
+        .state     = ASID_ACTIONABLESHIELD,
         .stickY    = -127,
         .input     = PAD_TRIGGER_R,
     },
@@ -323,7 +296,7 @@ static CPUAction Lab_CPUActionSpotdodge[] = {
 };
 static CPUAction Lab_CPUActionRollAway[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .stickX    = 127,
         .input     = PAD_TRIGGER_R,
         .isLast    = 1,
@@ -332,19 +305,12 @@ static CPUAction Lab_CPUActionRollAway[] = {
     {
         .state     = ASID_ACTIONABLEGROUND,
         .input     = PAD_TRIGGER_R,
-    },
-    {
-        .state     = ASID_GUARDREFLECT,
-        .stickX    = 127,
-        .input     = PAD_TRIGGER_R,
-        .isLast    = 1,
-        .stickDir  = STCKDIR_AWAY,
     },
     ActionEnd
 };
 static CPUAction Lab_CPUActionRollTowards[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .stickX    = 127,
         .input     = PAD_TRIGGER_R,
         .isLast    = 1,
@@ -353,19 +319,12 @@ static CPUAction Lab_CPUActionRollTowards[] = {
     {
         .state     = ASID_ACTIONABLEGROUND,
         .input     = PAD_TRIGGER_R,
-    },
-    {
-        .state     = ASID_GUARDREFLECT,
-        .stickX    = 127,
-        .input     = PAD_TRIGGER_R,
-        .isLast    = 1,
-        .stickDir  = STCKDIR_TOWARD,
     },
     ActionEnd
 };
 static CPUAction Lab_CPUActionRollRandom[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .stickX    = 127,
         .input     = PAD_TRIGGER_R,
         .isLast    = 1,
@@ -375,18 +334,11 @@ static CPUAction Lab_CPUActionRollRandom[] = {
         .state     = ASID_ACTIONABLEGROUND,
         .input     = PAD_TRIGGER_R,
     },
-    {
-        .state     = ASID_GUARDREFLECT,
-        .stickX    = 127,
-        .input     = PAD_TRIGGER_R,
-        .isLast    = 1,
-        .stickDir  = STICKDIR_RDM,
-    },
     ActionEnd
 };
 static CPUAction Lab_CPUActionNair[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -402,7 +354,7 @@ static CPUAction Lab_CPUActionNair[] = {
 };
 static CPUAction Lab_CPUActionFair[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -419,7 +371,7 @@ static CPUAction Lab_CPUActionFair[] = {
 };
 static CPUAction Lab_CPUActionDair[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -435,7 +387,7 @@ static CPUAction Lab_CPUActionDair[] = {
 };
 static CPUAction Lab_CPUActionBair[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -452,7 +404,7 @@ static CPUAction Lab_CPUActionBair[] = {
 };
 static CPUAction Lab_CPUActionUair[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -468,7 +420,7 @@ static CPUAction Lab_CPUActionUair[] = {
 };
 static CPUAction Lab_CPUActionJump[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -484,7 +436,7 @@ static CPUAction Lab_CPUActionJump[] = {
 };
 static CPUAction Lab_CPUActionJumpFull[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -671,7 +623,7 @@ static CPUAction Lab_CPUActionFSmash[] = {
 };
 static CPUAction Lab_CPUActionUpSmashOOS[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -683,7 +635,7 @@ static CPUAction Lab_CPUActionUpSmashOOS[] = {
 };
 static CPUAction Lab_CPUActionWavedashAway[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -702,7 +654,7 @@ static CPUAction Lab_CPUActionWavedashAway[] = {
 };
 static CPUAction Lab_CPUActionWavedashTowards[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -721,7 +673,7 @@ static CPUAction Lab_CPUActionWavedashTowards[] = {
 };
 static CPUAction Lab_CPUActionWavedashDown[] = {
     {
-        .state     = ASID_GUARD,
+        .state     = ASID_ACTIONABLESHIELD,
         .input     = PAD_TRIGGER_R | PAD_BUTTON_X,
     },
     {
@@ -986,12 +938,10 @@ static EventOption LabOptions_Main[OPTLAB_COUNT] = {
         .desc = {"Configure stage behavior."},
     },
     {
-        .kind = OPTKIND_INFO,
-        .name = "Help",
-        .desc = {"D-Pad Left - Load State",
-                 "D-Pad Right - Save State",
-                 "D-Pad Down - Move CPU",
-                 "Hold R in the menu for turbo."},
+        .kind = OPTKIND_MENU,
+        .menu = &LabMenu_Controls,
+        .name = "Controls",
+        .desc = {"Change controls for lab options."}
     },
     {
         .kind = OPTKIND_FUNC,
@@ -1005,6 +955,111 @@ static EventMenu LabMenu_Main = {
     .name = "Main Menu",
     .option_num = sizeof(LabOptions_Main) / sizeof(EventOption),
     .options = LabOptions_Main,
+    .shortcuts = &Lab_ShortcutList,
+};
+
+// CONTROLS MENU --------------------------------------------------------------
+
+enum lab_controls {
+    OPTCTRL_FRAME_ADVANCE,
+    OPTCTRL_FRAME_DECREMENT,
+    OPTCTRL_DPAD_UP,
+    OPTCTRL_DPAD_DOWN,
+    OPTCTRL_DPAD_LEFT,
+    OPTCTRL_DPAD_RIGHT,
+
+    OPTCTRL_COUNT
+};
+
+enum lab_dpad_up {
+    DPAD_U_TAUNT,
+    DPAD_U_DISABLED,
+};
+
+enum lab_dpad_down {
+    DPAD_D_PLACE_CPU,
+    DPAD_D_DISABLED,
+    DPAD_D_FRAME_ADVANCE,
+};
+
+enum lab_dpad_left {
+    DPAD_L_LOAD_STATE,
+    DPAD_L_DISABLED,
+};
+
+enum lab_dpad_right {
+    DPAD_R_SAVE_STATE,
+    DPAD_R_DISABLED,
+};
+
+// These options are serialized: do not re-order
+static const char *LabOptions_FrameAdvButton[] = {"L", "Z", "X", "Y", "R"};
+static const char *LabOptions_FrameDecButton[] = {"None", "Z", "L", "R", "X", "Y"};
+static const char *LabOptions_DPadUp[] = {"Taunt", "None"};
+static const char *LabOptions_DPadDown[] = {"Place CPU", "None", "Frame Advance"};
+static const char *LabOptions_DPadLeft[] = {"Load State", "None"};
+static const char *LabOptions_DPadRight[] = {"Save State", "None"};
+
+static int LabValues_FrameAdvButtonMask[] = {HSD_TRIGGER_L, HSD_TRIGGER_Z, HSD_BUTTON_X, HSD_BUTTON_Y, HSD_TRIGGER_R};
+static int LabValues_FrameDecButtonMask[] = {0, HSD_TRIGGER_Z, HSD_TRIGGER_L, HSD_TRIGGER_R, HSD_BUTTON_X, HSD_BUTTON_Y};
+
+static EventOption LabOptions_Controls[OPTCTRL_COUNT] = {
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Frame Advance Button",
+        .desc = {"The button to advance a frame.",
+                 "Hold to advance at normal speed."},
+        .values = LabOptions_FrameAdvButton,
+        .value_num = countof(LabOptions_FrameAdvButton),
+        .OnChange = Lab_ChangeFrameAdvanceButton,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "Frame Decrement Button",
+        .desc = {"The button to go back one frame.",
+                 "Only works during playback."},
+        .values = LabOptions_FrameDecButton,
+        .value_num = countof(LabOptions_FrameDecButton),
+        .OnChange = Lab_ChangeFrameDecrementButton,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "DPad Up",
+        .desc = {"Change what D-pad up does."},
+        .values = LabOptions_DPadUp,
+        .value_num = countof(LabOptions_DPadUp),
+        .OnChange = Lab_ChangeDPadOption,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "DPad Down",
+        .desc = {"Change what D-pad down does."},
+        .values = LabOptions_DPadDown,
+        .value_num = countof(LabOptions_DPadDown),
+        .OnChange = Lab_ChangeDPadOption,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "DPad Left",
+        .desc = {"Change what D-pad left does."},
+        .values = LabOptions_DPadLeft,
+        .value_num = countof(LabOptions_DPadLeft),
+        .OnChange = Lab_ChangeDPadOption,
+    },
+    {
+        .kind = OPTKIND_STRING,
+        .name = "DPad Right",
+        .desc = {"Change what D-pad right does."},
+        .values = LabOptions_DPadRight,
+        .value_num = countof(LabOptions_DPadRight),
+        .OnChange = Lab_ChangeDPadOption,
+    },
+};
+
+static EventMenu LabMenu_Controls = {
+    .name = "Controls",
+    .option_num = sizeof(LabOptions_Controls) / sizeof(EventOption),
+    .options = LabOptions_Controls,
     .shortcuts = &Lab_ShortcutList,
 };
 
@@ -1026,8 +1081,6 @@ enum model_display {
 enum gen_option
 {
     OPTGEN_FRAME,
-    OPTGEN_FRAMEBTN,
-    OPTGEN_FRAMEBTNREV,
     OPTGEN_HMNPCNT,
     OPTGEN_HMNPCNTLOCK,
     OPTGEN_MODEL,
@@ -1042,8 +1095,6 @@ enum gen_option
     OPTGEN_INPUT,
     OPTGEN_SPEED,
     OPTGEN_STALE,
-    OPTGEN_POWERSHIELD,
-    OPTGEN_TAUNT,
     OPTGEN_CUSTOM_OSD,
     OPTLAB_ACTIONLOG,
     OPTLAB_HITBOXTRAILS,
@@ -1054,11 +1105,6 @@ enum gen_option
 
 static const char *LabOptions_CamMode[] = {"Normal", "Zoom", "Fixed", "Advanced", "Static"};
 static const char *LabOptions_ShowInputs[] = {"Off", "HMN", "CPU", "HMN and CPU"};
-static const char *LabOptions_FrameAdvButton[] = {"L", "Z", "X", "Y", "R"};
-static const char *LabOptions_FrameDecButton[] = {"None", "Z", "L", "R", "X", "Y"};
-
-static int LabValues_FrameAdvButtonMask[] = {HSD_TRIGGER_L, HSD_TRIGGER_Z, HSD_BUTTON_X, HSD_BUTTON_Y, HSD_TRIGGER_R};
-static int LabValues_FrameDecButtonMask[] = {0, HSD_TRIGGER_Z, HSD_TRIGGER_L, HSD_TRIGGER_R, HSD_BUTTON_X, HSD_BUTTON_Y};
 
 static const char *LabOptions_ModelDisplay[] = {"On", "Stage Only", "Characters Only"};
 static const bool LabValues_CharacterModelDisplay[] = {true, false, true};
@@ -1072,27 +1118,6 @@ static EventOption LabOptions_General[OPTGEN_COUNT] = {
         .kind = OPTKIND_TOGGLE,
         .name = "Frame Advance",
         .desc = {"Enable frame advance."},
-        .OnChange = Lab_ChangeFrameAdvance,
-    },
-    {
-        .kind = OPTKIND_STRING,
-        .value_num = sizeof(LabOptions_FrameAdvButton) / 4,
-        .name = "Frame Advance Button",
-        .desc = {"The button to advance a frame.",
-                 "Hold to advance at normal speed."},
-        .values = LabOptions_FrameAdvButton,
-        .OnChange = Lab_ChangeFrameAdvanceButton,
-        .disable = 1,
-    },
-    {
-        .kind = OPTKIND_STRING,
-        .value_num = sizeof(LabOptions_FrameDecButton) / 4,
-        .name = "Frame Decrement Button",
-        .desc = {"The button to go back one frame.",
-                 "Only works during playback."},
-        .values = LabOptions_FrameDecButton,
-        .OnChange = Lab_ChangeFrameDecrementButton,
-        .disable = 1,
     },
     {
         .kind = OPTKIND_INT,
@@ -1203,18 +1228,6 @@ static EventOption LabOptions_General[OPTGEN_COUNT] = {
         .name = "Move Staling",
         .desc = {"Toggle the staling of moves. Attacks become ",
                  "weaker the more they are used."},
-    },
-    {
-        .kind = OPTKIND_TOGGLE,
-        .name = "Powershield Projectiles",
-        .desc = {"Projectiles will always be reflected when shielded."},
-    },
-    {
-        .kind = OPTKIND_TOGGLE,
-        .val = 1,
-        .name = "Disable Taunt",
-        .desc = {"Disable the taunt button (D-pad up)"},
-        .OnChange = Lab_ChangeTauntEnabled,
     },
     {
         .kind = OPTKIND_MENU,
@@ -1959,6 +1972,7 @@ enum cpu_behave
     CPUBEHAVE_SHIELD,
     CPUBEHAVE_CROUCH,
     CPUBEHAVE_JUMP,
+    CPUBEHAVE_POWERSHIELD,
 
     CPUBEHAVE_COUNT
 };
@@ -2128,7 +2142,7 @@ enum cpu_option
 
 static const char *LabValues_Shield[] = {"Off", "On Until Hit", "On"};
 static const char *LabValues_ShieldDir[] = {"Neutral", "Up", "Towards", "Down", "Away"};
-static const char *LabValues_CPUBehave[] = {"Stand", "Shield", "Crouch", "Jump"};
+static const char *LabValues_CPUBehave[] = {"Stand", "Shield", "Crouch", "Jump", "Powershield"};
 static const char *LabValues_TDI[] = {"Random", "Inwards", "Outwards", "Natural", "Custom", "Random Custom", "None"};
 static const char *LabValues_ASDI[] = {"Auto", "Away", "Towards", "Left", "Right", "Up", "Down"};
 static const char *LabValues_SDIDir[] = {"Auto", "Random", "Away", "Towards", "Left", "Right", "Up", "Down"};

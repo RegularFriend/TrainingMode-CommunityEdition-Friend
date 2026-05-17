@@ -2042,8 +2042,8 @@ struct Memcard
     u8 TM_EventPage;       // 0x1F29
     u8 TM_OSDRecommended;  // 0x1F2A
     u8 TM_LabFrameAdvanceButton;    // 0x1F2B - advance idx in low half, decrement idx in high half
-    u8 TM_LabTauntEnabled;          // 0x1F2C
-    u8 unused1F2D;         // 0x1F2D
+    u8 TM_LabDPadUD;       // 0x1F2C - Up in low half, Down in high half
+    u8 TM_LabDPadLR;       // 0x1F2D - Left in low half, Right in high half
     u8 unused1F2E;         // 0x1F2E
     u8 TM_LabCPUInputDisplay;       // 0x1F2F
 
