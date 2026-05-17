@@ -137,6 +137,6 @@ void OSD_Think(GOBJ *event) {
         if (ft_sub) UpdateIASATracking(ft_sub);
 
         if (osd_enabled & (1u << OSD_FrameAdvantage)) RunOSD_FrameAdvantage(ft, ft_sub);
-        if (osd_enabled && 1u << OSD_FighterSpecificTech) RunOSD_PNJ(ft, ft_sub);
+        if (osd_enabled & (1u << OSD_FighterSpecificTech)) RunOSD_PNJ(ft, ft_sub);
     }
 }
