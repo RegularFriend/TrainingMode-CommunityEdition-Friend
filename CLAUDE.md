@@ -4,6 +4,8 @@
 
 This is a fork of [Training Mode - Community Edition (TM-CE)](https://github.com/AlexanderHarrison/TrainingMode-CommunityEdition), itself a fork of UnclePunch's training modpack for Super Smash Bros. Melee. It patches a Melee ISO to add training features. The codebase is approximately half C and half GameCube (PowerPC) assembly.
 
+The IDE is **CLion**.
+
 ## Build
 
 ```sh
@@ -47,6 +49,7 @@ All new feature work happens in `src/`. The language is C targeting the GameCube
 - The simplest event to learn from is `src/powershield.c` — start there.
 - To add a new event: add `src/<name>.c`, register it in `src/events.c`, and add a `mex_build` line in `build.sh`.
 - Use `TMLOG(...)` for debug logging (only active in non-release builds). Toggle the on-screen console with L/R+Z.
+- Use `OSReport(const char *fmt, ...)` (like `printf`) for logging that works in **both debug and release builds** and is readable in Dolphin's log window while the game is running.
 - Use `bp()` to set a breakpoint for the Dolphin debugger. Load `GTME01.map` in Dolphin for symbols.
 - Draw graphics with `GFX_Start` / `GFX_AddVtx`, or higher-level `HUD_*` functions.
 
