@@ -94,6 +94,34 @@ static void RunOSD_FrameAdvantage(GOBJ *ft, GOBJ *ft_sub) {
         atk_hit_state[ply] = -1;
     }
 }
+static void RunOSD_PNJ(GOBJ *ft, GOBJ *ft_sub) {
+    if (!ft || !ft_sub) return;
+    const int frame_delay_required = 6;
+    const int osd_window = 3;
+
+    static int ft_turn_frame[6] = {0};
+    static int ft_sub_state_previous[6] = {0};
+    FighterData *ft_data = ft->userdata;
+    FighterData *ft_sub_data = ft_sub->userdata;
+    if (ft_data->state_id == ASID_TURN) {
+        ft_turn_frame[ft_data->ply] = event_vars->game_timer;
+    }
+    if (ft_sub_data->state_id == ASID_KNEEBEND && ft_sub_state_previous[ft_data->ply] != ASID_KNEEBEND) {
+        //a pnj happens when ft_sub enters jump 6 frames after ft enters turn
+        if (event_vars->game_timer - ft_turn_frame[ft_data->ply] == frame_delay_required) {
+            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_GREEN, "PNJ Success");
+        }
+        //if you were within 3 frames on either side display a fail message. keep band small to avoid spam when dash jumping
+        int diff = event_vars->game_timer - ft_turn_frame[ft_data->ply];
+        if (diff >= osd_window && diff < frame_delay_required) {
+            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail\n%dF Early", frame_delay_required - diff);
+        } else if (diff > frame_delay_required && diff <= frame_delay_required + osd_window) {
+            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail\n%dF Late", diff - frame_delay_required);
+        }
+    }
+    ft_sub_state_previous[ft_data->ply] = ft_sub_data->state_id;
+}
+
 
 void OSD_Think(GOBJ *event) {
     u32 osd_enabled = stc_memcard->TM_OSDEnabled;
@@ -109,5 +137,6 @@ void OSD_Think(GOBJ *event) {
         if (ft_sub) UpdateIASATracking(ft_sub);
 
         if (osd_enabled & (1u << OSD_FrameAdvantage)) RunOSD_FrameAdvantage(ft, ft_sub);
+        if (osd_enabled && 1u << OSD_FighterSpecificTech) RunOSD_PNJ(ft, ft_sub);
     }
 }
