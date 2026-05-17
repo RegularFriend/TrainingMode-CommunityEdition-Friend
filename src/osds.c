@@ -128,7 +128,7 @@ void OSD_Think(GOBJ *event) {
 
     for (int ply = 0; ply < 6; ++ply) {
         GOBJ *ft = Fighter_GetSubcharGObj(ply, 0);
-        if (!ft) continue;i
+        if (!ft) continue;
 
         // subchar is usually null except for nana and the inactive sheik/zelda tform
         GOBJ *ft_sub = Fighter_GetSubcharGObj(ply, 1);
