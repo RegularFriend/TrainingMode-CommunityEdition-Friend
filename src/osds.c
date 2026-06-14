@@ -197,7 +197,7 @@ static void RunOsd_Handoff(GOBJ *thrower, GOBJ *grabber, GOBJ *enemy, HandoffSta
 
 static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
     static int pivot_frames[6] = {};
-    static int jump_frames[6] = {};      // popo jumped with no active pivot (possible early jump)
+    static int jump_frames[6] = {};
     static char smash_turn_prev_frame[6] = {};
     if (!ft || !ft_sub) return;
     const FighterData *ft_data = ft->userdata;
@@ -237,15 +237,16 @@ static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
     // EARLY PNJ DETECTION
     if (jump_frames[ft_data->ply] != 0) {
         const int early_pnj_window = 4;
-        int delta = stc_match->time_frames - jump_frames[ft_data->ply];
+        //we want to turn 1f before jump
+        int frames_early = stc_match->time_frames - jump_frames[ft_data->ply] - 1;
         bool smash_turn_correct_direction = ft_data->input.lstick.X * ft_data->facing_direction < 0.0f;
         //if you jumped, then smash turned back, you inputted your pnj too early
-        if (smash_turn_this_frame && smash_turn_correct_direction && delta >= 1 && delta <= early_pnj_window) {
-            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Early", delta);
+        if (smash_turn_this_frame && smash_turn_correct_direction && frames_early >= 1 && frames_early <= early_pnj_window) {
+            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Early", frames_early);
             jump_frames[ft_data->ply] = 0;
         }
         //after timout fail silently.
-        else if (delta > early_pnj_window) {
+        else if (frames_early > early_pnj_window) {
             jump_frames[ft_data->ply] = 0;
         }
     }
