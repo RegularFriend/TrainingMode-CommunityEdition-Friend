@@ -145,7 +145,7 @@ static void RunOsd_Handoff(GOBJ *thrower, GOBJ *grabber, GOBJ *enemy, HandoffSta
     if (should_tick_handoff) {
         //this number of frames after the enemy is released from the throw, the handoff is considered invalid,
         //even if you successfully regrab. a successful regrab after this timeout is likely a chain grab or backtrack.
-        const int post_release_Timeout = 15;
+        const int post_release_timeout = 15;
         if (state->enemy_release_frame == 0 && IsThrownState(enemy_data->TM.state_prev[0]) && !IsThrownState(enemy_data->state_id)) {
             state->enemy_release_frame = stc_match->time_frames;
         }
@@ -171,7 +171,7 @@ static void RunOsd_Handoff(GOBJ *thrower, GOBJ *grabber, GOBJ *enemy, HandoffSta
             Text_SetColor(msg->text, 1, &stc_msg_colors[color_timing]);
             state->osd_start_frame = 0;
         }
-        else if (state->enemy_release_frame != 0 && state->first_grab_hitbox_frame != 0 && stc_match->time_frames - state->enemy_release_frame > post_release_Timeout) {
+        else if (state->enemy_release_frame != 0 && state->first_grab_hitbox_frame != 0 && stc_match->time_frames - state->enemy_release_frame > post_release_timeout) {
             int grab_to_throw_delta = state->first_grab_hitbox_frame - state->enemy_release_frame;
             bool grab_early = grab_to_throw_delta < 1;
             //if the timing was 'perfect', yet you missed, give a custom error message to avoid confusion.
@@ -193,6 +193,36 @@ static void RunOsd_Handoff(GOBJ *thrower, GOBJ *grabber, GOBJ *enemy, HandoffSta
         state->first_grab_hitbox_frame = 0;
     }
     state->thrower_prev_state = thrower_data->state_id;
+}
+
+static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
+    static int pivot_frames[6] = {};
+    const int timeout = 10;
+    if (!ft || !ft_sub) return;
+    const FighterData *ft_data = ft->userdata;
+    const FighterData *ft_sub_data = ft_sub->userdata;
+    if (ft_data->kind != FTKIND_POPO) return;
+    if (pivot_frames[ft_data->ply] != 0) {
+        //timeout. no pnj attempt.
+        if (stc_match->time_frames >  pivot_frames[ft_data->ply] + timeout) {
+            pivot_frames[ft_data->ply] = 0;
+        }
+        //if popo jumps, you failed the pnj.
+        else if (ft_data->state_id == ASID_KNEEBEND) {
+            int delta = stc_match->time_frames - pivot_frames[ft_data->ply];
+            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Late", delta);
+            pivot_frames[ft_data->ply] = 0;
+        }
+        //success state.
+        else if (ft_sub_data->state_id == ASID_KNEEBEND && stc_match->time_frames - pivot_frames[ft_data->ply] == 6) {
+            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_GREEN, "PNJ Success");
+            pivot_frames[ft_data->ply] = 0;
+        }
+    }
+    //check for pivot to start ticking
+    else if (ft_data->TM.state_prev[0] == ASID_DASH && (ft_data->state_id == ASID_TURN || ft_data->state_id == ASID_TURNRUN)) {
+        pivot_frames[ft_data->ply] = stc_match->time_frames;
+    }
 }
 
 void OSD_Think(GOBJ *event) {
@@ -219,6 +249,8 @@ void OSD_Think(GOBJ *event) {
                 RunOsd_Handoff(ft, ft_sub, enm_ft, &handoff_states[ply][0]);
                 RunOsd_Handoff(ft_sub, ft, enm_ft, &handoff_states[ply][1]);
             }
+            RunOsd_PnJ(ft, ft_sub);
+            // ICE CLIMBERS OSDS END
         }
     }
 }
