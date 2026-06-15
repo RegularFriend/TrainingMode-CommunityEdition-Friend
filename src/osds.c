@@ -215,7 +215,7 @@ static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
             pivot_frames[ft_data->ply] = 0;
         }
         //fail: popo jumped late.
-        else if (ft_data->state_id == ASID_KNEEBEND && stc_match->time_frames - pivot_frames[ft_data->ply] > late_pnj_window) {
+        else if (ft_data->state_id == ASID_KNEEBEND && stc_match->time_frames - pivot_frames[ft_data->ply] <= late_pnj_window) {
             int delta = stc_match->time_frames - pivot_frames[ft_data->ply];
             Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Late", delta);
             pivot_frames[ft_data->ply] = 0;
