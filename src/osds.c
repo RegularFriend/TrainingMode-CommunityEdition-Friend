@@ -198,7 +198,7 @@ static void RunOsd_Handoff(GOBJ *thrower, GOBJ *grabber, GOBJ *enemy, HandoffSta
 static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
     static int pivot_frames[6] = {};
     static int jump_frames[6] = {};
-    static char smash_turn_prev_frame[6] = {};
+    static char smash_x_prev[6] = {};
     if (!ft || !ft_sub) return;
     const FighterData *ft_data = ft->userdata;
     const FighterData *ft_sub_data = ft_sub->userdata;
@@ -209,48 +209,46 @@ static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
     //SUCCESSFUL AND LATE PNJ DETECTION
     if (pivot_frames[ft_data->ply] != 0) {
         const int post_pivot_window = 10;
-        //timeout. no pnj attempt.
+        //timeout.
         if (stc_match->time_frames >  pivot_frames[ft_data->ply] + post_pivot_window) {
             pivot_frames[ft_data->ply] = 0;
         }
-        //if popo jumps, you failed the pnj.
+        //fail: popo jumped late.
         else if (ft_data->state_id == ASID_KNEEBEND) {
             int delta = stc_match->time_frames - pivot_frames[ft_data->ply];
             Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Late", delta);
             pivot_frames[ft_data->ply] = 0;
         }
-        //success state.
+        //success: nana jumped 6f after the smash turn, and popo never jumped.
         else if (ft_sub_data->state_id == ASID_KNEEBEND && stc_match->time_frames - pivot_frames[ft_data->ply] == 6) {
             Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_GREEN, "PNJ Success");
             pivot_frames[ft_data->ply] = 0;
         }
     }
-    //check for pivot to start ticking pnj detection
+    //start watching for pnjs after a pivot out of a dash.
     else if (ft_data->TM.state_prev[0] == ASID_DASH && (ft_data->state_id == ASID_TURN || ft_data->state_id == ASID_TURNRUN)) {
         pivot_frames[ft_data->ply] = stc_match->time_frames;
     }
 
-    char smash_turn = ft_data->input.timer_lstick_smash_x;
-    //smash turns are saved as a decaying char, so if it was bigger this frame than last frame, it was first frame of smash turn.
-    bool smash_turn_this_frame = smash_turn > smash_turn_prev_frame[ft_data->ply];
-    smash_turn_prev_frame[ft_data->ply] = smash_turn;
     // EARLY PNJ DETECTION
+    char smash_x = ft_data->input.timer_lstick_smash_x;
+    //smash turns are saved as a decaying byte. if this is < the current frame value, you smash turned this frame.
+    bool smash_input_this_frame = smash_x > smash_x_prev[ft_data->ply];
+    smash_x_prev[ft_data->ply] = smash_x;
     if (jump_frames[ft_data->ply] != 0) {
         const int early_pnj_window = 4;
-        //we want to turn 1f before jump
         int frames_early = stc_match->time_frames - jump_frames[ft_data->ply] - 1;
-        bool smash_turn_correct_direction = ft_data->input.lstick.X * ft_data->facing_direction < 0.0f;
-        //if you jumped, then smash turned back, you inputted your pnj too early
-        if (smash_turn_this_frame && smash_turn_correct_direction && frames_early >= 1 && frames_early <= early_pnj_window) {
+        bool smash_turn_correct_direction = ft_data->input.lstick.X * ft_data->facing_direction < 0.0f; //to filter out fox trots.
+
+        if (smash_input_this_frame && smash_turn_correct_direction && frames_early >= 1 && frames_early <= early_pnj_window) {
             Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Early", frames_early);
             jump_frames[ft_data->ply] = 0;
         }
-        //after timout fail silently.
         else if (frames_early > early_pnj_window) {
             jump_frames[ft_data->ply] = 0;
         }
     }
-    // check if popo jumped to start early pnj detection
+    // check if popo jumped out of a dash to start early pnj detection
     else if (!pivot_was_active && ft_data->TM.state_prev[0] == ASID_DASH && ft_data->state_id == ASID_KNEEBEND) {
         jump_frames[ft_data->ply] = stc_match->time_frames;
     }
