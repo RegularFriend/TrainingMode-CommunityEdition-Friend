@@ -208,13 +208,14 @@ static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
 
     //SUCCESSFUL AND LATE PNJ DETECTION
     if (pivot_frames[ft_data->ply] != 0) {
-        const int post_pivot_window = 10;
+        const int late_pnj_window = 4;
+        const int timeout = 6 + late_pnj_window;
         //timeout.
-        if (stc_match->time_frames >  pivot_frames[ft_data->ply] + post_pivot_window) {
+        if (stc_match->time_frames >  pivot_frames[ft_data->ply] + timeout) {
             pivot_frames[ft_data->ply] = 0;
         }
         //fail: popo jumped late.
-        else if (ft_data->state_id == ASID_KNEEBEND) {
+        else if (ft_data->state_id == ASID_KNEEBEND && stc_match->time_frames - pivot_frames[ft_data->ply] > late_pnj_window) {
             int delta = stc_match->time_frames - pivot_frames[ft_data->ply];
             Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Late", delta);
             pivot_frames[ft_data->ply] = 0;
