@@ -237,14 +237,15 @@ static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
     smash_x_prev[ft_data->ply] = smash_x;
     if (jump_frames[ft_data->ply] != 0) {
         const int early_pnj_window = 4;
-        int frames_early = stc_match->time_frames - jump_frames[ft_data->ply] - 1;
+        int frames_since_jump = stc_match->time_frames - jump_frames[ft_data->ply];
         bool smash_turn_correct_direction = ft_data->input.lstick.X * ft_data->facing_direction < 0.0f; //to filter out fox trots.
 
-        if (smash_input_this_frame && smash_turn_correct_direction && frames_early >= 1 && frames_early <= early_pnj_window) {
-            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Early", frames_early);
+        if (smash_input_this_frame && smash_turn_correct_direction && frames_since_jump >= 1 && frames_since_jump <= early_pnj_window) {
+            //timer_lstick_smash_x is 1f stale compared to state_id, so we subtract by 1 here to compensate.
+            Message_Display(OSD_FighterSpecificTech, ft_data->ply, MSGCOLOR_RED, "PNJ Fail. %dF Early", frames_since_jump - 1);
             jump_frames[ft_data->ply] = 0;
         }
-        else if (frames_early > early_pnj_window) {
+        else if (frames_since_jump > early_pnj_window) {
             jump_frames[ft_data->ply] = 0;
         }
     }
