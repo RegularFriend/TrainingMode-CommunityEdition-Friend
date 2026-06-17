@@ -259,7 +259,9 @@ static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
 
 static void RunOsd_Tech(GOBJ* ft) {
     if (!ft) return;
-
+    //if the player enters the missed tech state, start watcing for a trigger press and look back for a previous trigger press.
+    //if you've pressed in the window display a miss message with the timing displayed.
+    //if you tech sucessfully, display a success tech message.
 }
 
 void OSD_Think(GOBJ *event) {
