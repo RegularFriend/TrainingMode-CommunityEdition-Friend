@@ -246,6 +246,11 @@ void LCancel_ChangeBarrel(GOBJ *menu_gobj, int value) {
     LcOptions_Main[OPTLC_BARREL_INTANGIBILITY_RATE].disable = (value == 0) ? 1 : 0;
 }
 
+static void AddLCancelInput(LCancelData *event_data) {
+    if (event_data->lrz_input_count < (int)countof(event_data->lrz_input_frame))
+        event_data->lrz_input_frame[event_data->lrz_input_count++] = event_data->cur_frame;
+}
+
 void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
 {
     // run tip logic
@@ -267,13 +272,17 @@ void LCancel_Think(LCancelData *event_data, FighterData *hmn_data)
 
     // log lrz inputs
     if (IsAerialState(state) || IsAerialLandingState(state)) {
-        int cur_frame = ++event_data->cur_frame;
-        if (event_data->lrz_input_count < (int)countof(event_data->lrz_input_frame) && (hmn_data->input.down & PAD_TRIGGER_L))
-            event_data->lrz_input_frame[event_data->lrz_input_count++] = cur_frame;
-        if (event_data->lrz_input_count < (int)countof(event_data->lrz_input_frame) && (hmn_data->input.down & PAD_TRIGGER_R))
-            event_data->lrz_input_frame[event_data->lrz_input_count++] = cur_frame;
-        if (event_data->lrz_input_count < (int)countof(event_data->lrz_input_frame) && (hmn_data->input.down & PAD_TRIGGER_Z))
-            event_data->lrz_input_frame[event_data->lrz_input_count++] = cur_frame;
+        event_data->cur_frame++;
+        
+        static float prev_ftriggerLeft, prev_ftriggerRight;
+
+        HSD_Pad *pad = PadGetEngine(hmn_data->pad_index);
+        if (pad->ftriggerLeft >= 0.25f && prev_ftriggerLeft <= 0.25f) AddLCancelInput(event_data);
+        if (pad->ftriggerRight >= 0.25f && prev_ftriggerRight <= 0.25f) AddLCancelInput(event_data);
+        if (hmn_data->input.down & PAD_TRIGGER_Z) AddLCancelInput(event_data);
+
+        prev_ftriggerLeft = pad->ftriggerLeft;
+        prev_ftriggerRight = pad->ftriggerRight;
     }
 
     // log fastfall frame
