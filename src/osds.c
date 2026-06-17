@@ -257,6 +257,11 @@ static void RunOsd_PnJ(GOBJ *ft, GOBJ *ft_sub) {
     }
 }
 
+static void RunOsd_Tech(GOBJ* ft) {
+    if (!ft) return;
+
+}
+
 void OSD_Think(GOBJ *event) {
     u32 osd_enabled = stc_memcard->TM_OSDEnabled;
 
@@ -272,6 +277,7 @@ void OSD_Think(GOBJ *event) {
 
 
         if (osd_enabled & (1u << OSD_FrameAdvantage)) RunOSD_FrameAdvantage(ft, ft_sub);
+        if (osd_enabled & (1u << OSD_Tech)) RunOsd_Tech(ft);
         if (osd_enabled & (1u << OSD_FighterSpecificTech)) {
             // ICE CLIMBERS OSDS
             static HandoffState handoff_states[6][2];

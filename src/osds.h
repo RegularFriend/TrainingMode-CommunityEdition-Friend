@@ -23,6 +23,7 @@ void OSD_Think(GOBJ *event);
 #define OSD_Fastfall 20
 #define OSD_FrameAdvantage 21
 #define OSD_ComboCounter 22
+#define OSD_Tech 23
 #define OSD_GrabBreakout 24
 #define OSD_Ledge 26
 #define OSD_ActOoHitstun 28

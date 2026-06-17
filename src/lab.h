@@ -1692,6 +1692,7 @@ static u8 LabOSD_ID[] = {
     OSD_Fastfall,
     OSD_FrameAdvantage,
     OSD_ComboCounter,
+    OSD_Tech,
     OSD_GrabBreakout,
     OSD_Ledge,
     OSD_ActOoHitstun,

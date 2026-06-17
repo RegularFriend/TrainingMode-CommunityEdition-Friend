@@ -67,6 +67,7 @@
     .set OSD.Fastfall, 20
     .set OSD.FrameAdvantage, 21
     .set OSD.ComboCounter, 22
+    .set OSD.Tech, 23
     .set OSD.GrabBreakout, 24
     .set OSD.Ledge, 26
     .set OSD.ActOoHitstun, 28
