@@ -2727,6 +2727,21 @@ struct MemcardUnk
     u8 xa[8];
 };
 
+struct MemcardState
+{
+    /* +0  */ int x0;
+    /* +4  */ int x4;
+    /* +8  */ int x8;
+    /* +C  */ bool memcard_changed;
+    /* +10 */ int x10;
+    /* +14 */ int x14;
+    /* +18 */ bool enable;
+    /* +1C */ char _1C[0x40];
+    /* +5C */ int *x5C;
+    /* +60 */ int x60;
+    /* +64 */ void *x64;
+};
+
 struct MemcardInfo
 {
     void *snap_data;                 // 0x0 (should be 256,064 bytes)
@@ -2806,6 +2821,7 @@ struct Rules4
 };
 
 /*** Static Variables ***/
+static MemcardState *stc_memcard_state = (void *)0x80433318;
 static MemcardInfo *stc_memcard_info = (void *)0x80433380;
 static MemcardUnk *stc_memcard_unk = (void *)0x803bacc8;
 static MemcardWork *stc_memcard_work = (void *)0x80432a68;
@@ -2830,5 +2846,6 @@ int Memcard_CheckStatus(); // returns 11 when operation in effect
 void Memcard_RemovedCallback();
 void Memcard_Obfuscate(void *data, int size);
 void Memcard_Deobfuscate(void *data, int size);
+void Memcard_SaveIfChanged(void);
 
 #endif

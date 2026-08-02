@@ -26,6 +26,11 @@ if [[ "$(uname)" =~ "MSYS" ]]; then
     hgecko="bin/hgecko.exe"
     hmex="bin/hmex.exe"
     xdelta="bin/xdelta.exe"
+elif [[ "$(uname)" == "Darwin" && "$(uname -m)" == "arm64" ]]; then
+    gc_fst="bin/gc_fst_macos_arm64"
+    hgecko="bin/hgecko_macos_arm64"
+    hmex="bin/hmex_macos_arm64"
+    xdelta="xdelta3"
 else
     gc_fst="bin/gc_fst"
     hgecko="bin/hgecko"
@@ -54,23 +59,23 @@ mex_build() {
     local sym="${1}"
     local out="${2}"
     local src="${3}"
-    
+
     if [[ -n "${mode}" && "${mode}" != "${out}" ]]; then
         return
     fi
-    
+
     if [ -n "${4}" ]; then
         local dat="-dat ${4}"
     else
         local dat=""
     fi
-    
+
     if [ "${release}" = true ]; then
         local opt="-O2"
     else
         local opt="-DTM_DEBUG"
     fi
-    
+
     warn="-Wall -Wextra -Wno-char-subscripts -Wno-builtin-declaration-mismatch -Wno-unused-parameter"
     ${hmex} -q -l "MexTK/melee.link" -f "${warn} ${opt}" -s "${sym}" -t "MexTK/${sym}.txt" -o "${out}" -i ${src} ${dat} || kill_all
     echo built ${out}
@@ -145,4 +150,3 @@ if [ "${2}" = "release" ]; then
     zip -r TM-CE.zip TM-CE/
     echo "built TM-CE.zip"
 fi
-

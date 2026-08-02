@@ -796,6 +796,7 @@
 8031C99C:Match_GetVIWaitFilename
 8016B350:MatchInfo_0x0010_store
 8037E708:MatToQuat
+8001cc84:Memcard_SaveIfChanged
 8001B6F8:Memcard_CheckStatus
 8001BB48:Memcard_ReqSaveCreate
 8001BF04:Memcard_ReqSaveLoad

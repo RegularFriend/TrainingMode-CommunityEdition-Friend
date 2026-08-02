@@ -42,3 +42,8 @@ TM-CE/
 
 # Claude Code
 .claude/
+
+# Direnv / Nix generated
+.direnv/
+.nix-bin/
+bin/*.orig

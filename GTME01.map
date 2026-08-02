@@ -370,7 +370,7 @@
 8001cbbc 00000074 8001cbbc 0 MemoryCard_DoLoadData
 8001cc30 0000001c 8001cc30 0 zz_001cc30_
 8001cc4c 00000038 8001cc4c 0 MemoryCard_DeleteGameData_HandleAllInputs
-8001cc84 00000130 8001cc84 0 MemoryCard_CheckToSaveData
+8001cc84 00000130 8001cc84 0 MemoryCard_SaveIfChanged
 8001cdb4 0000004c 8001cdb4 0 MemoryCard_CheckSaveBool?
 8001ce00 00000078 8001ce00 0 MemoryCard_UpdateTotalInGameTimeCount
 8001ce78 00000048 8001ce78 0 MemoryCard_CheckIfMemcardPresentEveryMinorChange

@@ -5,8 +5,12 @@ I really appreciate all the help.
 Melee is a pretty complicated game, but that doesn't make TM-CE hard to contribute to!
 Here are a few things you should know before contributing.
 
-First thing, [please join the discord](https://discord.gg/2Khb8CVP7A).
-If you have any questions, feel free to ping me (Aitch) in the dev-discussion channel.
+- [Join the discord here](https://discord.gg/2Khb8CVP7A).
+- Ping me in the dev-discussion channel before starting a contribution, I will guide you in the right direction.
+- Keep contributions small and focused.
+- Do not contribute AI code.
+
+If you have any other questions, feel free to ping me (Aitch) in the dev-discussion channel.
 
 ## Compilation
 
@@ -21,6 +25,13 @@ If you have any questions, feel free to ping me (Aitch) in the dev-discussion ch
 3. Run the command `./build.sh path-to-melee.iso` in the console.
     - If the provided binaries fail (possibly due to libc issues), you can compile your own binaries from my repos:
 [gc_fst](https://github.com/AlexanderHarrison/gc_fst), [hmex](https://github.com/AlexanderHarrison/cdat), [hgecko](https://github.com/AlexanderHarrison/hgecko)
+
+### NixOS
+1. Make sure you have the [Flakes](https://nixos.wiki/wiki/Flakes) feature enabled.
+2. Enter the development shell by running `nix develop` to load all the necessary dependencies.
+3. Run the command `./build.sh path-to-melee.iso` in the console.
+
+Alternatively, if you have [Direnv](https://nixos.wiki/wiki/Direnv) installed, you can run `direnv allow` to enter the development shell automatically when you enter this project directory.
 
 ### Build Mode
 The build script takes an optional additional mode argument called the mode - `build.sh iso [mode]`.

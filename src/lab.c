@@ -309,6 +309,9 @@ void Lab_ChangeOSDs(GOBJ *menu_gobj, int value) {
     for (int i = 0; i < LabMenu_OSDs.option_num; i++)
         enabled_osds |= (u32)LabOptions_OSDs[i].val << LabOSD_ID[i];
     stc_memcard->TM_OSDEnabled = enabled_osds;
+
+    stc_memcard_state->memcard_changed = true;
+    Memcard_SaveIfChanged();
 }
 
 void Lab_ChangePlayerPercent(GOBJ *menu_gobj, int value)
